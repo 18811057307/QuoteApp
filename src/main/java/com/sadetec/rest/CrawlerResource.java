@@ -1,9 +1,11 @@
 package com.sadetec.rest;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -13,13 +15,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.sadetec.model.Category;
-import com.sadetec.model.Product;
+import com.sadetec.model.ProcessorStatus;
 import com.sadetec.model.Series;
 import com.sadetec.repository.CategoryRepository;
 import com.sadetec.repository.ProductRepository;
@@ -47,8 +50,7 @@ public class CrawlerResource {
 	
 	@Autowired
 	private ProductRepository productRepository;
-	
-	
+		
 	@Autowired
 	private IndexPageProcessor indexPageProcessor;	
 	
@@ -63,6 +65,9 @@ public class CrawlerResource {
 	
 	@Autowired
 	private PricePageProcessor pricePageProcessor;
+	
+	@Autowired
+	private ThreadPoolTaskExecutor threadPoolTaskExecutor;
 	
 	@RequestMapping(value = "/crawlIndexPage", method = POST, produces = APPLICATION_JSON_VALUE)
 	public ResponseEntity<PageResponse> crawlIndexPage(
@@ -130,67 +135,77 @@ public class CrawlerResource {
 		return new ResponseEntity<PageResponse>(pageResponse, HttpStatus.OK);
 	}
 	
-	@RequestMapping(value = "/crawlProductPage", method = POST, produces = APPLICATION_JSON_VALUE)
-	public ResponseEntity<PageResponse> crawlProductPage(@RequestParam(value = "proxyUrl", required = false) String proxyUrl) throws URISyntaxException {
+	@RequestMapping(value = "/asynCrawlProduct", method = POST, produces = APPLICATION_JSON_VALUE)
+	public ResponseEntity<PageResponse<String>> asynCrawlProduct(
+			@RequestParam(value = "proxyUrl", required = false) String proxyUrl
+			,@RequestParam(value = "numOfThread", required = false, defaultValue="2") Integer numOfThread) throws URISyntaxException {
 
-		log.info("Start Product Page Crawler");
-
-		if(!StringUtils.isEmpty(proxyUrl)) {
-			productPageProcessor.setProxy(proxyUrl);
+		List<String> taskIds = new ArrayList<String>();
+		
+		productPageProcessor.init(proxyUrl);
+		
+		for (int i = 0; i < numOfThread; i++) {
+			String taskId = "CrawlPrice-Thead-" + i;
+			productPageProcessor.executeAsyncTask(taskId);
 		}
 		
-		PageRequest pageRequest = new PageRequest(0, 50);		
-		Page<Series> series = seriesRepository.findByProcFlagIsNull(pageRequest);
-		
-		for(int page=0; page < series.getTotalPages(); page ++) {
-			pageRequest = new PageRequest(0, 50);
-			series = seriesRepository.findByProcFlagIsNull(pageRequest);
-			for (Series tempSeries : series.getContent()) {
-				if (productPageProcessor.process(tempSeries)) {
-					tempSeries.setProcFlag(true);
-					seriesRepository.save(tempSeries);
-				}
-			}
-			
-		}
-		
-		PageResponse pageResponse = new PageResponse(null);
+		PageResponse<String> pageResponse = new PageResponse<String>(taskIds);
 		pageResponse.setSuccess(Boolean.TRUE);
-		pageResponse.setMessage("Start Product Page Crawler");
-
-		return new ResponseEntity<PageResponse>(pageResponse, HttpStatus.OK);
+		pageResponse.setMessage("产品爬虫工具已启动");
+		return new ResponseEntity<PageResponse<String>>(pageResponse, HttpStatus.OK);
+		
 	}
 	
-	@RequestMapping(value = "/crawlPricePage", method = POST, produces = APPLICATION_JSON_VALUE)
-	public ResponseEntity<PageResponse> crawlPricePage(@RequestParam(value = "proxyUrl", required = false) String proxyUrl) throws URISyntaxException {
-
-		log.info("Start Price Page Crawler");
-
-		if(!StringUtils.isEmpty(proxyUrl)) {
-			pricePageProcessor.setProxy(proxyUrl);
-		}
+	@RequestMapping(value = "/productCrawlerStatus", method = GET, produces = APPLICATION_JSON_VALUE)
+	public ResponseEntity<ProcessorStatus> productCrawlerStatus() throws URISyntaxException {
+		ProcessorStatus status = new ProcessorStatus();
+		status.setTotal(productPageProcessor.getTotal());
+		status.setFinished(productPageProcessor.getFinished().get());
+		return new ResponseEntity<ProcessorStatus>(status, HttpStatus.OK);
 		
-		pricePageProcessor.login();
-		
-		PageRequest pageRequest = new PageRequest(0, 50);		
-		Page<Product> products = productRepository.findByProcFlagIsNull(pageRequest);
-		
-		for(int page=0; page < products.getTotalPages(); page ++) {
-			pageRequest = new PageRequest(0, 50);
-			products = productRepository.findByProcFlagIsNull(pageRequest);
-			for (Product tempProduct : products.getContent()) {
-				tempProduct.setUnitPrice(pricePageProcessor.process(tempProduct,1));
-				tempProduct.setProcFlag(true);
-				productRepository.save(tempProduct);
-			}
-			
-		}
-		
-		PageResponse pageResponse = new PageResponse(null);
-		pageResponse.setSuccess(Boolean.TRUE);
-		pageResponse.setMessage("Start Product Page Crawler");
-
-		return new ResponseEntity<PageResponse>(pageResponse, HttpStatus.OK);
 	}
+		
+	@RequestMapping(value = "/asynCrawlPrice", method = POST, produces = APPLICATION_JSON_VALUE)
+	public ResponseEntity<PageResponse<String>> asynCrawlPrice(
+			@RequestParam(value = "proxyUrl", required = false) String proxyUrl
+			,@RequestParam(value = "numOfThread", required = false, defaultValue="2") Integer numOfThread
+			,@RequestParam(value = "userid", required = false, defaultValue="agapanthus") String userid
+			,@RequestParam(value = "password", required = false, defaultValue="agapanth") String password) throws URISyntaxException {
+		List<String> taskIds = new ArrayList<String>();
+		
+		pricePageProcessor.init(proxyUrl, userid, password);
+		
+		for (int i = 0; i < numOfThread; i++) {
+			String taskId = "CrawlPrice-Thead-" + i;
+			pricePageProcessor.executeAsyncTask(taskId);
+		}
+		
+		PageResponse<String> pageResponse = new PageResponse<String>(taskIds);
+		pageResponse.setSuccess(Boolean.TRUE);
+		pageResponse.setMessage("产品价格爬虫工具已启动");
+		return new ResponseEntity<PageResponse<String>>(pageResponse, HttpStatus.OK);
+		
+	}
+	
+	@RequestMapping(value = "/priceCrawlerStatus", method = GET, produces = APPLICATION_JSON_VALUE)
+	public ResponseEntity<ProcessorStatus> priceCrawlerStatus() throws URISyntaxException {
+		ProcessorStatus status = new ProcessorStatus();
+		status.setTotal(pricePageProcessor.getTotal());
+		status.setFinished(pricePageProcessor.getFinished().get());
+		return new ResponseEntity<ProcessorStatus>(status, HttpStatus.OK);
+		
+	}
+	
+	@RequestMapping(value = "/stopCrawler", method = GET, produces = APPLICATION_JSON_VALUE)
+	public ResponseEntity<PageResponse> stopCrawler() throws URISyntaxException {
+		productPageProcessor.shutdown();
+		pricePageProcessor.shutdown();
+		PageResponse status = new PageResponse(null);
+		status.setSuccess(Boolean.TRUE);
+		status.setMessage("爬虫任务已停止");
+		return new ResponseEntity<PageResponse>(status, HttpStatus.OK);
+		
+	}
+
 
 }

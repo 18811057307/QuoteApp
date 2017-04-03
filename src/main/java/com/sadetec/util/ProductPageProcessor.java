@@ -7,6 +7,7 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.xml.transform.dom.DOMSource;
 
@@ -20,9 +21,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.http.converter.xml.SourceHttpMessageConverter;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -32,6 +35,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sadetec.model.Product;
 import com.sadetec.model.Series;
 import com.sadetec.repository.ProductRepository;
+import com.sadetec.repository.SeriesRepository;
 
 @Component("productPageProcessor")
 public class ProductPageProcessor {
@@ -46,12 +50,39 @@ public class ProductPageProcessor {
 	private ProductRepository productRepository;
 
 	@Autowired
+	private SeriesRepository seriesRepository;
+	
+	@Autowired
 	private ObjectMapper objectMapper;
+	
+	private AtomicInteger finished = new AtomicInteger(0);
+	private Long total;
+	private volatile boolean needShutDown = false;
 	
 
 	public void setProxy(String proxyUrl) {
 		Proxy proxy = new Proxy(Type.HTTP, new InetSocketAddress(proxyUrl, 80));
 		requestFactory.setProxy(proxy);		
+	}
+	
+	public Long getTotal() {
+		return total;
+	}
+
+	public void shutdown() {
+		this.needShutDown = true;
+	}
+	
+	public AtomicInteger getFinished() {
+		return finished;
+	}
+
+	public void init(String proxyUrl) {
+		if(!StringUtils.isEmpty(proxyUrl)) {
+			this.setProxy(proxyUrl);
+		}		
+		this.total = seriesRepository.countByProcByIsNullAndProcFlagIsNull();
+		this.needShutDown = false;
 	}
 
 	public boolean process(Series curSeries) {
@@ -169,6 +200,39 @@ public class ProductPageProcessor {
 			return null;
 		}
 	}
+	
+	public List<Series> lockRows(String threadId) {
+		log.info("通过线程ID锁定待处理的数据:{}" + threadId);
+		seriesRepository.lockRows(threadId);
+		return seriesRepository.getLockedRows(threadId);
+	}
+
+	@Async	
+    public void executeAsyncTask(String threadId){
+		
+		List<Series> tobeProcessed = this.lockRows(threadId);
+		
+		//如果还有未处理的产品,则线程继续执行
+		while(tobeProcessed.size() > 0) {
+			if(this.needShutDown) {
+				break;
+			}
+			for (Series series : tobeProcessed) {
+				log.info("线程{} 待处理产品为: {}" , threadId, series);
+				
+				if (this.process(series)) {
+					series.setProcFlag(true);
+				} else {
+					series.setProcFlag(false);
+				}				
+				seriesRepository.save(series);
+				
+				this.finished.incrementAndGet();
+			}
+			
+			tobeProcessed = this.lockRows(threadId);
+		}		
+    }
 
 	public static void main(String[] args) {
 

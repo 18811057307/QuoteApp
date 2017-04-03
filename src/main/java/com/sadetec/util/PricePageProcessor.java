@@ -6,6 +6,7 @@ import java.net.Proxy;
 import java.net.Proxy.Type;
 import java.nio.charset.Charset;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.jsoup.Jsoup;
 import org.slf4j.Logger;
@@ -16,6 +17,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -37,12 +39,18 @@ public class PricePageProcessor {
 	private String loginUrl = "https://cn.misumi-ec.com/mydesk2/s/login_frame";
 	private String quoteReqUrl = "http://cn.misumi-ec.com/mydesk2/s/quotation_request";
 	private String quoteInqUrl = "http://cn.misumi-ec.com/mydesk2/s/quotation_inquiry";
+	private Boolean isLogin = false;
 
 	private SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
 	private RestTemplate restTemplate = new RestTemplate(requestFactory);
 
 	private HttpHeaders loginHeader = new HttpHeaders();
-
+	
+	private AtomicInteger finished = new AtomicInteger(0);
+	private Long total;
+	
+	private volatile boolean needShutDown = false;
+	
 	@Autowired
 	private ProductRepository productRepository;
 
@@ -53,14 +61,45 @@ public class PricePageProcessor {
 		Proxy proxy = new Proxy(Type.HTTP, new InetSocketAddress(proxyUrl, 80));
 		requestFactory.setProxy(proxy);
 	}
+	
+	public void setTotal() {
+		this.total = productRepository.countByProcByIsNullAndProcFlagIsNull();
+	}
+	
+	public Long getTotal() {
+		return this.total;
+	}
+	
+	public void shutdown() {
+		this.needShutDown = true;
+	}
+	
+	public AtomicInteger getFinished() {
+		return finished;
+	}
 
-	public void login() {
+	public void init(String proxyUrl, String userid, String password) {
+		if(!StringUtils.isEmpty(proxyUrl)) {
+			this.setProxy(proxyUrl);
+		}		
+		this.login(userid,password);
+		this.setTotal();
+		this.needShutDown = false;
+	}
+	
+	public void login(String userid, String password) {
+		
+		if(this.isLogin) {
+			log.info("已登录,直接返回.");
+			return;
+		}
+
 		requestFactory.setReadTimeout(60000);
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(new MediaType("application", "x-www-form-urlencoded", Charset.forName("UTF-8")));
 		MultiValueMap<String, String> countParams = new LinkedMultiValueMap<String, String>();
-		countParams.add("userid", "agapanthus");
-		countParams.add("password", "agapanth");
+		countParams.add("userid", userid);
+		countParams.add("password", password);
 		HttpEntity<MultiValueMap<String, String>> loginReq = new HttpEntity<MultiValueMap<String, String>>(countParams, headers);
 		HttpEntity<String> response = restTemplate.exchange(loginUrl, HttpMethod.POST, loginReq, String.class);
 
@@ -100,7 +139,7 @@ public class PricePageProcessor {
 		}
 
 		log.info("登录Cookie值:{}", loginHeader.get(HttpHeaders.COOKIE));
-
+		this.isLogin = true;
 	}
 
 	public BigDecimal process(Product product, Integer quantity) {
@@ -189,6 +228,32 @@ public class PricePageProcessor {
 		}.rewrite(prodId);
 		
 	}
+	
+	public List<Product> lockRows(String threadId) {
+		log.info("通过线程ID锁定待处理的数据:{}" + threadId);
+		productRepository.lockRows(threadId);
+		return productRepository.getLockedRows(threadId);
+	}
+	
+	@Async	
+    public void executeAsyncTask(String threadId){
+		List<Product> tobeProcessed = this.lockRows(threadId);
+		
+		//如果还有未处理的产品,则线程继续执行
+		while(tobeProcessed.size() > 0) {
+			if(this.needShutDown) {
+				break;
+			}
+			for (Product product : tobeProcessed) {
+				log.info("线程{} 待处理产品为: {}" , threadId, product);
+				product.setUnitPrice(this.process(product,1));
+				product.setProcFlag(true);
+				productRepository.save(product);
+				this.finished.incrementAndGet();
+			}
+			tobeProcessed = this.lockRows(threadId);
+		}		
+    }
 	
 	public static void main(String[] args) {
 
