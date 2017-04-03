@@ -78,9 +78,11 @@ public class ProductPageProcessor {
 	}
 
 	public void init(String proxyUrl) {
-		if(!StringUtils.isEmpty(proxyUrl)) {
+		if(StringUtils.isEmpty(proxyUrl)) {
+			requestFactory.setProxy(null);
+		} else {
 			this.setProxy(proxyUrl);
-		}		
+		}
 		this.total = seriesRepository.countByProcByIsNullAndProcFlagIsNull();
 		this.needShutDown = false;
 	}

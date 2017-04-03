@@ -122,6 +122,12 @@
     border-radius: 0 0 2px 2px;
 }
 
+.x-progress-default .x-progress-text-back {
+	font-size: 24px !important;
+    font-weight: 300 !important;
+    line-height: 48px !important;
+}
+
 .white-text {
     color: #fff !important;
 }

@@ -79,9 +79,11 @@ public class PricePageProcessor {
 	}
 
 	public void init(String proxyUrl, String userid, String password) {
-		if(!StringUtils.isEmpty(proxyUrl)) {
+		if(StringUtils.isEmpty(proxyUrl)) {
+			requestFactory.setProxy(null);
+		} else {
 			this.setProxy(proxyUrl);
-		}		
+		}
 		this.login(userid,password);
 		this.setTotal();
 		this.needShutDown = false;

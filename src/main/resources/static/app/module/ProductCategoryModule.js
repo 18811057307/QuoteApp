@@ -12,7 +12,7 @@ Ext.define('tms.module.ProductCategoryModule', {
         var desktop = this.app.getDesktop();
         var win = desktop.getWindow('productCategory-win');
         if (!win) {
-            var progressbar = Ext.create('Ext.ProgressBar',{width:400});
+            var progressbar = Ext.create('Ext.ProgressBar',{width:400,region:"north",height:100,title:"爬虫进度"});
 
             var progressTask = {
         	    run: function(){
@@ -45,7 +45,44 @@ Ext.define('tms.module.ProductCategoryModule', {
         	    },
         	    interval: 1000 //1 second
         	};  
-                        
+            
+            var crawlerForm = Ext.create('Ext.form.Panel', {
+                frame: true,
+                title: 'Mi爬虫配置',
+                region: 'center',
+                bodyPadding: 5,
+
+                fieldDefaults: {
+                    labelAlign: 'left',
+                    labelWidth: 90,
+                    anchor: '100%'
+                },
+
+                items: [{
+                    xtype: 'textfield',
+                    name: 'proxyUrl',
+                    fieldLabel: '代理地址',
+                    value: ''
+                },{
+                	xtype: 'numberfield',
+                    name: 'numOfThread',
+                    fieldLabel: '爬虫数量',
+                    value: 2,
+                    minValue: 0,
+                    maxValue: 50
+                },{
+                    xtype: 'textfield',
+                    name: 'userid',
+                    value: 'agapanthus',
+                    fieldLabel: 'Mi用户'
+                },{
+                    xtype: 'textfield',
+                    name: 'password',
+                    value: 'agapanth',
+                    fieldLabel: 'Mi密码'
+                }]
+            });
+            
             win = desktop.createWindow({
                 id:'productCategory-win',
                 title:this.titleText,
@@ -54,8 +91,11 @@ Ext.define('tms.module.ProductCategoryModule', {
                 iconCls:'icon-productCategory',
                 animCollapse:false,
                 constrainHeader:true,
-                layout:'fit',
-                items:[progressbar],
+                layout:'border',
+                items:[
+                	crawlerForm,                    
+                	progressbar
+                ],
                 listeners: {
                 	close: function(me, opts) {
                 		
@@ -64,62 +104,7 @@ Ext.define('tms.module.ProductCategoryModule', {
                 dockedItems: [{
                     xtype: 'toolbar',
                     dock: 'top',
-                    items: [{
-                        xtype: 'button',
-                        text: '首页处理',
-                        handler: function() {
-                            Ext.Ajax.request({
-                                url: tms.getContextPath() + 'api/crawler/crawlIndexPage',
-                                params: {
-                                	//proxyUrl: "cn-proxy.jp.oracle.com",
-                                	urlToCrawl: "http://cn.misumi-ec.com/"
-                                },
-                                success: function(response) {
-                                    var data = Ext.JSON.decode(response.responseText);
-                                    tms.notify(data.message, "启动首页爬虫");	
-                                },
-                                scope:this
-                            });
-                        }
-                    },
-                    {
-                        xtype: 'button',
-                        text: '分类页处理',
-                        handler: function() {
-                            Ext.Ajax.request({
-                                url: tms.getContextPath() + 'api/crawler/crawlCategoryPage',
-                                method :"POST",   
-                                params: {
-                                	//proxyUrl: "cn-proxy.jp.oracle.com",
-                                	//urlToCrawl: "http://cn.misumi-ec.com/"
-                                },
-                                success: function(response) {
-                                    var data = Ext.JSON.decode(response.responseText);
-                                    tms.notify(data.message, "启动分类页爬虫");	
-                                },
-                                scope:this
-                            });
-                        }
-                    },
-                    {
-                        xtype: 'button',
-                        text: '产品系列处理',
-                        handler: function() {
-                        	Ext.Ajax.request({
-                                url: tms.getContextPath() + 'api/crawler/crawlSeriesPage',
-                                method :"POST",
-                                params: {
-                                	//proxyUrl: "cn-proxy.jp.oracle.com",
-                                	//urlToCrawl: "http://cn.misumi-ec.com/"
-                                },
-                                success: function(response) {
-                                    var data = Ext.JSON.decode(response.responseText);
-                                    tms.notify(data.message, "启动产品系列页爬虫");	
-                                },
-                                scope:this
-                            });
-                        }
-                    },
+                    items: [
                     {
                         xtype: 'button',
                         text: '异步产品规格型号处理',
@@ -127,10 +112,7 @@ Ext.define('tms.module.ProductCategoryModule', {
                     		Ext.Ajax.request({
                                 url: tms.getContextPath() + 'api/crawler/asynCrawlProduct',
                                 method :"POST",
-                                params: {
-                                	proxyUrl: "cn-proxy.jp.oracle.com",
-                                	numOfThread: 2
-                                },
+                                params: crawlerForm.getValues(),
                                 success: function(response) {
                                     var data = Ext.JSON.decode(response.responseText);
                                     tms.notify(data.message, "启动产品规格型号爬虫");	
@@ -148,10 +130,7 @@ Ext.define('tms.module.ProductCategoryModule', {
                     		Ext.Ajax.request({
                                 url: tms.getContextPath() + 'api/crawler/asynCrawlPrice',
                                 method :"POST",
-                                params: {
-                                	proxyUrl: "cn-proxy.jp.oracle.com",
-                                	numOfThread: 2
-                                },
+                                params: crawlerForm.getValues(),
                                 success: function(response) {
                                     var data = Ext.JSON.decode(response.responseText);
                                     tms.notify(data.message, "启动价格页爬虫");
