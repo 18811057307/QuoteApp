@@ -2,7 +2,7 @@ Ext.define('tms.controller.ManualProductMapController', {
     extend:'Ext.app.Controller',
     stores:['tms.store.ManualProductMapStore'],
     models:['tms.model.ManualProductMap'],
-    views:['tms.view.manualProductMap.List'],  
+    views:['tms.view.manualProductMap.List','Ext.ux.form.field.SearchField','tms.view.manualProductMap.Helper','tms.view.manualProductMap.PriceUpdater'],  
     requires:['Ext.ux.view.IconWindow',
         'Ext.ux.view.IconBrowser',
         'Ext.ux.view.InfoPanel',
@@ -58,6 +58,12 @@ Ext.define('tms.controller.ManualProductMapController', {
                     fn:this.onCancel,
                     scope:this
                 }
+            },
+            'manualProductMapPriceUpdater button[action=batchUpdatePrice]':{
+                click:{
+                    fn:this.onPriceUpdate,
+                    scope:this
+                }
             }
         });
         this._getStore().load();
@@ -107,6 +113,34 @@ Ext.define('tms.controller.ManualProductMapController', {
                     this._getStore().sync();                    
                 }
             }, this);
+
+    },
+    onPriceUpdate : function (me, e, eOpts) {
+    	var priceUpdatermPanel = Ext.ComponentQuery.query('manualProductMapPriceUpdater')[0];
+    	var priceForm = priceUpdatermPanel.getForm();
+    	if (priceForm.isValid()) {
+            var grid = Ext.ComponentQuery.query('manualProductMapList')[0];
+            var records = grid.getSelectionModel().getSelection();
+            Ext.MessageBox.confirm(
+                i18n.t('small_hint')
+                , Ext.String.format('确认对选中的{0}进行价格调整吗？', records[0].getRecordName() + "等共 " + records.length + " 条数据")
+                , function (btn) {
+                    if (btn == "yes") {
+                    	var column = priceForm.findField('column').getValue();
+                    	var oper = priceForm.findField('oper').getValue();
+                    	var amount = priceForm.findField('amount').getValue();
+                    	
+                    	Ext.each(records,function(record){
+                    		var curVal = record.get(column);
+                    		var newVal = eval(curVal+oper+amount);
+                    		record.set(column,newVal);
+                    	});
+                    	
+                    	this._getStore().sync();
+                    }
+                }, this);
+    	}
+
 
     },
     onRefresh:function (me, e, eOpts) {

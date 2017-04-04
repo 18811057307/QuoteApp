@@ -136,6 +136,11 @@ public class ManualProductMapResource {
 							returnList.add(result.get(0));
 						}
 						else {
+							ManualProductMap e = new ManualProductMap();
+							e.setId(productCode);
+							e.setMiProductCode(productCode);
+							e.setAtProductName("配置库中未找到报价产品对照信息");
+							returnList.add(e);
 							log.error("配置库中未找到报价产品对照信息：{}", map);
 						}
 					}

@@ -24,7 +24,7 @@ public interface SeriesRepository extends JpaRepository<Series, String> {
 	long countByProcByIsNullAndProcFlagIsNull();
 	
 	@Modifying(clearAutomatically = true)
-    @Query(value="UPDATE series s SET s.proc_by = ?1 WHERE s.proc_by IS NULL AND s.proc_flag IS NULL ORDER BY s.series_code LIMIT 10", nativeQuery = true)
+    @Query(value="UPDATE series s SET s.proc_by = ?1 WHERE s.proc_by IS NULL AND s.proc_flag IS NULL ORDER BY s.series_code LIMIT 1", nativeQuery = true)
     int lockRows(String procBy);
 	
 	@Query("SELECT s FROM Series s WHERE s.procBy = ?1 AND s.procFlag IS NULL")

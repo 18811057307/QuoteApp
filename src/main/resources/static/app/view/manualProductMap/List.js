@@ -69,17 +69,12 @@ Ext.define('tms.view.manualProductMap.List', {
             }
         });        
         this.topToolbar.add({
-            xtype: 'textfield',
+            xtype: 'searchfield',
             name: 'searchField',
             hideLabel: true,
             width: 200,
-            listeners: {
-                change: {
-                    fn: this.onTextFieldChange,
-                    scope: this,
-                    buffer: 1000
-                }
-            }
+            store: this.store,
+            paramName : 'productCode'
         });
         this.topToolbar.add('->');        
         this.topToolbar.add(this.uploadBtn);

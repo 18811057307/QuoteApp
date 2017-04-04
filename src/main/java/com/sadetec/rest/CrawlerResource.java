@@ -145,7 +145,7 @@ public class CrawlerResource {
 		productPageProcessor.init(proxyUrl);
 		
 		for (int i = 0; i < numOfThread; i++) {
-			String taskId = "CrawlPrice-Thead-" + i;
+			String taskId = "CrawlProduct-Thead-" + i;
 			productPageProcessor.executeAsyncTask(taskId);
 		}
 		
@@ -161,6 +161,7 @@ public class CrawlerResource {
 		ProcessorStatus status = new ProcessorStatus();
 		status.setTotal(productPageProcessor.getTotal());
 		status.setFinished(productPageProcessor.getFinished().get());
+		status.setActiveCount(threadPoolTaskExecutor.getActiveCount());
 		return new ResponseEntity<ProcessorStatus>(status, HttpStatus.OK);
 		
 	}
@@ -192,6 +193,7 @@ public class CrawlerResource {
 		ProcessorStatus status = new ProcessorStatus();
 		status.setTotal(pricePageProcessor.getTotal());
 		status.setFinished(pricePageProcessor.getFinished().get());
+		status.setActiveCount(threadPoolTaskExecutor.getActiveCount());
 		return new ResponseEntity<ProcessorStatus>(status, HttpStatus.OK);
 		
 	}

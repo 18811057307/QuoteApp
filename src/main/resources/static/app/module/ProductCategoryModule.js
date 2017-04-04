@@ -13,7 +13,8 @@ Ext.define('tms.module.ProductCategoryModule', {
         var win = desktop.getWindow('productCategory-win');
         if (!win) {
             var progressbar = Ext.create('Ext.ProgressBar',{width:400,region:"north",height:100,title:"爬虫进度"});
-
+            var asyncPriceRetry = 0;
+            var asyncProductRetry = 0;
             var progressTask = {
         	    run: function(){
         	    	Ext.Ajax.request({
@@ -21,13 +22,21 @@ Ext.define('tms.module.ProductCategoryModule', {
                         method: 'GET',
                         success: function(result, request) {
                             var json = Ext.decode(result.responseText);
-                            progressbar.updateProgress(json.finished / json.total, '待获取价格的产品总数：' + json.total + ' 已完成 ' + json.finished + ' 个 ...');                            
+                            progressbar.updateProgress(json.finished / json.total, json.activeCount + '个爬虫正在获取价格，总数：' + json.total + '， 已完成 ' + json.finished + ' 个 ...');
+                            
+                            //如果爬虫数量为0,则在10分钟后，重新发起爬虫任务
+                            if(0 == json.activeCount) {
+                            	asyncPriceRetry ++;
+                            	if(asyncPriceRetry > 120) {
+                            		Ext.getCmp('asyncPriceBtn').fireEvent('click');
+                            	}	
+                            }
                         },
                         failure: function(result, request) {
                         }
                     });
         	    },
-        	    interval: 1000 //1 second
+        	    interval: 5000 //5 second
         	};       
             
             var productCrawlerTask = {
@@ -37,13 +46,21 @@ Ext.define('tms.module.ProductCategoryModule', {
                         method: 'GET',
                         success: function(result, request) {
                             var json = Ext.decode(result.responseText);
-                            progressbar.updateProgress(json.finished / json.total, '待获取规格型号的产品总数：' + json.total + ' 已完成 ' + json.finished + ' 个 ...');                            
+                            progressbar.updateProgress(json.finished / json.total, json.activeCount + '个爬虫正在获取产品，总数：' + json.total + '， 已完成 ' + json.finished + ' 个 ...');
+                            
+                            //如果爬虫数量为0,则重新发起爬虫任务?
+                            if(0 == json.activeCount) {
+                            	asyncProductRetry ++;
+                            	if(asyncProductRetry > 120) {
+                            		Ext.getCmp('asyncProductBtn').fireEvent('click');
+                            	}
+                            }
                         },
                         failure: function(result, request) {
                         }
                     });
         	    },
-        	    interval: 1000 //1 second
+        	    interval: 5000 //5 second
         	};  
             
             var crawlerForm = Ext.create('Ext.form.Panel', {
@@ -107,54 +124,63 @@ Ext.define('tms.module.ProductCategoryModule', {
                     items: [
                     {
                         xtype: 'button',
+                        id:'asyncProductBtn',
                         text: '异步产品规格型号处理',
-                    	handler: function() {
-                    		Ext.Ajax.request({
-                                url: tms.getContextPath() + 'api/crawler/asynCrawlProduct',
-                                method :"POST",
-                                params: crawlerForm.getValues(),
-                                success: function(response) {
-                                    var data = Ext.JSON.decode(response.responseText);
-                                    tms.notify(data.message, "启动产品规格型号爬虫");	
-                                    Ext.TaskManager.start(productCrawlerTask);
-                                },
-                                scope:this
-                            });
+                        listeners: {
+                            click: function() {
+                            		Ext.TaskManager.stop(productCrawlerTask);
+                            		Ext.Ajax.request({
+                                        url: tms.getContextPath() + 'api/crawler/asynCrawlProduct',
+                                        method :"POST",
+                                        params: crawlerForm.getValues(),
+                                        success: function(response) {
+                                            var data = Ext.JSON.decode(response.responseText);
+                                            tms.notify(data.message, "启动产品规格型号爬虫");	
+                                            Ext.TaskManager.start(productCrawlerTask);
+                                        },
+                                        scope:this
+                                    });
+                                }
                         }
                     },
                     {
                         xtype: 'button',
                         id:'asyncPriceBtn',
                         text: '异步价格处理',
-                    	handler: function() {
-                    		Ext.Ajax.request({
-                                url: tms.getContextPath() + 'api/crawler/asynCrawlPrice',
-                                method :"POST",
-                                params: crawlerForm.getValues(),
-                                success: function(response) {
-                                    var data = Ext.JSON.decode(response.responseText);
-                                    tms.notify(data.message, "启动价格页爬虫");
-                                    Ext.TaskManager.start(progressTask);
-                                },
-                                scope:this
-                            });
+                        listeners: {
+                            click: function() {
+                            	Ext.TaskManager.stop(progressTask);
+	                    		Ext.Ajax.request({
+	                                url: tms.getContextPath() + 'api/crawler/asynCrawlPrice',
+	                                method :"POST",
+	                                params: crawlerForm.getValues(),
+	                                success: function(response) {
+	                                    var data = Ext.JSON.decode(response.responseText);
+	                                    tms.notify(data.message, "启动价格页爬虫");
+	                                    Ext.TaskManager.start(progressTask);
+	                                },
+	                                scope:this
+	                            });
+	                        }
                         }
                     },
                     {
                         xtype: 'button',
                         text: '停止爬虫',
-                    	handler: function() {
-                    		Ext.Ajax.request({
-                                url: tms.getContextPath() + 'api/crawler/stopCrawler',
-                                method :"GET",
-                                success: function(response) {
-                                    var data = Ext.JSON.decode(response.responseText);
-                                    tms.notify(data.message, "停止爬虫");	
-                                    Ext.TaskManager.stop(progressTask);
-                                    Ext.TaskManager.stop(productCrawlerTask);                                    
-                                },
-                                scope:this
-                            });
+                        listeners: {
+                            click: function() {
+	                    		Ext.Ajax.request({
+	                                url: tms.getContextPath() + 'api/crawler/stopCrawler',
+	                                method :"GET",
+	                                success: function(response) {
+	                                    var data = Ext.JSON.decode(response.responseText);
+	                                    tms.notify(data.message, "停止爬虫");	
+	                                    Ext.TaskManager.stop(progressTask);
+	                                    Ext.TaskManager.stop(productCrawlerTask);                                    
+	                                },
+	                                scope:this
+	                            });
+	                        }
                         }
                     }]
                 }]
