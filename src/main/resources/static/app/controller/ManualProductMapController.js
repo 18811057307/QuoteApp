@@ -132,7 +132,7 @@ Ext.define('tms.controller.ManualProductMapController', {
                     	
                     	Ext.each(records,function(record){
                     		var curVal = record.get(column);
-                    		var newVal = eval(curVal+oper+amount);
+                    		var newVal = Ext.util.Format.number(eval(curVal+oper+amount), '0.00');
                     		record.set(column,newVal);
                     	});
                     	

@@ -95,7 +95,7 @@ public class ManualProductMapResource {
 					manualProductMapRepository.save(tempMap);
 				}
 				catch (Exception e) {
-					log.error("导入产品对照信息出错：{},失败原因:{}", map, e.getMessage());
+					log.error("导入产品对照信息出错：{},失败原因:{}", map, e.getCause());
 				}
 			}
 

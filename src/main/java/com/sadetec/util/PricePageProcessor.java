@@ -51,6 +51,9 @@ public class PricePageProcessor {
 	
 	private volatile boolean needShutDown = false;
 	
+	private String userid;
+	private String password;
+	
 	@Autowired
 	private ProductRepository productRepository;
 
@@ -84,7 +87,8 @@ public class PricePageProcessor {
 		} else {
 			this.setProxy(proxyUrl);
 		}
-		this.login(userid,password);
+		this.userid = userid;
+		this.password = password;
 		this.setTotal();
 		this.needShutDown = false;
 	}
@@ -232,13 +236,16 @@ public class PricePageProcessor {
 	}
 	
 	public List<Product> lockRows(String threadId) {
-		log.info("通过线程ID锁定待处理的数据:{}" + threadId);
+		log.info("通过线程ID{}锁定待处理的数据:{}", threadId);
 		productRepository.lockRows(threadId);
 		return productRepository.getLockedRows(threadId);
 	}
 	
 	@Async	
     public void executeAsyncTask(String threadId){
+		
+		this.login(this.userid, this.password);
+		
 		List<Product> tobeProcessed = this.lockRows(threadId);
 		
 		//如果还有未处理的产品,则线程继续执行

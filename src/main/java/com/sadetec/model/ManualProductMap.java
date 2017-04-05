@@ -9,6 +9,7 @@ package com.sadetec.model;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.text.DecimalFormat;
 import java.time.LocalDateTime;
 import java.util.logging.Logger;
 
@@ -23,14 +24,14 @@ import javax.validation.constraints.Size;
 import org.hibernate.validator.constraints.NotEmpty;
 
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Objects;
 
 @Entity
 @Table(name = "manual_product_map")
 public class ManualProductMap implements Serializable {
     private static final long serialVersionUID = 1L;
     private static final Logger log = Logger.getLogger(ManualProductMap.class.getName());
-
+    private static final DecimalFormat df = new DecimalFormat("#.####");
+    
     // Raw attributes
     private String id;
     private String atProductName;
@@ -164,7 +165,7 @@ public class ManualProductMap implements Serializable {
     }
 
     public void setMiProductQuote(BigDecimal miProductQuote) {
-        this.miProductQuote = miProductQuote;
+        this.miProductQuote = miProductQuote == null ? null : miProductQuote.setScale(4,BigDecimal.ROUND_HALF_UP);
     }
 
     public ManualProductMap miProductQuote(BigDecimal miProductQuote) {
@@ -180,7 +181,7 @@ public class ManualProductMap implements Serializable {
     }
 
     public void setAtProductQuote(BigDecimal atProductQuote) {
-        this.atProductQuote = atProductQuote;
+        this.atProductQuote = atProductQuote == null ? null : atProductQuote.setScale(4,BigDecimal.ROUND_HALF_UP);
     }
 
     public ManualProductMap atProductQuote(BigDecimal atProductQuote) {
@@ -196,7 +197,7 @@ public class ManualProductMap implements Serializable {
     }
 
     public void setFactoryQuote(BigDecimal factoryQuote) {
-        this.factoryQuote = factoryQuote;
+        this.factoryQuote = factoryQuote == null ? null : factoryQuote.setScale(4,BigDecimal.ROUND_HALF_UP);
     }
 
     public ManualProductMap factoryQuote(BigDecimal factoryQuote) {
@@ -212,7 +213,7 @@ public class ManualProductMap implements Serializable {
     }
 
     public void setUniQuote(BigDecimal uniQuote) {
-        this.uniQuote = uniQuote;
+        this.uniQuote = uniQuote == null ? null : uniQuote.setScale(4,BigDecimal.ROUND_HALF_UP);
     }
 
     public ManualProductMap uniQuote(BigDecimal uniQuote) {
@@ -231,7 +232,7 @@ public class ManualProductMap implements Serializable {
     }
 
     public void setSupaQuote(BigDecimal supaQuote) {
-        this.supaQuote = supaQuote;
+        this.supaQuote = supaQuote == null ? null : supaQuote.setScale(4,BigDecimal.ROUND_HALF_UP);
     }
 
     public ManualProductMap supaQuote(BigDecimal supaQuote) {
@@ -250,7 +251,7 @@ public class ManualProductMap implements Serializable {
     }
 
     public void setSupbQuote(BigDecimal supbQuote) {
-        this.supbQuote = supbQuote;
+        this.supbQuote = supbQuote == null ? null : supbQuote.setScale(4,BigDecimal.ROUND_HALF_UP);
     }
 
     public ManualProductMap supbQuote(BigDecimal supbQuote) {
@@ -269,7 +270,7 @@ public class ManualProductMap implements Serializable {
     }
 
     public void setSupcQuote(BigDecimal supcQuote) {
-        this.supcQuote = supcQuote;
+        this.supcQuote = supcQuote == null ? null : supcQuote.setScale(4,BigDecimal.ROUND_HALF_UP);
     }
 
     public ManualProductMap supcQuote(BigDecimal supcQuote) {
