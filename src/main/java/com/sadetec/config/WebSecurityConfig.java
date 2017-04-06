@@ -21,12 +21,12 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         http
         .authorizeRequests()
-	        .antMatchers("/api/sysRole/**", "/api/sysUser/**","/api/crawler/**").hasRole("ADMIN")
+	        .antMatchers("/api/sysRole/**", "/api/sysUser/**","/api/crawler/**").hasAuthority("ADMIN")
 	        .antMatchers("/api/manualProductMap/create", 
 	        		"/api/manualProductMap/update",
 	        		"/api/manualProductMap/delete",
 	        		"/api/manualProductMap/complete",
-	        		"/api/manualProductMap/upload").hasRole("ADMIN")
+	        		"/api/manualProductMap/upload").hasAuthority("ADMIN")
 	        .antMatchers("/", "/index").authenticated()
 	        .anyRequest().authenticated()
             .and()
