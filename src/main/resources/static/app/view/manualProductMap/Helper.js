@@ -9,7 +9,7 @@ Ext.define('tms.view.manualProductMap.Helper', {
             		'<p>{content:htmlEncode}</p>',
             	'</div>',
             	'<div class="card-action">',
-            		'<a href={url}" class="lime-text text-accent-1">{linkText:htmlEncode}</a>',
+            		'<a href={url} class="lime-text text-accent-1">{linkText:htmlEncode}</a>',
             	'</div>',
             '</div>',
         '</tpl>'

@@ -29,6 +29,7 @@
 	    /*[+
 	    var desktopModules  = [[${deskTopModules}]];
 	    var deskTopShortcuts = [[${deskTopShortcuts}]];
+	    var isAdmin = [[${isAdmin}]];
 	    +]*/
 	</script>
 	
@@ -89,12 +90,12 @@
                     'SysRoleStore'
                 ],
                 launch: function() {
-                	//productController = Ext.create("tms.controller.ProductController");
-                	//productStore = new tms.store.ProductStore();
+
                 	tms.setContextPath(contextPath);
                     tms.app = this;
                     tms.app.desktop = Ext.create("tms.view.Desktop");
                     tms.app.session = 'admin';
+                    tms.isAdmin = isAdmin;
               
                 },
                 loginSuccess: function() {

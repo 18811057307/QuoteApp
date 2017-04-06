@@ -67,6 +67,8 @@ Ext.define('tms.controller.ManualProductMapController', {
             }
         });
         this._getStore().load();
+        
+
     },
 
     onGridSelectionChange:function (me, e, eOpts) {

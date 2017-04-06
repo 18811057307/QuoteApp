@@ -5,14 +5,14 @@ Ext.define('tms.view.manualProductMap.List', {
     selType: 'checkboxmodel',
     selModel:{mode:'MULTI'},
     columns:[
-    	{width: 50,  header:i18n.t('manualProductMap_at_product_name'), sortable:true, dataIndex:'atProductName', filter:true}		
-    	,{width: 50,  header:i18n.t('manualProductMap_at_product_code'), sortable:true, dataIndex:'id', filter:true}
-    	,{width: 50,  header:i18n.t('manualProductMap_mi_product_code'), sortable:true, dataIndex:'miProductCode', filter:true}
-		,{width: 50,  header:i18n.t('manualProductMap_factory_quote'), sortable:true, dataIndex:'factoryQuote', filter:true}
-		,{width: 50,  header:i18n.t('manualProductMap_uni_quote'), sortable:true, dataIndex:'uniQuote', filter:true}
-		,{width: 50,  header:i18n.t('manualProductMap_at_product_quote'), sortable:true, dataIndex:'atProductQuote', filter:true}
-		,{width: 50,  header:i18n.t('manualProductMap_mi_product_quote'), sortable:true, dataIndex:'miProductQuote', filter:true}
-		//,{width: 50,  header:i18n.t('manualProductMap_date_added'), sortable:true, dataIndex:'dateAdded', filter:true}
+    	{width: 50,  header:i18n.t('manualProductMap_at_product_name'), sortable:true, dataIndex:'atProductName'}		
+    	,{width: 50,  header:i18n.t('manualProductMap_at_product_code'), sortable:true, dataIndex:'id'}
+    	,{width: 50,  header:i18n.t('manualProductMap_mi_product_code'), sortable:true, dataIndex:'miProductCode'}
+		,{width: 50,  header:i18n.t('manualProductMap_factory_quote'), sortable:true, dataIndex:'factoryQuote'}
+		,{width: 50,  header:i18n.t('manualProductMap_uni_quote'), sortable:true, dataIndex:'uniQuote'}
+		,{width: 50,  header:i18n.t('manualProductMap_at_product_quote'), sortable:true, dataIndex:'atProductQuote'}
+		,{width: 50,  header:i18n.t('manualProductMap_mi_product_quote'), sortable:true, dataIndex:'miProductQuote'}
+		//,{width: 50,  header:i18n.t('manualProductMap_date_added'), sortable:true, dataIndex:'dateAdded'}
     ],
     initComponent:function () {
         this.callParent();
@@ -70,9 +70,9 @@ Ext.define('tms.view.manualProductMap.List', {
         });        
         this.topToolbar.add({
             xtype: 'searchfield',
+            fieldLabel: '按型号查找',
             name: 'searchField',
-            hideLabel: true,
-            width: 200,
+            width: 300,
             store: this.store,
             paramName : 'productCode'
         });

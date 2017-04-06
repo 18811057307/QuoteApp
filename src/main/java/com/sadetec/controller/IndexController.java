@@ -35,6 +35,7 @@ public class IndexController {
 		
         model.addAttribute("deskTopModules", modules);
         model.addAttribute("deskTopShortcuts", shortcuts);
+        model.addAttribute("isAdmin",UserContext.hasRole("ADMIN"));
         return "index";
     }
 }

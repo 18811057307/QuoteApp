@@ -178,7 +178,7 @@ public class CrawlerResource {
 		
 		for (int i = 0; i < numOfThread; i++) {
 			String taskId = "CrawlPrice-Thead-" + i;
-			pricePageProcessor.executeAsyncTask(taskId);
+			pricePageProcessor.executeAsyncTask(i);
 		}
 		
 		PageResponse<String> pageResponse = new PageResponse<String>(taskIds);

@@ -26,6 +26,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -39,7 +40,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sadetec.model.ManualProductMap;
-import com.sadetec.model.SysRole;
 import com.sadetec.repository.ManualProductMapRepository;
 import com.sadetec.rest.support.AutoCompleteQuery;
 import com.sadetec.rest.support.PageResponse;
@@ -51,6 +51,7 @@ import com.sadetec.util.UserContext;
 import com.sadetec.util.WorkbookProperties;
 
 @RestController
+@EnableGlobalMethodSecurity(prePostEnabled=true)
 @RequestMapping("/api/manualProductMap")
 public class ManualProductMapResource {
 
@@ -163,6 +164,7 @@ public class ManualProductMapResource {
 	 * Create a new ManualProductMap.
 	 */
 	@RequestMapping(value = "/create", method = POST, produces = APPLICATION_JSON_VALUE)
+	@PreAuthorize("hasRole('ADMIN')")
 	public ResponseEntity<PageResponse<ManualProductMap>> create(@RequestBody String json) throws URISyntaxException {
 
 		log.info("Create json : {}", json);
@@ -281,6 +283,7 @@ public class ManualProductMapResource {
 	 * Auto complete support.
 	 */
 	@RequestMapping(value = "/complete", method = POST, produces = APPLICATION_JSON_VALUE)
+	@PreAuthorize("hasRole('ADMIN')")
 	public ResponseEntity<List<ManualProductMap>> complete(@RequestBody AutoCompleteQuery acq) throws URISyntaxException {
 
 		List<ManualProductMap> results = manualProductMapRepository.complete(acq.query, acq.maxResults);
@@ -292,6 +295,7 @@ public class ManualProductMapResource {
 	 * update
 	 */
 	@RequestMapping(value = "/update", method = POST, produces = APPLICATION_JSON_VALUE)
+	@PreAuthorize("hasRole('ADMIN')")
 	public ResponseEntity<PageResponse<ManualProductMap>> update(@RequestBody String json) throws URISyntaxException {
 
 		log.debug("Update by id ManualProductMap : {}", json);
@@ -330,6 +334,7 @@ public class ManualProductMapResource {
 	 * Delete by id ManualProductMap.
 	 */
 	@RequestMapping(value = "/delete", method = POST, produces = APPLICATION_JSON_VALUE)
+	@PreAuthorize("hasRole('ADMIN')")
 	public ResponseEntity<PageResponse<ManualProductMap>> delete(@RequestBody String json) throws URISyntaxException {
 
 		log.debug("Delete by id ManualProductMap : {}", json);
