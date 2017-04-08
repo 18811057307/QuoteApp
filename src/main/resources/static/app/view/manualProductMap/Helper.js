@@ -6,7 +6,7 @@ Ext.define('tms.view.manualProductMap.Helper', {
             '<div class="card  light-blue">',
             	'<div class="card-content white-text">',
             		'<span class="card-title">{title:htmlEncode}</span>',
-            		'<p>{content:htmlEncode}</p>',
+            		'<p>{content}</p>',
             	'</div>',
             	'<div class="card-action">',
             		'<a href={url} class="lime-text text-accent-1">{linkText:htmlEncode}</a>',

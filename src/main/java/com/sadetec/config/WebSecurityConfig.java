@@ -27,6 +27,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 	        		"/api/manualProductMap/delete",
 	        		"/api/manualProductMap/complete",
 	        		"/api/manualProductMap/upload").hasAuthority("ADMIN")
+	        .antMatchers("/resources/**").permitAll()	        
 	        .antMatchers("/", "/index").authenticated()
 	        .anyRequest().authenticated()
             .and()
@@ -37,6 +38,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         .logout()
             .permitAll();
         http.csrf().disable();
+        http.headers().cacheControl().disable();
     }
 
     @Autowired

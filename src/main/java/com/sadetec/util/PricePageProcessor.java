@@ -105,7 +105,7 @@ public class PricePageProcessor {
 	
 	public void login(String userid, String password) {
 		
-		if(this.isLogin) {
+		if(this.isLogin && userid.equals(this.userid)) {
 			log.info("已登录,直接返回.");
 			return;
 		}
@@ -155,6 +155,8 @@ public class PricePageProcessor {
 		}
 
 		log.info("登录Cookie值:{}", loginHeader.get(HttpHeaders.COOKIE));
+		this.userid = userid;
+		this.password = password;
 		this.isLogin = true;
 	}
 

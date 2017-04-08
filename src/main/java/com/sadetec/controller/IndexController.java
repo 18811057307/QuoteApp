@@ -18,17 +18,17 @@ public class IndexController {
 		
 		List<String> modules = new ArrayList<String>();
 		modules.add("tms.module.TempProductMapModule");
-		modules.add("tms.module.ManualProductMapModule");
 		
 		List<Shortcut> shortcuts = new  ArrayList<Shortcut>();
 		shortcuts.add(new Shortcut("报价处理", "quotemap-shortcut", "tempProductMap-win"));
-		shortcuts.add(new Shortcut("产品对照管理", "manualmap-shortcut", "manualProductMap-win"));
 
 		if(UserContext.hasRole("ADMIN")) {
 			modules.add("tms.module.SysUserModule");
 			modules.add("tms.module.SysRoleModule");
 			modules.add("tms.module.ProductCategoryModule");
+			modules.add("tms.module.ManualProductMapModule");
 
+			shortcuts.add(new Shortcut("产品对照管理", "manualmap-shortcut", "manualProductMap-win"));
 			shortcuts.add(new Shortcut("用户管理", "users-shortcut", "sysUser-win"));
 			shortcuts.add(new Shortcut("角色管理", "role-shortcut", "sysRole-win"));
 		}

@@ -18,6 +18,8 @@ import com.sadetec.model.Product_;
 @Transactional
 public interface ProductRepository extends JpaRepository<Product, Integer> {
 
+	Product findById(String productCode);
+	
 	Page<Product> findByProcFlagIsNull(Pageable page);
 	
 	@Modifying(clearAutomatically = true)

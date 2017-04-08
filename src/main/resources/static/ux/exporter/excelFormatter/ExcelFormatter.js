@@ -98,7 +98,7 @@ Ext.define("Ext.ux.exporter.excelFormatter.ExcelFormatter", {
         var visibleColumnCountReduction = 0;
         var colCount = cm.length;
         for (var i = 0; i < colCount; i++) {
-            if (cm[i] != '') {
+            if (cm[i] != '' && cm[i].xtype != 'actioncolumn') {
                 var w = cm[i].getWidth();
                 
                 if (cm[i].text != undefined) {
@@ -158,7 +158,7 @@ Ext.define("Ext.ux.exporter.excelFormatter.ExcelFormatter", {
             r = it[i].data;
             var k = 0;
             for (var j = 0; j < colCount; j++) {
-                if (cm[j].dataIndex != '') {
+                if (cm[j].dataIndex != '' && cm[j].xtype != 'actioncolumn') {
                     var v = r[cm[j].dataIndex];
                     if (cellType[k] !== "None") {
                         t += '<ss:Cell ss:StyleID="' + cellClass + cellTypeClass[k] + '"><ss:Data ss:Type="' + cellType[k] + '">';

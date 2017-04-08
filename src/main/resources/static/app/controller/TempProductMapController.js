@@ -2,7 +2,7 @@ Ext.define('tms.controller.TempProductMapController', {
     extend:'Ext.app.Controller',
     stores:['tms.store.ManualProductMapStore'],
     models:['tms.model.ManualProductMap'],
-    views:['tms.view.manualProductMap.TempList'],  
+    views:['tms.view.manualProductMap.TempList','Ext.ux.form.field.SearchField','tms.view.manualProductMap.Helper'],  
     requires:['Ext.ux.view.IconWindow',
         'Ext.ux.view.IconBrowser',
         'Ext.ux.view.InfoPanel',

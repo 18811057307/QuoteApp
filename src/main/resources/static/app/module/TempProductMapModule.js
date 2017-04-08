@@ -12,9 +12,28 @@ Ext.define('tms.module.TempProductMapModule', {
         var desktop = this.app.getDesktop();
         var win = desktop.getWindow('tempProductMap-win');
         var helpHtml = '<div class="card  light-blue"><div class="card-content white-text">' + 
-        					'<span class="card-title">报价单处理</span><p>1. 首先点击【选择文件】按钮，导入待处理原始报价单。</p><p>2. 获得对照结果后，再点击【导出对照报价单】按钮，导出处理结果。</p></div>' +
+        					'<span class="card-title">报价单处理</span><p>1. 首先点击【选择文件】按钮，导入待处理原始报价单。</p><p>2. 获得对照结果后，再点击【导出对照报价单】按钮，导出处理结果。</p><p>3. 按型号查找时，可使用逗号(,)或分号(;)分隔，一次查询多个型号，例如(BOFIMLS,BOFCKWS)。</p></div>' +
         					'<div class="card-action"><a href="' + tms.getContextPath() + 'xls/报价对应测试.xlsx" class="lime-text text-accent-1">下载报价Excel模板</a></div></div>';
         if (!win) {
+        	var miUserForm = Ext.create('Ext.form.Panel', {
+        			id:'miUserForm',
+        			xtype:'form',
+    			    title: 'Mi询价用账户(如发现无法获取价格，请更换账户。)',
+    			    layout: 'anchor',
+    			    bodyPadding: 5,
+    			    defaultType: 'textfield',
+    			    items: [{
+    			        fieldLabel: '账户',
+    			        name: 'userid',
+    			        value: 'fragrantland',
+    			        allowBlank: false
+    			    },{
+    			        fieldLabel: '密码',
+    			        name: 'password',
+    			        value: 'passw0rd',
+    			        allowBlank: false
+    			    }]
+        	});
             win = desktop.createWindow({
                 id:'tempProductMap-win',
                 title:this.titleText,
@@ -26,7 +45,18 @@ Ext.define('tms.module.TempProductMapModule', {
                 layout:'border',
                 items:[
                 	{xtype:'tempProductMapList',region:'center'},
-                	{xtype:'panel',html: helpHtml, split:true,border:false, width: 400,  region: 'east'}
+                	{xtype:'panel'
+                		,items:[{
+            				xtype:'manualProductMapHelper',
+            				data:[{
+		            	    	title:'报价单处理',
+		            	    	content:'1. 首先点击【选择文件】按钮，导入待处理原始报价单。</p><p>2. 获得对照结果后，再点击【导出对照报价单】按钮，导出处理结果。</p><p>3. 按型号查找时，可使用逗号(,)或分号(;)分隔，一次查询多个型号，例如(BOFIMLS,BOFCKWS)。',
+		            	    	url: tms.getContextPath() + 'xls/报价对应测试.xlsx',
+		            	    	linkText:'下载报价Excel模板'
+		            	    }]
+                		},miUserForm
+                		]
+                	, split:true,border:false, width: 400,  region: 'east'}                	
                 ]
             });
         }
