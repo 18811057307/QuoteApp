@@ -27,6 +27,7 @@ public class IndexController {
 			modules.add("tms.module.SysRoleModule");
 			modules.add("tms.module.ProductCategoryModule");
 			modules.add("tms.module.ManualProductMapModule");
+			modules.add("tms.module.CategoryModule");
 
 			shortcuts.add(new Shortcut("产品对照管理", "manualmap-shortcut", "manualProductMap-win"));
 			shortcuts.add(new Shortcut("用户管理", "users-shortcut", "sysUser-win"));

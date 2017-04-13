@@ -19,7 +19,13 @@ import com.sadetec.model.Series_;
 @Transactional
 public interface SeriesRepository extends JpaRepository<Series, String> {
 
+	Series findById(String seriesCode);
+	
+	List<Series> findByProcFlag(Boolean procFlag);
+	
 	Page<Series> findByProcFlagIsNull(Pageable page);
+	
+	Page<Series> findByCategoryCode(String categoryCode, Pageable page);
 	
 	long countByProcByIsNullAndProcFlagIsNull();
 	

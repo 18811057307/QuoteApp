@@ -104,7 +104,8 @@ public class ManualProductMapResource {
 				try {
 					ManualProductMap tempMap = new ManualProductMap();
 					BeanUtils.populate(tempMap, map);
-					manualProductMapRepository.save(tempMap);
+					log.info("待保存对照:{}",tempMap);
+					manualProductMapRepository.saveAndFlush(tempMap);
 				}
 				catch (Exception e) {
 					log.error("导入产品对照信息出错：{},失败原因:{}", map, e.getCause());

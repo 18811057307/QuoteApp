@@ -1,10 +1,11 @@
 package com.sadetec;
 
+import java.util.List;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -12,9 +13,11 @@ import com.sadetec.model.Series;
 import com.sadetec.repository.CategoryRepository;
 import com.sadetec.repository.SeriesRepository;
 import com.sadetec.util.CategoryPageProcessor;
+import com.sadetec.util.CategorySpecProcessor;
 import com.sadetec.util.IndexPageProcessor;
 import com.sadetec.util.ProductPageProcessor;
 import com.sadetec.util.SeriesPageProcessor;
+import com.sadetec.util.SeriesSpecProcessor;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -38,6 +41,14 @@ public class QuoteAppApplicationTests {
 	@Autowired
 	private ProductPageProcessor productPageProcessor;
 	
+	@Autowired
+	private CategorySpecProcessor categorySpecProcessor;
+	
+	
+	@Autowired
+	private SeriesSpecProcessor seriesSpecProcessor;
+	
+	
 	@Test
 	public void contextLoads() {
 		/*
@@ -52,9 +63,16 @@ public class QuoteAppApplicationTests {
 		List<Category> results = categoryRepository.findByHasChildCategoryAndProcFlag(false,false);
 		
 		for (Category category : results) {
-			Spider.create(categoryPageProcessor).addUrl(category.getCategoryUrl()).run();			
+			categorySpecProcessor.process(category);		
 		}
 		*/
+		List<Series> serieses = seriesRepository.findByProcFlag(false);
+		for (Series series : serieses) {
+			
+			seriesSpecProcessor.process(series);
+			
+		}
+		
 		
 		//seriesPageProcessor.process("http://cn.misumi-ec.com/vona2/spookserver");
 		
@@ -67,6 +85,7 @@ public class QuoteAppApplicationTests {
 		}
 		*/
 		
+		/*
 		PageRequest pageRequest = new PageRequest(0, 50);		
 		Page<Series> series = seriesRepository.findByProcFlagIsNull(pageRequest);
 		
@@ -81,6 +100,7 @@ public class QuoteAppApplicationTests {
 			}
 			
 		}
+		*/
 		
 		
 	}
