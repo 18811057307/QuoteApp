@@ -201,7 +201,7 @@ public class PricePageProcessor {
 			String returnJsonP;
 			
 			if("gzip".equalsIgnoreCase(quoteInqResp.getHeaders().getFirst("Content-Encoding"))) {
-				returnJsonP = this.decompress(quoteInqResp);				
+				returnJsonP = this.decompress(quoteInqResp);
 			} else {
 				returnJsonP = new String(quoteInqResp.getBody(),"UTF-8");
 			}
@@ -323,12 +323,12 @@ public class PricePageProcessor {
 		pricePageProcessor.objectMapper = new ObjectMapper();
 		Product product = new Product();
 		product.setId("MTRF0.3-3");
-		product.setBrdCode("MSM1");
+		product.setBrdCode("");
 
 		Integer quantity = 1;
 
 		//pricePageProcessor.setProxy("cn-proxy.jp.oracle.com");
-		pricePageProcessor.login("agapanthus","agapanth");
+		pricePageProcessor.login("fragrantland","passw0rd");
 		pricePageProcessor.process(product, quantity);
 		
 

@@ -25,9 +25,9 @@ Ext.define('tms.module.CategoryModule', {
                 	{xtype:'panel', layout: {
                         type: 'vbox',
                         align: 'stretch'
-                    },title: '全部分类',items:[{xtype:'categoryList',flex:2},{xtype:'categorySpecList',title:'分类规格',flex:1}],region:'west', split:true, width: 300,collapsible: true}
+                    },title: '分类规格',items:[{xtype:'categorySpecList',flex:1},{xtype:'seriesSpecList',title:'系列规格',flex:1}],region:'east', split:true, width: 700,collapsible: true}
                 	,{xtype:'panel',title:'产品系列',layout:'fit',items: [{xtype:'seriesList'}], border:false,  region: 'center'}
-                	,{xtype:'panel',title:'系列规格',layout:'fit',items: [{xtype:'seriesSpecList'}],  split:true, width: 500,collapsible: true,region: 'east'}
+                	,{xtype:'panel',title:'全部分类',layout:'fit',items: [{xtype:'categoryList'}],  split:true, width: 300,collapsible: true,region: 'west'}
                 	]
             });
         }

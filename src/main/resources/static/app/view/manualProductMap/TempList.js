@@ -65,7 +65,7 @@ Ext.define('tms.view.manualProductMap.TempList', {
     ],
     initComponent:function () { 
     	
-    	this.store = Ext.create('Ext.data.JsonStore', {
+    	var tempMapstore = Ext.create('Ext.data.JsonStore', {
     		storeId: 'tempProductMap',
     	    fields   : [
         		{name:'id', type:'string'}
@@ -97,7 +97,62 @@ Ext.define('tms.view.manualProductMap.TempList', {
     	     },
     	     pageSize: 100
     	});
-        this.dockedItems = [{xtype: 'toolbar',dock: 'top',
+    	
+    	this.store = tempMapstore;
+    	
+        var productCompareProgressbar = Ext.create('Ext.ProgressBar', {
+            text    : "报价处理进度",
+            width   : 600,
+            style: {
+                cursor: 'pointer'
+            }
+        });
+        var productCompareTask = {
+    	    run: function(){
+    	    	Ext.Ajax.request({
+                	url: tms.getContextPath() + 'api/manualProductMap/compareStatus',
+                    method: 'GET',
+                    success: function(result, request) {
+                        var json = Ext.decode(result.responseText);
+                        
+                        var miUserForm = Ext.getCmp('miUserForm');
+	                    var needPrice = miUserForm.getForm().findField('needPrice').checked;
+	                    
+	                    if(needPrice) {
+	                    	productCompareProgressbar.updateProgress(json.finished / json.total, '总计：' + json.total + '， 已完成 ：' + json.finished + ' 个 ... Mi报价查询数量：' + json.activeCount);	 	
+	                    	if(json.activeCount == json.total) {
+	                    		Ext.TaskManager.stop(productCompareTask);
+	                	    	Ext.Ajax.request({
+	                            	url: tms.getContextPath() + 'api/manualProductMap/getMyQuotation',
+	                                method: 'GET',
+	                                success: function(result, request) {
+	                                	tempMapstore.loadRawData(result);
+	                                }
+	                	    	});
+	                    	}
+	                    } else {
+	                    	productCompareProgressbar.updateProgress(json.finished / json.total, '总计：' + json.total + '， 已完成 ：' + json.finished + ' 个 ...');
+	                    	if(json.finished == json.total) {
+	                    		Ext.TaskManager.stop(productCompareTask);
+	                	    	Ext.Ajax.request({
+	                            	url: tms.getContextPath() + 'api/manualProductMap/getMyQuotation',
+	                                method: 'GET',
+	                                success: function(result, request) {
+	                                	tempMapstore.loadRawData(result);
+	                                }
+	                	    	});
+	                    	}
+	                    }
+                        
+                    },
+                    failure: function(result, request) {
+                    }
+                });
+    	    },
+    	    interval: 5000 //5 second
+    	};  
+
+        this.dockedItems = [{xtype: 'toolbar',dock: 'bottom',items:['->','报价处理进度:',productCompareProgressbar]},{xtype: 'toolbar',dock: 'top',
         	items: [{
 	                xtype: 'searchfield',
 	                fieldLabel: '按型号查找',
@@ -161,8 +216,9 @@ Ext.define('tms.view.manualProductMap.TempList', {
 
                         fileuploaded: function(uploader, file, resp)
                         {
-                        	this.store.loadData(resp.data);
+                        	//this.store.loadData(resp.data);
                             tms.notify(file.name + i18n.t("uploaded"),i18n.t("File Upload"));
+                            Ext.TaskManager.start(productCompareTask);
                         },
 
                         uploadcomplete: function(uploader, success, failed)

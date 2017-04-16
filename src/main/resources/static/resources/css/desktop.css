@@ -399,3 +399,10 @@ div.ux-taskbar div.x-toolbar {
 .pull-right {
     float: right !important;
 }
+
+.x-grid-cell-inner {     
+    text-overflow: normal;
+    white-space:normal; 
+    table-layout:fixed; 
+    word-break: break-all;
+}
