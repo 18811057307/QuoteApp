@@ -12,7 +12,9 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
+import com.ctc.wstx.util.StringUtil;
 import com.sadetec.model.ManualProductMap;
 import com.sadetec.model.Product;
 import com.sadetec.model.QuotationHistory;
@@ -143,12 +145,12 @@ public class QuotationProcessor {
 
 			String[] atChars = codePattern.split(manualProductMap.getId());
 			for (String atChar : atChars) {
-				fullyMatchAT = fullyMatchAT && productCode.contains(atChar);
+				fullyMatchAT = fullyMatchAT && org.apache.commons.lang3.StringUtils.containsIgnoreCase(productCode,atChar);
 			}
 
 			String[] miChars = codePattern.split(manualProductMap.getMiProductCode());
 			for (String miChar : miChars) {
-				fullyMatchMI = fullyMatchMI && productCode.contains(miChar);
+				fullyMatchMI = fullyMatchMI && org.apache.commons.lang3.StringUtils.containsIgnoreCase(productCode,miChar);
 			}
 
 			log.info("匹配到记录：{}, 检查后AT代码符合度为: {},Mi代码符合度为: {}", manualProductMap, fullyMatchAT, fullyMatchMI);
@@ -190,10 +192,27 @@ public class QuotationProcessor {
 	 * @return 转换后的结果 PSFGKRRA10-50-F10-S10-KA3-A6-KB3-B6-KC3-C6
 	 */
 	private String mapProductCode(String oriCode, String selfType, String targetType) {
+		
+		if(null == oriCode || null == selfType || null == targetType) {
+			log.error("输入参数oriCode:{},selfType:{},targetType:{}",oriCode,selfType,targetType);
+			return "无法进行产品代码转换" + oriCode;
+		}
+		
+		oriCode = StringUtils.trimWhitespace(oriCode);
+		selfType = StringUtils.trimWhitespace(selfType);
+		targetType = StringUtils.trimWhitespace(targetType);
+		
+		String upperOriCode = oriCode.toUpperCase();
+		String upperSelfType = selfType.toUpperCase();
+		
 		Pattern codePattern = Pattern.compile(regularExpression);
-		String[] orgChars = codePattern.split(selfType);
+		String[] orgChars = codePattern.split(upperSelfType);
+		
+		for (String string : orgChars) {
+			log.debug("拆分结果:{}", string);
+		}
 
-		Matcher matcher = codePattern.matcher(selfType);
+		Matcher matcher = codePattern.matcher(upperSelfType);
 
 		Map<String, String> result = new HashMap<String, String>();
 		int splitIdx = 0;
@@ -201,16 +220,16 @@ public class QuotationProcessor {
 			String key = matcher.group();
 			log.debug("{}. 当前匹配:{}", splitIdx, key);
 
-			int beginIdx = oriCode.indexOf(orgChars[splitIdx]) + orgChars[splitIdx].length();
+			int beginIdx = upperOriCode.indexOf(orgChars[splitIdx]) + orgChars[splitIdx].length();
 
 			String value = "";
 			if (splitIdx + 1 < orgChars.length) {
-				int endIdx = oriCode.indexOf(orgChars[splitIdx + 1], beginIdx);
+				int endIdx = upperOriCode.indexOf(orgChars[splitIdx + 1], beginIdx);
 				log.debug("截取字符串位置:{} - {}", beginIdx, endIdx);
-				value = oriCode.substring(beginIdx, endIdx);
+				value = upperOriCode.substring(beginIdx, endIdx);
 			}
 			else {
-				value = oriCode.substring(beginIdx);
+				value = upperOriCode.substring(beginIdx);
 			}
 
 			result.put(key, value);
@@ -307,7 +326,8 @@ public class QuotationProcessor {
 
 		QuotationProcessor processor = new QuotationProcessor();
 
-		System.out.println(processor.extractBeginChar("PSFRN6-15-F5-B3-P3"));
+		//System.out.println(processor.extractBeginChar("PSFRN6-15-F5-B3-P3"));
+		System.out.println(processor.mapProductCode(" pSfrN6-15-F5-b3-P3","PSFRN①-②-F③-B④-P⑤","ASTSE-①-g6-②-F③-P④-M⑤-B"));
 
 	}
 

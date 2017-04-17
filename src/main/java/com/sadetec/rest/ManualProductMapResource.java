@@ -7,6 +7,7 @@ import static org.springframework.web.bind.annotation.RequestMethod.POST;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -81,10 +82,10 @@ public class ManualProductMapResource {
 
 	@Autowired
 	private ProductRepository productRepository;
-	
+
 	@Autowired
 	private QuotationHistoryRepository quotationHistoryRepository;
-	
+
 	@Autowired
 	private QuotationProcessor quotationProcessor;
 
@@ -129,29 +130,28 @@ public class ManualProductMapResource {
 			return new ResponseEntity<PageResponse>(pageResponse, HttpStatus.OK);
 		}
 	}
-	
+
 	@RequestMapping(value = "/needPrice", method = GET, produces = APPLICATION_JSON_VALUE)
-	public ResponseEntity<PageResponse<Product>> needPrice(
-			@RequestParam(value = "needPrice", required = false, defaultValue = "false") Boolean needPrice,
+	public ResponseEntity<PageResponse<Product>> needPrice(@RequestParam(value = "needPrice", required = false, defaultValue = "false") Boolean needPrice,
 			@RequestParam(value = "userid", required = false, defaultValue = "fragrantland") String userid,
 			@RequestParam(value = "password", required = false, defaultValue = "passw0rd") String password) throws URISyntaxException {
 
 		List<Product> result = new ArrayList<>();
 		PageResponse<Product> status = new PageResponse<Product>(result);
 
-		log.info("报价处理时是否查询Mi报价:{}, 账户:{}, 密码:{}",needPrice, userid, password);
-		
+		log.info("报价处理时是否查询Mi报价:{}, 账户:{}, 密码:{}", needPrice, userid, password);
+
 		quotationProcessor.setNeedPrice(needPrice);
 		quotationProcessor.setUserid(userid);
 		quotationProcessor.setPassword(password);
-		
+
 		status.setSuccess(Boolean.TRUE);
 		status.setMessage("查询价格设置完成.");
 		status.setData(result);
 		return new ResponseEntity<PageResponse<Product>>(status, HttpStatus.OK);
 
 	}
-	
+
 	@RequestMapping(value = "/compareStatus", method = GET, produces = APPLICATION_JSON_VALUE)
 	public ResponseEntity<ProcessorStatus> compareStatus() throws URISyntaxException {
 		ProcessorStatus status = new ProcessorStatus();
@@ -159,13 +159,13 @@ public class ManualProductMapResource {
 		status.setFinished(quotationProcessor.getFinishedMap());
 		status.setActiveCount(quotationProcessor.getFinishedPrice());
 		return new ResponseEntity<ProcessorStatus>(status, HttpStatus.OK);
-		
+
 	}
-	
+
 	@RequestMapping(value = "/getMyQuotation", method = GET, produces = APPLICATION_JSON_VALUE)
 	public ResponseEntity<PageResponse<QuotationHistory>> getMyQuotation() throws IOException {
 		List<QuotationHistory> returnList = quotationHistoryRepository.findByLoginName(UserContext.getUsername());
-		
+
 		List<String> curUserRoles = UserContext.getRoles();
 
 		if (!curUserRoles.contains("ADMIN")) {
@@ -191,18 +191,53 @@ public class ManualProductMapResource {
 				}
 			}
 		}
-		
+
 		PageResponse<QuotationHistory> pageResponse = new PageResponse<QuotationHistory>(returnList);
 		pageResponse.setSuccess(true);
 		return new ResponseEntity<PageResponse<QuotationHistory>>(pageResponse, HttpStatus.OK);
 
 	}
 
+	@RequestMapping(value = "/quoteQuery", method = GET, produces = APPLICATION_JSON_VALUE)
+	public ResponseEntity<PageResponse<ManualProductMap>> quoteQuery(@RequestParam(value = "productCode", required = true) String productCode)
+			throws IOException {
+		List<ManualProductMap> returnList = new ArrayList<ManualProductMap>();
+		PageResponse<ManualProductMap> pageResponse = new PageResponse<ManualProductMap>(returnList);
+
+		List<QuotationHistory> toProcessed = new ArrayList<QuotationHistory>();
+
+		String[] tempCodes;
+		if (productCode.contains(",")) {
+			tempCodes = StringUtils.commaDelimitedListToStringArray(productCode);
+		}
+		else if (productCode.contains(";")) {
+			tempCodes = StringUtils.delimitedListToStringArray(productCode, ";");
+		}
+		else {
+			tempCodes = new String[]{productCode};
+		}
+
+		for (String tempCode : tempCodes) {
+			if (StringUtils.hasText(tempCode)) {
+				QuotationHistory temp = new QuotationHistory();
+				temp.setProductCode(StringUtils.trimWhitespace(tempCode));
+				temp.setLoginName(UserContext.getUsername());
+				toProcessed.add(temp);
+			}
+
+		}
+
+		quotationHistoryRepository.deleteByLoginName(UserContext.getUsername());
+		quotationProcessor.executeAsyncTask(toProcessed);
+
+		pageResponse.setMessage("报价查询请求已提交，后台正在处理，请稍候...");
+		pageResponse.setSuccess(true);
+		return new ResponseEntity<PageResponse<ManualProductMap>>(pageResponse, HttpStatus.OK);
+
+	}
+
 	@PostMapping("/compare")
-	public ResponseEntity<PageResponse<ManualProductMap>> compare(@RequestParam("file") MultipartFile file
-			,@RequestParam(value = "needPrice", required = false, defaultValue = "false") Boolean needPrice
-			,@RequestParam(value = "userid", required = false, defaultValue = "fragrantland") String userid
-			,@RequestParam(value = "password", required = false, defaultValue = "passw0rd") String password) throws IOException {
+	public ResponseEntity<PageResponse<ManualProductMap>> compare(@RequestParam("file") MultipartFile file) throws IOException {
 		List<ManualProductMap> returnList = new ArrayList<ManualProductMap>();
 		PageResponse<ManualProductMap> pageResponse = new PageResponse<ManualProductMap>(returnList);
 		try {
@@ -229,10 +264,10 @@ public class ManualProductMapResource {
 				}
 
 			}
-			
+
 			quotationHistoryRepository.deleteByLoginName(UserContext.getUsername());
 			quotationProcessor.executeAsyncTask(toProcessed);
-			
+			log.info("开始处理用户:{}提交的价格查询请求,共计产品项:{}",UserContext.getUsername(),toProcessed.size());
 			pageResponse.setSuccess(true);
 			return new ResponseEntity<PageResponse<ManualProductMap>>(pageResponse, HttpStatus.OK);
 		}
@@ -488,7 +523,7 @@ public class ManualProductMapResource {
 		PageResponse<Product> status = new PageResponse<Product>(result);
 
 		ManualProductMap manualProductMap = manualProductMapRepository.findById(atProductCode);
-		
+
 		Product miProduct = new Product();
 		miProduct.setBrdCode("");
 		miProduct.setId(miProductCode);
@@ -504,12 +539,13 @@ public class ManualProductMapResource {
 				return new ResponseEntity<PageResponse<Product>>(status, HttpStatus.OK);
 			}
 			miProduct.setUnitPrice(pricePageProcessor.process(miProduct, 1));
-			
-			if(null != manualProductMap) {				
+
+			if (null != manualProductMap) {
 				manualProductMap.setMiProductQuote(miProduct.getUnitPrice());
 				manualProductMapRepository.save(manualProductMap);
 			}
-		} else {
+		}
+		else {
 			miProduct.setUnitPrice(manualProductMap.getMiProductQuote());
 		}
 

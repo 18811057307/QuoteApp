@@ -8,6 +8,7 @@ Ext.define('tms.view.manualProductMap.TempList', {
     showTopToolbar:true,
     showBottomToolbar:true,
     alias:'widget.tempProductMapList',
+    enableTextSelection:true,
     
     columns:[
     	{width: 50,  header:i18n.t('manualProductMap_at_product_name'), sortable:true, dataIndex:'atProductName'}		
@@ -172,6 +173,28 @@ Ext.define('tms.view.manualProductMap.TempList', {
 	                        me.updateLayout();
 	                    }
 	                },
+	                onTrigger2Click : function(){
+	                    var me = this,
+	                        value = me.getValue();
+
+	                    if (value.length > 0) {	                    	
+                	    	Ext.Ajax.request({
+                            	url: tms.getContextPath() + 'api/manualProductMap/quoteQuery',
+                                method: 'GET',
+                                params: {
+                                	productCode:value
+                                },
+                                success: function(result, request) {
+                                	var json = Ext.decode(result.responseText);
+                                    tms.notify(json.message,"报价查询");
+                                    Ext.TaskManager.start(productCompareTask);
+                                }
+                	    	});
+	                        me.hasSearch = true;
+	                        me.triggerCell.item(0).setDisplayed(true);
+	                        me.updateLayout();
+	                    }
+	                }
 	            }
         		,"->",
         		{

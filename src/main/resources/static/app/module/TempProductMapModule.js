@@ -80,7 +80,7 @@ Ext.define('tms.module.TempProductMapModule', {
             				xtype:'manualProductMapHelper',
             				data:[{
 		            	    	title:'报价单处理',
-		            	    	content:'1. 首先点击【选择文件】按钮，导入待处理原始报价单。</p><p>2. 获得对照结果后，再点击【导出对照报价单】按钮，导出处理结果。</p><p>3. 按型号查找时，可使用逗号(,)或分号(;)分隔，一次查询多个型号，例如(BOFIMLS,BOFCKWS)。',
+		            	    	content:'1. 首先点击【选择文件】按钮，导入待处理原始报价单。</p><p>2. 获得对照结果后，再点击【导出对照报价单】按钮，导出处理结果。</p><p>3. 按型号查找时，可使用逗号(,)或分号(;)分隔，一次查询多个型号，例如(BWFSP6-0.6-315,BWFSP9-1.2-92)。</p><p>4. 如果需要的价格没有显示，请联系管理员分配相应价格的查看权限。',
 		            	    	url: tms.getContextPath() + 'xls/报价对应测试.xlsx',
 		            	    	linkText:'下载报价Excel模板'
 		            	    }]
