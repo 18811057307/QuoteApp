@@ -12,7 +12,7 @@ Ext.define('tms.view.manualProductMap.TempList', {
     
     columns:[
     	{width: 50,  header:i18n.t('manualProductMap_at_product_name'), sortable:true, dataIndex:'atProductName'}		
-    	,{width: 50,  header:i18n.t('manualProductMap_at_product_code'), sortable:true, dataIndex:'id'}
+    	,{width: 50,  header:i18n.t('manualProductMap_at_product_code'), sortable:true, dataIndex:'atProductCode'}
     	,{width: 50,  header:i18n.t('manualProductMap_mi_product_code'), sortable:true, dataIndex:'miProductCode'}
 		,{width: 50,  header:i18n.t('manualProductMap_factory_quote'), sortable:true, dataIndex:'factoryQuote'}
 		,{width: 50,  header:i18n.t('manualProductMap_uni_quote'), sortable:true, dataIndex:'uniQuote'}
@@ -121,7 +121,7 @@ Ext.define('tms.view.manualProductMap.TempList', {
 	                    
 	                    if(needPrice) {
 	                    	productCompareProgressbar.updateProgress(json.finished / json.total, '总计：' + json.total + '， 已完成 ：' + json.finished + ' 个 ... Mi报价查询数量：' + json.activeCount);	 	
-	                    	if(json.activeCount == json.total) {
+	                    	if(json.finished == json.total && json.activeCount == json.total) {
 	                    		Ext.TaskManager.stop(productCompareTask);
 	                	    	Ext.Ajax.request({
 	                            	url: tms.getContextPath() + 'api/manualProductMap/getMyQuotation',

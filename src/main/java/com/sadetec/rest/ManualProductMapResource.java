@@ -7,7 +7,6 @@ import static org.springframework.web.bind.annotation.RequestMethod.POST;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -139,11 +138,11 @@ public class ManualProductMapResource {
 		List<Product> result = new ArrayList<>();
 		PageResponse<Product> status = new PageResponse<Product>(result);
 
+		String loginName = UserContext.getUsername();
+		
 		log.info("报价处理时是否查询Mi报价:{}, 账户:{}, 密码:{}", needPrice, userid, password);
 
-		quotationProcessor.setNeedPrice(needPrice);
-		quotationProcessor.setUserid(userid);
-		quotationProcessor.setPassword(password);
+		quotationProcessor.initMiUser(loginName,userid, password, needPrice);
 
 		status.setSuccess(Boolean.TRUE);
 		status.setMessage("查询价格设置完成.");
@@ -155,9 +154,10 @@ public class ManualProductMapResource {
 	@RequestMapping(value = "/compareStatus", method = GET, produces = APPLICATION_JSON_VALUE)
 	public ResponseEntity<ProcessorStatus> compareStatus() throws URISyntaxException {
 		ProcessorStatus status = new ProcessorStatus();
-		status.setTotal(quotationProcessor.getTotal());
-		status.setFinished(quotationProcessor.getFinishedMap());
-		status.setActiveCount(quotationProcessor.getFinishedPrice());
+		String loginName = UserContext.getUsername();
+		status.setTotal(quotationProcessor.getTotal(loginName));
+		status.setFinished(quotationProcessor.getFinishedMap(loginName));
+		status.setActiveCount(quotationProcessor.getFinishedPrice(loginName));
 		return new ResponseEntity<ProcessorStatus>(status, HttpStatus.OK);
 
 	}
@@ -217,18 +217,19 @@ public class ManualProductMapResource {
 			tempCodes = new String[]{productCode};
 		}
 
+		String loginName = UserContext.getUsername();
 		for (String tempCode : tempCodes) {
 			if (StringUtils.hasText(tempCode)) {
 				QuotationHistory temp = new QuotationHistory();
 				temp.setProductCode(StringUtils.trimWhitespace(tempCode));
-				temp.setLoginName(UserContext.getUsername());
+				temp.setLoginName(loginName);
 				toProcessed.add(temp);
 			}
 
 		}
 
-		quotationHistoryRepository.deleteByLoginName(UserContext.getUsername());
-		quotationProcessor.executeAsyncTask(toProcessed);
+		quotationHistoryRepository.deleteByLoginName(loginName);
+		quotationProcessor.executeAsyncTask(loginName, toProcessed);
 
 		pageResponse.setMessage("报价查询请求已提交，后台正在处理，请稍候...");
 		pageResponse.setSuccess(true);
@@ -236,7 +237,7 @@ public class ManualProductMapResource {
 
 	}
 
-	@PostMapping("/compare")
+	@PostMapping(value = "/compare",produces = APPLICATION_JSON_VALUE)
 	public ResponseEntity<PageResponse<ManualProductMap>> compare(@RequestParam("file") MultipartFile file) throws IOException {
 		List<ManualProductMap> returnList = new ArrayList<ManualProductMap>();
 		PageResponse<ManualProductMap> pageResponse = new PageResponse<ManualProductMap>(returnList);
@@ -254,19 +255,20 @@ public class ManualProductMapResource {
 			List<Map<String, Object>> columnValues = ExcelImportUtils.columns(workbook, workbookProperties.getQuoteConfig());
 
 			List<QuotationHistory> toProcessed = new ArrayList<QuotationHistory>();
+			String loginName = UserContext.getUsername();
 			for (Map<String, Object> map : columnValues) {
 				String productCode = (String) map.get("productCode");
 				if (StringUtils.hasText(productCode)) {
 					QuotationHistory temp = new QuotationHistory();
 					temp.setProductCode(StringUtils.trimWhitespace(productCode));
-					temp.setLoginName(UserContext.getUsername());
+					temp.setLoginName(loginName);
 					toProcessed.add(temp);
 				}
 
 			}
 
-			quotationHistoryRepository.deleteByLoginName(UserContext.getUsername());
-			quotationProcessor.executeAsyncTask(toProcessed);
+			quotationHistoryRepository.deleteByLoginName(loginName);
+			quotationProcessor.executeAsyncTask(loginName, toProcessed);
 			log.info("开始处理用户:{}提交的价格查询请求,共计产品项:{}",UserContext.getUsername(),toProcessed.size());
 			pageResponse.setSuccess(true);
 			return new ResponseEntity<PageResponse<ManualProductMap>>(pageResponse, HttpStatus.OK);

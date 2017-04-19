@@ -16,7 +16,8 @@ import javax.persistence.metamodel.StaticMetamodel;
 public abstract class QuotationHistory_ {
 
     // Raw attributes
-    public static volatile SingularAttribute<QuotationHistory, String> id;
+    public static volatile SingularAttribute<QuotationHistory, Integer> id;
+    public static volatile SingularAttribute<QuotationHistory, String> atProductCode;
     public static volatile SingularAttribute<QuotationHistory, String> atProductName;
     public static volatile SingularAttribute<QuotationHistory, String> atProductDesc;
     public static volatile SingularAttribute<QuotationHistory, String> miProductName;

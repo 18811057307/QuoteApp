@@ -7,12 +7,15 @@
  */
 package com.sadetec.model;
 
+import static javax.persistence.GenerationType.IDENTITY;
+
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.logging.Logger;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.Transient;
@@ -31,7 +34,8 @@ public class QuotationHistory implements Serializable {
     private static final Logger log = Logger.getLogger(QuotationHistory.class.getName());
 
     // Raw attributes
-    private String id;
+    private Integer id;
+    private String atProductCode;
     private String atProductName;
     private String atProductDesc;
     private String miProductName;
@@ -56,26 +60,42 @@ public class QuotationHistory implements Serializable {
 
     // -- [id] ------------------------
 
-    @NotEmpty
-    @Size(max = 128)
-    @Column(name = "at_product_code", length = 128)
+    @Column(name = "id", precision = 10)
+    @GeneratedValue(strategy = IDENTITY)
     @Id
-    public String getId() {
+    public Integer getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 
-    public QuotationHistory id(String id) {
+    public QuotationHistory id(Integer id) {
         setId(id);
         return this;
     }
 
     @Transient
     public boolean isIdSet() {
-        return id != null && !id.isEmpty();
+        return id != null;
+    }
+    // -- [atProductCode] ------------------------
+
+    @NotEmpty
+    @Size(max = 256)
+    @Column(name = "at_product_code", nullable = false, length = 256)
+    public String getAtProductCode() {
+        return atProductCode;
+    }
+
+    public void setAtProductCode(String atProductCode) {
+        this.atProductCode = atProductCode;
+    }
+
+    public QuotationHistory atProductCode(String atProductCode) {
+        setAtProductCode(atProductCode);
+        return this;
     }
     // -- [atProductName] ------------------------
 
@@ -386,6 +406,7 @@ public class QuotationHistory implements Serializable {
     public String toString() {
         return MoreObjects.toStringHelper(this) //
                 .add("id", getId()) //
+                .add("atProductCode", getAtProductCode()) //
                 .add("atProductName", getAtProductName()) //
                 .add("atProductDesc", getAtProductDesc()) //
                 .add("miProductName", getMiProductName()) //
