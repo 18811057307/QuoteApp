@@ -8,7 +8,10 @@ Ext.define('tms.view.manualProductMap.TempList', {
     showTopToolbar:true,
     showBottomToolbar:true,
     alias:'widget.tempProductMapList',
-    enableTextSelection:true,
+    viewConfig: {
+        stripeRows: true,
+        enableTextSelection: true
+    },
     
     columns:[
     	{width: 50,  header:i18n.t('manualProductMap_at_product_name'), sortable:true, dataIndex:'atProductName'}		
@@ -49,7 +52,7 @@ Ext.define('tms.view.manualProductMap.TempList', {
                             	rec.set('miProductQuote',json.data[0].unitPrice);
                             	tms.notify(json.message, "查询价格成功");                            	
                             } else {
-                            	tms.notify(json.message, "查询价格失败");
+                            	tms.notify(json.message, "查询价格失败");                            	
                             }
                             
                             miInquiryMask.hide(grid);
@@ -121,7 +124,7 @@ Ext.define('tms.view.manualProductMap.TempList', {
 	                    
 	                    if(needPrice) {
 	                    	productCompareProgressbar.updateProgress(json.finished / json.total, '总计：' + json.total + '， 已完成 ：' + json.finished + ' 个 ... Mi报价查询数量：' + json.activeCount);	 	
-	                    	if(json.finished == json.total && json.activeCount == json.total) {
+	                    	if(json.total > 0 && json.finished == json.total && json.activeCount == json.total) {
 	                    		Ext.TaskManager.stop(productCompareTask);
 	                	    	Ext.Ajax.request({
 	                            	url: tms.getContextPath() + 'api/manualProductMap/getMyQuotation',
@@ -133,7 +136,7 @@ Ext.define('tms.view.manualProductMap.TempList', {
 	                    	}
 	                    } else {
 	                    	productCompareProgressbar.updateProgress(json.finished / json.total, '总计：' + json.total + '， 已完成 ：' + json.finished + ' 个 ...');
-	                    	if(json.finished == json.total) {
+	                    	if(json.total > 0 && json.finished == json.total) {
 	                    		Ext.TaskManager.stop(productCompareTask);
 	                	    	Ext.Ajax.request({
 	                            	url: tms.getContextPath() + 'api/manualProductMap/getMyQuotation',
@@ -187,7 +190,8 @@ Ext.define('tms.view.manualProductMap.TempList', {
                                 success: function(result, request) {
                                 	var json = Ext.decode(result.responseText);
                                     tms.notify(json.message,"报价查询");
-                                    Ext.TaskManager.start(productCompareTask);
+                                    tempMapstore.loadData([]);
+                                    Ext.TaskManager.start(productCompareTask);                                    
                                 }
                 	    	});
 	                        me.hasSearch = true;
@@ -242,6 +246,7 @@ Ext.define('tms.view.manualProductMap.TempList', {
                         	//this.store.loadData(resp.data);
                             tms.notify(file.name + i18n.t("uploaded"),i18n.t("File Upload"));
                             Ext.TaskManager.start(productCompareTask);
+                            tempMapstore.loadData([]);
                         },
 
                         uploadcomplete: function(uploader, success, failed)

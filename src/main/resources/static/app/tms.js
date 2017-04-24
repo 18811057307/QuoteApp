@@ -11,6 +11,7 @@ Ext.define('tms', {
             title = i18n.t('Notification');
         }
 
+        /*
         Ext.create('Ext.ux.window.Notification', {
             position:'br',
             width:250,
@@ -28,6 +29,18 @@ Ext.define('tms', {
                 '<p>{message}</p></div>'],
             data:{"title":title, "message":msg, "level":level}
         }).show();
+        */
+        
+        Ext.MessageBox.show({
+            title: title,
+            msg: msg,
+            buttons: Ext.MessageBox.OK,
+            icon: Ext.MessageBox.INFO
+        });
+         setTimeout(function(){
+             Ext.MessageBox.hide();
+         }, 2000);
+
     },
     getAjaxProxy:function (model) {
         var obj = {

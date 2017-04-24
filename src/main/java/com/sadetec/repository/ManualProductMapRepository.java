@@ -35,6 +35,7 @@ public interface ManualProductMapRepository extends JpaRepository<ManualProductM
     
     Page<ManualProductMap> findByMiProductCodeContainsOrIdContains(String miProductCode, String atProductCode, Pageable pageable);
     
-    List<ManualProductMap> findFirst100ByMiProductCodeStartingWithOrIdStartingWith(String miProductCode, String atProductCode);
+    @Query(value="SELECT * FROM manual_product_map WHERE (AT_PRODUCT_CODE LIKE ?1% OR MI_PRODUCT_CODE like ?2%) and (AT_PRODUCT_CODE like '%①%' OR MI_PRODUCT_CODE like '%①%')", nativeQuery=true)
+    List<ManualProductMap> findByIdOrMiProductCodeStartWith (String miProductCode, String atProductCode);
     
 }

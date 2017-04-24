@@ -27,6 +27,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -229,9 +231,10 @@ public class ManualProductMapResource {
 		}
 
 		quotationHistoryRepository.deleteByLoginName(loginName);
+		quotationProcessor.initThreadMap(loginName,toProcessed.size());
 		quotationProcessor.executeAsyncTask(loginName, toProcessed);
 
-		pageResponse.setMessage("报价查询请求已提交，后台正在处理，请稍候...");
+		pageResponse.setMessage("报价查询请求已提交，后台正在处理，可在下方查看报价处理进度...");
 		pageResponse.setSuccess(true);
 		return new ResponseEntity<PageResponse<ManualProductMap>>(pageResponse, HttpStatus.OK);
 
@@ -268,6 +271,8 @@ public class ManualProductMapResource {
 			}
 
 			quotationHistoryRepository.deleteByLoginName(loginName);
+			
+			quotationProcessor.initThreadMap(loginName,toProcessed.size());
 			quotationProcessor.executeAsyncTask(loginName, toProcessed);
 			log.info("开始处理用户:{}提交的价格查询请求,共计产品项:{}",UserContext.getUsername(),toProcessed.size());
 			pageResponse.setSuccess(true);

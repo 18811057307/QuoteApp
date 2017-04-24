@@ -11,7 +11,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.stereotype.Component;
+import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 import com.ctc.wstx.util.StringUtil;
@@ -33,8 +35,6 @@ public class QuotationProcessor {
 	private final Logger log = LoggerFactory.getLogger(QuotationProcessor.class);
 
 	private final String regularExpression = "[\\u2460-\\u246F]+";
-	
-	private static ThreadLocal<String> loginNameThreadLocal = new ThreadLocal<String>();
 
 	// 在线程间共享的变量,每个用户拥有自己的key,由此进行隔离
 	private Map<String, Object> threadMap = new HashMap<String, Object>();
@@ -50,12 +50,6 @@ public class QuotationProcessor {
 
 	@Async
 	public void executeAsyncTask(String curLoginName, List<QuotationHistory> myHistory) {
-
-		if(loginNameThreadLocal.get() == null) {
-			loginNameThreadLocal.set(curLoginName);
-		}
-		
-		this.initThreadMap(myHistory.size());
 
 		for (QuotationHistory quotationHistory : myHistory) {
 			String productCode = quotationHistory.getProductCode();
@@ -73,7 +67,7 @@ public class QuotationProcessor {
 				}
 				else {
 					quotationHistory.setProcFlag(true);
-					this.increaseFinishedPrice();
+					this.increaseFinishedPrice(curLoginName);
 				}
 			}
 			else {
@@ -84,15 +78,16 @@ public class QuotationProcessor {
 
 			quotationHistoryRepository.saveAndFlush(quotationHistory);
 
-			this.increaseFinishedMap();
+			this.increaseFinishedMap(curLoginName);
+			
 
 		}
 
-		if (this.getNeedPrice()) {
+		if (this.getNeedPrice(curLoginName)) {
 
 			List<QuotationHistory> needPrices = quotationHistoryRepository.findByLoginNameAndProcFlag(curLoginName, false);
 			try {
-				pricePageProcessor.login(this.getMiUserId(), this.getMiPassword());
+				pricePageProcessor.login(this.getMiUserId(curLoginName), this.getMiPassword(curLoginName));
 			}
 			catch (Exception e) {
 				log.error("登录Mi失败:{}", e.getCause());
@@ -118,14 +113,13 @@ public class QuotationProcessor {
 					manualProductMapRepository.saveAndFlush(productMap);
 				}
 
-				this.increaseFinishedPrice();
+				this.increaseFinishedPrice(curLoginName);
 			}
 
 		}
 	}
 
-	public void initThreadMap(int size) {
-		String curLoginName = loginNameThreadLocal.get();
+	public void initThreadMap(String curLoginName, int size) {
 		this.threadMap.put(curLoginName + ".total", size);
 		this.threadMap.put(curLoginName + ".finishedMap", 0);
 		this.threadMap.put(curLoginName + ".finishedPrice", 0);
@@ -138,51 +132,45 @@ public class QuotationProcessor {
 		this.threadMap.put(curLoginName + ".miNeedPrice", needPrice);
 
 	}
-	
-	public void increaseFinishedPrice() {
-		String curLoginName = loginNameThreadLocal.get();
+
+	public void increaseFinishedPrice(String curLoginName) {
 		this.threadMap.put(curLoginName + ".finishedPrice", this.getFinishedPrice(curLoginName) + 1);
 	}
 
-	public void increaseFinishedMap() {
-		String curLoginName = loginNameThreadLocal.get();
+	public void increaseFinishedMap(String curLoginName) {
 		this.threadMap.put(curLoginName + ".finishedMap", this.getFinishedMap(curLoginName) + 1);
 	}
 
-	private Boolean getNeedPrice() {
-		String curLoginName = loginNameThreadLocal.get();
-		Object needPrice = this.threadMap.get(curLoginName + ".miNeedPrice");		
-		return needPrice == null ? false : (Boolean)needPrice;
+	private Boolean getNeedPrice(String curLoginName) {
+		Object needPrice = this.threadMap.get(curLoginName + ".miNeedPrice");
+		return needPrice == null ? false : (Boolean) needPrice;
 	}
-	
-	private String getMiUserId() {
-		String curLoginName = loginNameThreadLocal.get();
-		Object miUserid = this.threadMap.get(curLoginName + ".miUserid");		
-		return miUserid == null ? "" : (String)miUserid;
-	}
-	
-	private String getMiPassword() {
-		String curLoginName = loginNameThreadLocal.get();
-		Object miPassword = this.threadMap.get(curLoginName + ".miPassword");		
-		return miPassword == null ? "" : (String)miPassword;
-	}
-	
-	public Integer getTotal(String curLoginName) {
-		Object total = this.threadMap.get(curLoginName + ".total");		
-		return total == null ? 0 : (Integer)total;
-	}
-	
-	public Integer getFinishedMap(String curLoginName) {
-		Object finishedMap = this.threadMap.get(curLoginName + ".finishedMap");		
-		return finishedMap == null ? 0 : (Integer)finishedMap;
-	}
-	
-	public Integer getFinishedPrice(String curLoginName) {
-		Object finishedPrice = this.threadMap.get(curLoginName + ".finishedPrice");		
-		return finishedPrice == null ? 0 : (Integer)finishedPrice;
-	}
-	
 
+	private String getMiUserId(String curLoginName) {
+		Object miUserid = this.threadMap.get(curLoginName + ".miUserid");
+		return miUserid == null ? "" : (String) miUserid;
+	}
+
+	private String getMiPassword(String curLoginName) {
+		Object miPassword = this.threadMap.get(curLoginName + ".miPassword");
+		return miPassword == null ? "" : (String) miPassword;
+	}
+
+	public Integer getTotal(String curLoginName) {
+		Object total = this.threadMap.get(curLoginName + ".total");
+		return total == null ? 0 : (Integer) total;
+	}
+
+	public Integer getFinishedMap(String curLoginName) {
+		log.info("当前threadMap内容:{}", threadMap);
+		Object finishedMap = this.threadMap.get(curLoginName + ".finishedMap");
+		return finishedMap == null ? 0 : (Integer) finishedMap;
+	}
+
+	public Integer getFinishedPrice(String curLoginName) {
+		Object finishedPrice = this.threadMap.get(curLoginName + ".finishedPrice");
+		return finishedPrice == null ? 0 : (Integer) finishedPrice;
+	}
 
 	/**
 	 * @param productCode
@@ -192,7 +180,7 @@ public class QuotationProcessor {
 		String productCode = quotationHistory.getProductCode();
 		String beginStr = extractBeginChar(productCode);
 		log.info("未查询到完全一样的产品代码，尝试根据代码起始字符串:{}进行匹配.", beginStr);
-		List<ManualProductMap> mapLikeResults = manualProductMapRepository.findFirst100ByMiProductCodeStartingWithOrIdStartingWith(beginStr, beginStr);
+		List<ManualProductMap> mapLikeResults = manualProductMapRepository.findByIdOrMiProductCodeStartWith(beginStr, beginStr);
 		log.info("根据代码起始字符串:{},匹配到记录数量：{}.", beginStr, mapLikeResults.size());
 
 		// 判断查询到的结果是否完全符合产品型号
@@ -218,7 +206,7 @@ public class QuotationProcessor {
 				BeanUtils.copyProperties(manualProductMap, quotationHistory);
 				quotationHistory.setAtProductCode(mapProductCode(productCode, manualProductMap.getMiProductCode(), manualProductMap.getId()));
 				quotationHistory.setMiProductCode(productCode);
-				log.info("匹配到Mi产品:{}，转换为AT产品:{}", productCode, quotationHistory.getId());
+				log.info("匹配到Mi产品:{}，转换为AT产品:{}", productCode, quotationHistory.getAtProductCode());
 				quotationHistory.setProcFlag(false);
 				return;
 			}
@@ -227,7 +215,7 @@ public class QuotationProcessor {
 		quotationHistory.setAtProductCode("配置库未找到代码为:" + productCode + "的产品");
 		quotationHistory.setMiProductCode("以代码:" + beginStr + "为开始的产品");
 		quotationHistory.setProcFlag(true);
-		this.increaseFinishedPrice();
+		this.increaseFinishedPrice(quotationHistory.getLoginName());
 		return;
 	}
 
@@ -252,6 +240,7 @@ public class QuotationProcessor {
 		Boolean fullyMatchAT = true;
 		// 将型号描述模版提出占位符，转换为ASRKR-,-g6-...类型数组
 		String[] atChars = codePattern.split(templateCode);
+		String upperProductCode = productCode.toUpperCase();
 
 		for (String atChar : atChars) {
 			boolean isContain = org.apache.commons.lang3.StringUtils.containsIgnoreCase(productCode, atChar);
@@ -263,6 +252,37 @@ public class QuotationProcessor {
 				productCode = productCode.substring(curIdx + atChar.length());
 			}
 		}
+
+		if (!fullyMatchAT) {
+			return fullyMatchAT;
+		}
+
+		// 拆分结果不能包含字母
+		String upperTemplateCode = templateCode.toUpperCase();
+		Matcher matcher = codePattern.matcher(upperTemplateCode);
+		String[] upperChars = codePattern.split(upperTemplateCode);
+		int splitIdx = 0;
+		while (matcher.find()) {
+			String key = matcher.group();
+			log.debug("{}. 当前匹配:{}, 起始位置{}", splitIdx, key, upperChars[splitIdx]);
+
+			int beginIdx = upperProductCode.indexOf(upperChars[splitIdx]) + upperChars[splitIdx].length();
+
+			String value = "";
+			if (splitIdx + 1 < upperChars.length) {
+				int endIdx = upperProductCode.indexOf(upperChars[splitIdx + 1], beginIdx);
+				log.debug("截取字符串位置:{} - {}", beginIdx, endIdx);
+				value = upperProductCode.substring(beginIdx, endIdx);
+			}
+			else {
+				value = upperProductCode.substring(beginIdx);
+			}
+
+			log.debug("{}. 匹配结果:{}", splitIdx, value);
+			fullyMatchAT = fullyMatchAT && org.apache.commons.lang3.StringUtils.isNumeric(value);
+			splitIdx++;
+		}
+
 		return fullyMatchAT;
 	}
 

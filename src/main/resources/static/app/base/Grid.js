@@ -7,6 +7,10 @@ Ext.define('tms.base.Grid', {
     border:false,
     showTopToolbar:true,
     showBottomToolbar:true,
+    viewConfig: {
+        stripeRows: true,
+        enableTextSelection: true
+    },
     features : [{ftype: 'filters',encode: true}],
     initComponent: function() {
         this.dockedItems = new Array();
