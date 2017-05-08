@@ -6,17 +6,15 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.math.NumberUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
-import org.springframework.security.core.context.SecurityContext;
 import org.springframework.stereotype.Component;
-import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
-import com.ctc.wstx.util.StringUtil;
 import com.sadetec.model.ManualProductMap;
 import com.sadetec.model.Product;
 import com.sadetec.model.QuotationHistory;
@@ -279,7 +277,7 @@ public class QuotationProcessor {
 			}
 
 			log.debug("{}. 匹配结果:{}", splitIdx, value);
-			fullyMatchAT = fullyMatchAT && org.apache.commons.lang3.StringUtils.isNumeric(value);
+			fullyMatchAT = fullyMatchAT && NumberUtils.isNumber(value);
 			splitIdx++;
 		}
 
@@ -377,12 +375,11 @@ public class QuotationProcessor {
 
 		// System.out.println(processor.extractBeginChar("PSFRN6-15-F5-B3-P3"));
 
-		System.out.println("ASRKR-10-g6-50-F10-S10-KA3-A6-KB3-B6-KC3-C6-B".length());
-		System.out.println("ASRKR-①-g6-②-F③-S④-KA⑤-A⑥-KB⑦-B⑧-KC⑨-C⑩-A".length());
+		//System.out.println("ASRKR-10-g6-50-F10-S10-KA3-A6-KB3-B6-KC3-C6-B".length());
+		//System.out.println("ASRKR-①-g6-②-F③-S④-KA⑤-A⑥-KB⑦-B⑧-KC⑨-C⑩-A".length());
 
-		System.out.println(processor.mapProductCode("ASRKR-10-g6-50-F10-S10-KA3-A6-KB3-B6-KC3-C6-B", "ASRKR-①-g6-②-F③-S④-KA⑤-A⑥-KB⑦-B⑧-KC⑨-C⑩-A",
-				"SFGKRRA①-②-F③-S④-KA⑤-A⑥-KB⑦-B⑧-KC⑨-C⑩"));
-
+		//System.out.println(processor.mapProductCode("ASRKR-10-g6-50-F10-S10-KA3-A6-KB3-B6-KC3-C6-B", "ASRKR-①-g6-②-F③-S④-KA⑤-A⑥-KB⑦-B⑧-KC⑨-C⑩-A",	"SFGKRRA①-②-F③-S④-KA⑤-A⑥-KB⑦-B⑧-KC⑨-C⑩"));
+		
 	}
 
 }
