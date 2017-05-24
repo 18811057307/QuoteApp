@@ -292,6 +292,13 @@ div.ux-taskbar div.x-toolbar {
     background-image: url(../../images/shortcut/quote_mapping_16.png) !important;
 }
 
+.quotelog-shortcut {
+    background-image: url(../../images/shortcut/quote_log_48.png) !important;
+}
+.quotelog-icon,.icon-quotationLog {
+    background-image: url(../../images/shortcut/quote_log_16.png) !important;
+}
+
 .role-shortcut {
     background-image: url(../../images/shortcut/role_48.png) !important;
 }

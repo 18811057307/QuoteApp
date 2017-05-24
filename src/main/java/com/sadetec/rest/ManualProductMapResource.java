@@ -6,6 +6,8 @@ import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -45,9 +47,13 @@ import com.sadetec.model.ManualProductMap;
 import com.sadetec.model.ProcessorStatus;
 import com.sadetec.model.Product;
 import com.sadetec.model.QuotationHistory;
+import com.sadetec.model.QuotationLog;
+import com.sadetec.model.SysUser;
 import com.sadetec.repository.ManualProductMapRepository;
 import com.sadetec.repository.ProductRepository;
 import com.sadetec.repository.QuotationHistoryRepository;
+import com.sadetec.repository.QuotationLogRepository;
+import com.sadetec.repository.SysUserRepository;
 import com.sadetec.rest.support.AutoCompleteQuery;
 import com.sadetec.rest.support.PageResponse;
 import com.sadetec.service.StorageException;
@@ -88,8 +94,14 @@ public class ManualProductMapResource {
 	private QuotationHistoryRepository quotationHistoryRepository;
 
 	@Autowired
+	private QuotationLogRepository quotationLogRepository;
+
+	@Autowired
 	private QuotationProcessor quotationProcessor;
 
+	@Autowired
+	private SysUserRepository sysUserRepository;
+	
 	@PostMapping("/upload")
 	public ResponseEntity<PageResponse> handleFileUpload(@RequestParam("file") MultipartFile file) throws IOException {
 		try {
@@ -141,10 +153,10 @@ public class ManualProductMapResource {
 		PageResponse<Product> status = new PageResponse<Product>(result);
 
 		String loginName = UserContext.getUsername();
-		
+
 		log.info("报价处理时是否查询Mi报价:{}, 账户:{}, 密码:{}", needPrice, userid, password);
 
-		quotationProcessor.initMiUser(loginName,userid, password, needPrice);
+		quotationProcessor.initMiUser(loginName, userid, password, needPrice);
 
 		status.setSuccess(Boolean.TRUE);
 		status.setMessage("查询价格设置完成.");
@@ -166,7 +178,37 @@ public class ManualProductMapResource {
 
 	@RequestMapping(value = "/getMyQuotation", method = GET, produces = APPLICATION_JSON_VALUE)
 	public ResponseEntity<PageResponse<QuotationHistory>> getMyQuotation() throws IOException {
-		List<QuotationHistory> returnList = quotationHistoryRepository.findByLoginName(UserContext.getUsername());
+		
+		String loginName = UserContext.getUsername();
+		List<QuotationHistory> returnList = quotationHistoryRepository.findByLoginName(loginName);
+		
+		String name = "匿名用户";
+		SysUser curUser = sysUserRepository.getByLoginName(loginName);
+		if(null != curUser) {
+			name = curUser.getName();
+		}
+		
+		Timestamp now = Timestamp.valueOf(LocalDateTime.now());
+		
+		// 查询完成后,将本次查询的结果另存至QuotationLog表中,用于统计
+		for (QuotationHistory temp : returnList) {
+
+			if (!org.apache.commons.lang3.StringUtils.contains(temp.getAtProductCode(), "未找到")) {
+				try {
+					QuotationLog tempLog = new QuotationLog();
+					org.springframework.beans.BeanUtils.copyProperties(temp, tempLog, "id");
+					tempLog.setName(name);
+					tempLog.setQuotationTime(now);
+					log.info("报价对照另存到日志表,待保存信息:{}", tempLog);
+					quotationLogRepository.saveAndFlush(tempLog);
+				}
+				catch (Exception e) {
+					e.printStackTrace();
+					log.error("转存产品对照信息出错：{},失败原因:{}", temp, e.getCause());
+				}
+			}
+
+		}
 
 		List<String> curUserRoles = UserContext.getRoles();
 
@@ -216,7 +258,7 @@ public class ManualProductMapResource {
 			tempCodes = StringUtils.delimitedListToStringArray(productCode, ";");
 		}
 		else {
-			tempCodes = new String[]{productCode};
+			tempCodes = new String[] { productCode };
 		}
 
 		String loginName = UserContext.getUsername();
@@ -231,7 +273,7 @@ public class ManualProductMapResource {
 		}
 
 		quotationHistoryRepository.deleteByLoginName(loginName);
-		quotationProcessor.initThreadMap(loginName,toProcessed.size());
+		quotationProcessor.initThreadMap(loginName, toProcessed.size());
 		quotationProcessor.executeAsyncTask(loginName, toProcessed);
 
 		pageResponse.setMessage("报价查询请求已提交，后台正在处理，可在下方查看报价处理进度...");
@@ -240,7 +282,7 @@ public class ManualProductMapResource {
 
 	}
 
-	@PostMapping(value = "/compare",produces = APPLICATION_JSON_VALUE)
+	@PostMapping(value = "/compare", produces = APPLICATION_JSON_VALUE)
 	public ResponseEntity<PageResponse<ManualProductMap>> compare(@RequestParam("file") MultipartFile file) throws IOException {
 		List<ManualProductMap> returnList = new ArrayList<ManualProductMap>();
 		PageResponse<ManualProductMap> pageResponse = new PageResponse<ManualProductMap>(returnList);
@@ -271,10 +313,10 @@ public class ManualProductMapResource {
 			}
 
 			quotationHistoryRepository.deleteByLoginName(loginName);
-			
-			quotationProcessor.initThreadMap(loginName,toProcessed.size());
+
+			quotationProcessor.initThreadMap(loginName, toProcessed.size());
 			quotationProcessor.executeAsyncTask(loginName, toProcessed);
-			log.info("开始处理用户:{}提交的价格查询请求,共计产品项:{}",UserContext.getUsername(),toProcessed.size());
+			log.info("开始处理用户:{}提交的价格查询请求,共计产品项:{}", UserContext.getUsername(), toProcessed.size());
 			pageResponse.setSuccess(true);
 			return new ResponseEntity<PageResponse<ManualProductMap>>(pageResponse, HttpStatus.OK);
 		}

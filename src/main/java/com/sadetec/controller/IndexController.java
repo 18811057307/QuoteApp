@@ -18,9 +18,11 @@ public class IndexController {
 		
 		List<String> modules = new ArrayList<String>();
 		modules.add("tms.module.TempProductMapModule");
+		modules.add("tms.module.QuotationLogModule");
 		
 		List<Shortcut> shortcuts = new  ArrayList<Shortcut>();
 		shortcuts.add(new Shortcut("报价处理", "quotemap-shortcut", "tempProductMap-win"));
+		shortcuts.add(new Shortcut("报价历史", "quotelog-shortcut", "quotationLog-win"));
 
 		if(UserContext.hasRole("ADMIN")) {
 			modules.add("tms.module.SysUserModule");

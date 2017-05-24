@@ -10,7 +10,8 @@ Ext.define('tms.view.Desktop', {
         'tms.module.ProductCategoryModule',
         'tms.module.ProductModule',
         'tms.module.SysUserModule',
-        'tms.module.SysRoleModule'
+        'tms.module.SysRoleModule',
+        'tms.module.QuotationLogModule'
     ],
 
     init:function () {
