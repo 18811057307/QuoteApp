@@ -15,8 +15,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.sadetec.model.Category;
+import com.sadetec.model.QuotationLogStatistics;
 import com.sadetec.model.Series;
 import com.sadetec.repository.CategoryRepository;
+import com.sadetec.repository.QuotationLogRepository;
 import com.sadetec.repository.SeriesRepository;
 import com.sadetec.util.CategoryPageProcessor;
 import com.sadetec.util.CategorySpecProcessor;
@@ -57,8 +59,18 @@ public class QuoteAppApplicationTests {
 	@Autowired
 	private SeriesSpecProcessor seriesSpecProcessor;
 
+	@Autowired
+	private QuotationLogRepository quotationLogRepository;
+
+	
 	@Test
 	public void contextLoads() {
+		
+		 List<QuotationLogStatistics> result = quotationLogRepository.findTopName();
+		 for (QuotationLogStatistics quotationLogStatistics : result) {
+			System.out.println(quotationLogStatistics);
+		}
+		
 		/*
 		 * categoryRepository.deleteAll();
 		 * 

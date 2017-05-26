@@ -1,30 +1,79 @@
 Ext.define('tms.view.quotationLog.List', {
-    extend:'tms.base.Grid',
+    extend:'Ext.grid.Panel',
+    requires: ['Ext.ux.exporter.Exporter','Ext.ux.exporter.Button'],
+    selModel:{mode:'SINGLE'},
+    forceFit:true,
+    columnLines:true,
+    border:false,
+    showTopToolbar:true,
+    showBottomToolbar:true,
     alias:'widget.quotationLogList',
-    store:'QuotationLogStore',
-    columns:[
-		{width: 50,  header:i18n.t('quotationLog_at_product_code'), sortable:true, dataIndex:'atProductCode', filter:true}
-		,{width: 50,  header:i18n.t('quotationLog_at_product_name'), sortable:true, dataIndex:'atProductName', filter:true}
-		,{width: 50,  header:i18n.t('quotationLog_at_product_desc'), sortable:true, dataIndex:'atProductDesc', filter:true}
-		,{width: 50,  header:i18n.t('quotationLog_mi_product_name'), sortable:true, dataIndex:'miProductName', filter:true}
-		,{width: 50,  header:i18n.t('quotationLog_mi_product_code'), sortable:true, dataIndex:'miProductCode', filter:true}
-		,{width: 50,  header:i18n.t('quotationLog_mi_product_desc'), sortable:true, dataIndex:'miProductDesc', filter:true}
-		,{width: 50,  header:i18n.t('quotationLog_mi_product_quote'), sortable:true, dataIndex:'miProductQuote', filter:true}
-		,{width: 50,  header:i18n.t('quotationLog_at_product_quote'), sortable:true, dataIndex:'atProductQuote', filter:true}
-		,{width: 50,  header:i18n.t('quotationLog_factory_quote'), sortable:true, dataIndex:'factoryQuote', filter:true}
-		,{width: 50,  header:i18n.t('quotationLog_uni_quote'), sortable:true, dataIndex:'uniQuote', filter:true}
-		,{width: 50,  header:i18n.t('quotationLog_supa_quote'), sortable:true, dataIndex:'supaQuote', filter:true}
-		,{width: 50,  header:i18n.t('quotationLog_supb_quote'), sortable:true, dataIndex:'supbQuote', filter:true}
-		,{width: 50,  header:i18n.t('quotationLog_supc_quote'), sortable:true, dataIndex:'supcQuote', filter:true}
-		,{width: 50,  header:i18n.t('quotationLog_login_name'), sortable:true, dataIndex:'loginName', filter:true}
-		,{width: 50,  header:i18n.t('quotationLog_order_quantity'), sortable:true, dataIndex:'orderQuantity', filter:true}
-		,{width: 50,  header:i18n.t('quotationLog_name'), sortable:true, dataIndex:'name', filter:true}
-		,{width: 50,  header:i18n.t('quotationLog_quotation_time'), sortable:true, dataIndex:'quotationTime', filter:true}
+    viewConfig: {
+        stripeRows: true,
+        enableTextSelection: true
+    },
+    columns:[],
+    reconfigByProductCode: function() {
+    	this.columns = this.staticsByProductCode;
+    	this.reconfigure(null, this.columns);
+    },
+    reconfigByName: function() {
+    	this.columns = this.staticsByName;
+    	this.reconfigure(null, this.columns);
+    },
+    staticsByProductCode :[
+    	{width: 50,  header:i18n.t('quotationLog_at_product_name'), dataIndex:'atProductName'}
+		,{width: 50,  header:i18n.t('quotationLog_at_product_code'), dataIndex:'atProductCode'}
+		,{width: 50,  header:i18n.t('quotationLog_mi_product_code'), dataIndex:'miProductCode'}
+		,{width: 50,  header:"查询次数", dataIndex:'count'}
     ],
-    dockedItems: [{
-        xtype: 'pagingtoolbar',
-        dock: 'bottom',
-        store: 'QuotationLogStore',
-        displayInfo: true
-    }]
+    staticsByName :[
+		{width: 50,  header:i18n.t('quotationLog_name'), dataIndex:'name'}
+		,{width: 50,  header:"查询次数", dataIndex:'count'}
+    ],
+    initComponent:function () {     	
+    	var logStore = Ext.create('Ext.data.JsonStore', {
+    	    fields   : [
+        		{name:'miProductName', type:'string'}
+        		,{name:'miProductCode', type:'string'}
+        		,{name:'atProductName', type:'string'}
+        		,{name:'atProductCode', type:'string'}
+        		,{name:'count', type:'int'}
+        		,{name:'name', type:'string'}
+    	    ],
+    	    proxy: {
+    	    	type:'ajax',
+                api:{
+                    read:tms.getContextPath() + 'api/manualProductMap/quotationLogStatistic'
+                },
+                reader:{
+                    totalProperty:'total',
+                    successProperty:'success',
+                    idProperty:'atProductCode',
+                    root:'data',
+                    messageProperty:'message',
+                    type:'json'
+                }
+    	     },
+    	     pageSize: 100
+    	});
+    	
+    	this.store = logStore;
+    	
+        this.dockedItems = [{xtype: 'toolbar',dock: 'top',
+        	items: ["->",
+                {
+                    text: '导出'
+                    ,handler: function(){
+                    	var formater = Ext.create("Ext.ux.exporter.excelFormatter.ExcelFormatter");
+                    	var vExportContent =formater.getExcelXml(this);
+                    	document.location = 'data:application/vnd.ms-excel;base64,' + Ext.ux.exporter.Base64.encode(vExportContent);
+                    }
+                    ,scope :this
+                }
+        	]
+        }];
+        
+        this.callParent(arguments);
+    }
 });

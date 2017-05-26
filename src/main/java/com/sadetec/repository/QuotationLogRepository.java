@@ -14,8 +14,10 @@ import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 import com.sadetec.model.QuotationLog;
+import com.sadetec.model.QuotationLogStatistics;
 import com.sadetec.model.QuotationLog_;
 
 public interface QuotationLogRepository extends JpaRepository<QuotationLog, Integer> {
@@ -30,4 +32,10 @@ public interface QuotationLogRepository extends JpaRepository<QuotationLog, Inte
         Page<QuotationLog> page = findAll(Example.of(probe, matcher), new PageRequest(0, maxResults));
         return page.getContent();
     }
+
+    @Query(value = "select new com.sadetec.model.QuotationLogStatistics(ql.atProductCode, ql.atProductName, ql.miProductCode, ql.miProductName, ql.name, count(ql)) from QuotationLog ql group by ql.atProductCode order by count(ql) desc")
+	List<QuotationLogStatistics> findTopQuotaionProduct();
+    
+    @Query(value = "select new com.sadetec.model.QuotationLogStatistics(ql.name, count(ql)) from QuotationLog ql group by ql.name order by count(ql) desc")
+	List<QuotationLogStatistics> findTopName();
 }

@@ -2,7 +2,7 @@ Ext.define('tms.controller.QuotationLogController', {
     extend:'Ext.app.Controller',
     stores:['tms.store.QuotationLogStore'],
     models:['tms.model.QuotationLog'],
-    views:['tms.view.quotationLog.List'],
+    views:['tms.view.quotationLog.List','tms.view.quotationLog.Menu'],
     init:function (application) {
         this.control({
             'quotationLogList':{
@@ -15,42 +15,12 @@ Ext.define('tms.controller.QuotationLogController', {
                     scope:this
                 }
             },
-            'quotationLogList button[action=create]':{
-                click:{
-                    fn:this.onAdd,
+            'quotationLogMenu':{
+                itemclick:{
+                    fn:this.onItemClick,
                     scope:this
                 }
             },
-            'quotationLogList button[action=update]':{
-                click:{
-                    fn:this.onEdit,
-                    scope:this
-                }
-            },
-            'quotationLogList button[action=delete]':{
-                click:{
-                    fn:this.onDelete,
-                    scope:this
-                }
-            },
-            'quotationLogList button[action=refresh]':{
-                click:{
-                    fn:this.onRefresh,
-                    scope:this
-                }
-            },
-            'quotationLogUpdate button[action=submitForm]':{
-                click:{
-                    fn:this.onSubmit,
-                    scope:this
-                }
-            },
-            'quotationLogUpdate button[action=cancelForm]':{
-                click:{
-                    fn:this.onCancel,
-                    scope:this
-                }
-            }
         });
     },
 
@@ -59,6 +29,25 @@ Ext.define('tms.controller.QuotationLogController', {
         var deleteButton = Ext.ComponentQuery.query('quotationLogList button[action=delete]')[0];
         editButton.enable();
         deleteButton.enable();
+    },
+    onItemClick:function (me, record, item, index, e, eOpts) {
+    	if(record.data.leaf) {    		
+    		var quotationGrid = Ext.ComponentQuery.query('quotationLogList')[0];
+    		
+    		if("byProductCode" == record.raw.linkType) {
+    			quotationGrid.reconfigByProductCode();
+    		}
+    		
+    		if("byName" == record.raw.linkType) {
+    			quotationGrid.reconfigByName();
+    		}
+    		
+    		quotationGrid.store.clearFilter();
+    		quotationGrid.store.load({params:{
+    			type: record.raw.linkType
+    	    }});
+    		quotationGrid.updateLayout();
+    	}
     },
     onItemDblClick:function (me, e, eOpts) {
         this.onEdit();

@@ -48,6 +48,7 @@ import com.sadetec.model.ProcessorStatus;
 import com.sadetec.model.Product;
 import com.sadetec.model.QuotationHistory;
 import com.sadetec.model.QuotationLog;
+import com.sadetec.model.QuotationLogStatistics;
 import com.sadetec.model.SysUser;
 import com.sadetec.repository.ManualProductMapRepository;
 import com.sadetec.repository.ProductRepository;
@@ -176,6 +177,28 @@ public class ManualProductMapResource {
 
 	}
 
+	
+	@RequestMapping(value = "/quotationLogStatistic", method = GET, produces = APPLICATION_JSON_VALUE)
+	public ResponseEntity<PageResponse<QuotationLogStatistics>> quotationLogStatistic(@RequestParam(value = "type", required = true) String type) throws IOException {
+		
+		String loginName = UserContext.getUsername();
+		
+		List<QuotationLogStatistics> returnList = new ArrayList<>();
+		if("byProductCode".equals(type)) {
+			returnList = quotationLogRepository.findTopQuotaionProduct();			
+		}
+		
+		if("byName".equals(type)) {
+			returnList = quotationLogRepository.findTopName();
+		}
+				
+		PageResponse<QuotationLogStatistics> pageResponse = new PageResponse<QuotationLogStatistics>(returnList);
+		pageResponse.setSuccess(true);
+		return new ResponseEntity<PageResponse<QuotationLogStatistics>>(pageResponse, HttpStatus.OK);
+
+	}
+	
+	
 	@RequestMapping(value = "/getMyQuotation", method = GET, produces = APPLICATION_JSON_VALUE)
 	public ResponseEntity<PageResponse<QuotationHistory>> getMyQuotation() throws IOException {
 		

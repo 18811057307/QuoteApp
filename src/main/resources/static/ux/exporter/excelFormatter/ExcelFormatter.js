@@ -91,7 +91,7 @@ Ext.define("Ext.ux.exporter.excelFormatter.ExcelFormatter", {
         // Calculate cell data types and extra class names which affect formatting
         var cellType = [];
         var cellTypeClass = [];
-        var cm = grid.columns;
+        var cm = grid.columnManager.columns;
         var totalWidthInPixels = 0;
         var colXml = '';
         var headerXml = '';
@@ -99,6 +99,7 @@ Ext.define("Ext.ux.exporter.excelFormatter.ExcelFormatter", {
         var colCount = cm.length;
         for (var i = 0; i < colCount; i++) {
             if (cm[i] != '' && cm[i].xtype != 'actioncolumn') {
+            	
                 var w = cm[i].getWidth();
                 
                 if (cm[i].text != undefined) {

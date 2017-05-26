@@ -11,6 +11,8 @@ Ext.define('tms.module.QuotationLogModule', {
     createWindow:function () {
         var desktop = this.app.getDesktop();
         var win = desktop.getWindow('quotationLog-win');
+        
+        
         if (!win) {
             win = desktop.createWindow({
                 id:'quotationLog-win',
@@ -20,8 +22,12 @@ Ext.define('tms.module.QuotationLogModule', {
                 iconCls:'icon-quotationLog',
                 animCollapse:false,
                 constrainHeader:true,
-                layout:'fit',
-                items:[{xtype:'quotationLogList'}]
+                layout:'border',
+                items:[
+                	{xtype:'panel',layout:'fit',items: [{xtype:'quotationLogList'}], border:false,  region: 'center'}
+                	,{xtype:'panel',layout:'fit',items: [{xtype:'quotationLogMenu'}],  split:true, width: 300,collapsible: true,region: 'west'}
+                	]           
+            
             });
         }
         return win;
