@@ -37,6 +37,8 @@ public interface CategoryRepository extends JpaRepository<Category, Integer> {
 	
 	Category findById(String categoryCode);
 	
+	Category getByCategoryName(String categoryName);
+	
     default List<Category> complete(String query, int maxResults) {
         Category probe = new Category();
         probe.setCategoryName(query);

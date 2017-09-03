@@ -25,39 +25,38 @@ Ext.define('tms.controller.CategoryController', {
                     fn:this.onSeriesDblClick,
                     scope:this
                 }
-            },
-            
-            'categoryList button[action=create]':{
+            },          
+            'seriesList button[action=create]':{
                 click:{
                     fn:this.onAdd,
                     scope:this
                 }
             },
-            'categoryList button[action=update]':{
+            'seriesList button[action=update]':{
                 click:{
                     fn:this.onEdit,
                     scope:this
                 }
             },
-            'categoryList button[action=delete]':{
+            'seriesList button[action=delete]':{
                 click:{
                     fn:this.onDelete,
                     scope:this
                 }
             },
-            'categoryList button[action=refresh]':{
+            'seriesList button[action=refresh]':{
                 click:{
                     fn:this.onRefresh,
                     scope:this
                 }
             },
-            'categoryUpdate button[action=submitForm]':{
+            'seriesUpdate button[action=submitForm]':{
                 click:{
                     fn:this.onSubmit,
                     scope:this
                 }
             },
-            'categoryUpdate button[action=cancelForm]':{
+            'seriesUpdate button[action=cancelForm]':{
                 click:{
                     fn:this.onCancel,
                     scope:this
@@ -72,14 +71,16 @@ Ext.define('tms.controller.CategoryController', {
     	//选中分类，则显示该分类下的产品犀利
     	if(record.data.leaf) {
     		
+    		/*
     		var categorySpecGrid = Ext.ComponentQuery.query('categorySpecList')[0];
     		categorySpecGrid.store.clearFilter();
     		categorySpecGrid.store.load({params:{
     			categoryCode: record.data.id
     	    }});
+    	    */
     		
     		var seriesGrid = Ext.ComponentQuery.query('seriesList')[0];
-    		seriesGrid.store.clearFilter();
+    		//seriesGrid.store.clearFilter();
     		seriesGrid.store.load({params:{
     			categoryCode: record.data.id
     	    }});
@@ -95,42 +96,48 @@ Ext.define('tms.controller.CategoryController', {
     
     onSeriesClick:function (me, record, item, index, e, eOpts) {
     	if(record) {
+            var editButton = Ext.ComponentQuery.query('seriesList button[action=update]')[0];
+            var deleteButton = Ext.ComponentQuery.query('seriesList button[action=delete]')[0];
+            editButton.enable();
+            deleteButton.enable();
+    		/*
     		var seriesSpecGrid = Ext.ComponentQuery.query('seriesSpecList')[0];
     		seriesSpecGrid.store.clearFilter();
     		seriesSpecGrid.store.load({params:{
     			seriesCode: record.data.id
     	    }});
+    	    */
     	}
     },
 
     onAdd:function (me, e, eOpts) {
-        var record = Ext.create('tms.model.Category');
+        var record = Ext.create('tms.model.Series');
         this._openUpdateWin(record);
     },
     onEdit:function (me, e, eOpts) {
-        var grid = Ext.ComponentQuery.query('categoryList')[0];
+        var grid = Ext.ComponentQuery.query('seriesList')[0];
         var record = grid.getSelectionModel().getSelection()[0];
         this._openUpdateWin(record);
     },
     _openUpdateWin:function (record) {
-        var updateWin = Ext.create('tms.view.category.Update');
+        var updateWin = Ext.create('tms.view.series.Update');
         updateWin.width = Ext.getBody().getViewSize().width * 0.6;
         updateWin.height = Ext.getBody().getViewSize().height * 0.6;
-        var form = Ext.ComponentQuery.query('categoryForm')[0];
+        var form = Ext.ComponentQuery.query('seriesForm')[0];
         form.loadRecord(record);
         updateWin._setTitle(record);
         updateWin.show();
         this._curRecord = record;
     },
     _getStore:function () {
-        return  Ext.data.StoreManager.lookup('CategoryStore');
+        return  Ext.data.StoreManager.lookup('SeriesStore');
     },
     onDelete:function (me, e, eOpts) {
-        var grid = Ext.ComponentQuery.query('categoryList')[0];
+        var grid = Ext.ComponentQuery.query('seriesList')[0];
         var record = grid.getSelectionModel().getSelection()[0];
         Ext.MessageBox.confirm(
-            small_hint
-            , Ext.String.format(records_delete_confirm, i18n.t('category') + ":" + record.getRecordName())
+        	i18n.t("small_hint")
+            , Ext.String.format(i18n.t('records_delete_confirm'), i18n.t('series') + ":" + record.getRecordName())
             , function (btn) {
                 if (btn == "yes") {
                     this._getStore().remove(record);
@@ -143,7 +150,7 @@ Ext.define('tms.controller.CategoryController', {
         this._getStore().load();
     },
     onSubmit:function (me, e, eOpts) {
-        var formPanel = Ext.ComponentQuery.query('categoryForm')[0];
+        var formPanel = Ext.ComponentQuery.query('seriesForm')[0];
         formPanel.getForm().updateRecord(this._curRecord);
         if (formPanel.getForm().isValid()) {
             if (this._curRecord.phantom) {
@@ -174,12 +181,13 @@ Ext.define('tms.controller.CategoryController', {
         }
     },
     _closeWin:function () {
-        var win = Ext.ComponentQuery.query('categoryUpdate')[0];
+        var win = Ext.ComponentQuery.query('seriesUpdate')[0];
         win.close();
     },
     onCancel:function (me, e, eOpts) {
         this._closeWin();
     }
+    
 });
 
 

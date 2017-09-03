@@ -306,6 +306,20 @@ div.ux-taskbar div.x-toolbar {
     background-image: url(../../images/shortcut/role_16.png) !important;
 }
 
+.bpm-shortcut {
+    background-image: url(../../images/shortcut/bpm_48.png) !important;
+}
+.bpm-icon ,.icon-bpm{
+    background-image: url(../../images/shortcut/bpm_16.png) !important;
+}
+
+.category-shortcut {
+    background-image: url(../../images/shortcut/category_48.png) !important;
+}
+.category-icon ,.icon-category{
+    background-image: url(../../images/shortcut/category_16.png) !important;
+}
+
 .property-module {
     background-image: url(../../images/shortcut/hotel_16.png) !important;
 }
@@ -407,6 +421,10 @@ div.ux-taskbar div.x-toolbar {
     float: right !important;
 }
 
+.x-grid-row-summary .x-grid-cell-inner {
+    font-weight: bold;
+}
+
 .x-grid-cell-inner {     
     text-overflow: normal;
     white-space:normal; 
@@ -420,3 +438,65 @@ div.ux-taskbar div.x-toolbar {
 	-moz-user-select:text !important;
 	-webkit-user-select:text !important;
 	cursor:default}
+.alert, .approved, .attention, .camera, .cart, .doc, .download, .media, .note, .notice, .quote {
+    clear: both;
+    display: block;
+   	border-radius: 6px 6px 6px 6px;
+    font-weight: bold;
+    line-height: 1.7em;
+    padding: 10px 10px 10px 10px;
+}
+.notice {
+    background-color: #ECF5F8;
+    border-bottom: 1px solid #E6DAD2;
+    border-right: 1px solid #E6DAD2;
+    color: #B76F38;
+    text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.3);
+}
+.notice a {
+	text-decoration: none;
+	padding: 0px 3px;
+}
+em.blue {
+    border-radius: 6px 6px 6px 6px;
+    padding: 2px 5px;
+    background: none repeat scroll 0 0 #488AAD;
+    color: #FFFFFF;
+    line-height: 14px;
+}
+em.yellow {
+    border-radius: 6px 6px 6px 6px;
+    padding: 2px 5px;
+    background: none repeat scroll 0 0 #D69839;
+    color: #FFFFFF;
+    line-height: 14px;
+}
+em.green {
+    border-radius: 6px 6px 6px 6px;
+    padding: 2px 5px;
+    background: none repeat scroll 0 0 #74924A;
+    color: #FFFFFF;
+    line-height: 14px;
+}
+em.red {
+    border-radius: 6px 6px 6px 6px;
+    padding: 2px 5px;
+    background: none repeat scroll 0 0 #BD5151;
+    color: #FFFFFF;
+    line-height: 14px;
+}
+em.black {
+    border-radius: 6px 6px 6px 6px;
+    padding: 2px 5px;
+    background: none repeat scroll 0 0 #000000;
+    color: #FFFFFF;
+    line-height: 14px;
+}
+.icon-remove {
+	line-height:16px;
+	height:24px;
+	cursor: pointer;
+	margin-bottom:1px;	
+	background-repeat:no-repeat;
+	background-image:url(/images/main/light/icon/cross.png);
+}	

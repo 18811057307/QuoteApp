@@ -43,4 +43,6 @@ public interface SysUserRepository extends JpaRepository<SysUser, Integer> {
     }
     
     Page<SysUser> findByLoginNameContainsOrNameContains(String loginName, String name, Pageable pageable);
+    
+    List<SysUser> findByNameContains(String name);
 }

@@ -37,6 +37,8 @@ public class Series implements Serializable {
     private String brdName;
     private String brdCode;
     private String categoryCode;
+    private String quoteType;
+    private String remark;
     private String procBy;
     private Boolean procFlag;
     private LocalDateTime createDate;
@@ -88,10 +90,9 @@ public class Series implements Serializable {
     }
     // -- [seriesUrl] ------------------------
 
-    @NotEmpty
     @Size(max = 512)
     @URL
-    @Column(name = "series_url", nullable = false, length = 512)
+    @Column(name = "series_url", length = 512)
     public String getSeriesUrl() {
         return seriesUrl;
     }
@@ -150,6 +151,40 @@ public class Series implements Serializable {
 
     public Series categoryCode(String categoryCode) {
         setCategoryCode(categoryCode);
+        return this;
+    }
+    
+    // -- [quoteType] ------------------------
+
+    @Size(max = 32)
+    @Column(name = "quote_type", length = 32)
+    public String getQuoteType() {
+        return quoteType;
+    }
+
+    public void setQuoteType(String quoteType) {
+        this.quoteType = quoteType;
+    }
+
+    public Series quoteType(String quoteType) {
+        setQuoteType(quoteType);
+        return this;
+    }
+    
+    // -- [categoryCode] ------------------------
+
+    @Size(max = 256)
+    @Column(name = "remark", length = 256)
+    public String getRemark() {
+        return remark;
+    }
+
+    public void setRemark(String remark) {
+        this.remark = remark;
+    }
+
+    public Series remark(String remark) {
+        setRemark(remark);
         return this;
     }
     // -- [procBy] ------------------------

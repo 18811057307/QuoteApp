@@ -4,6 +4,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -12,7 +13,6 @@ import java.util.Set;
 
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.DateUtil;
 import org.apache.poi.ss.usermodel.FormulaEvaluator;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Row.MissingCellPolicy;
@@ -155,7 +155,6 @@ public class ExcelImportUtils {
 		if (null != property && property.containsKey("type") && property.get("type") != null) {
 			expectedType = property.get("type").toString();
 		}
-
 		switch (cell.getCellType()) {
 		case Cell.CELL_TYPE_STRING:
 			String strValue = cell.getStringCellValue();
@@ -169,7 +168,7 @@ public class ExcelImportUtils {
 				}
 				List<String> patterns = new ArrayList<String>();
 				patterns.add(defaultFormat);
-				return DateUtil.parseYYYYMMDDDate(strValue);
+				return DateUtil.parseDate(strValue,patterns,null);
 			}
 			if ("int".equals(expectedType)) {
 				try {
@@ -206,7 +205,16 @@ public class ExcelImportUtils {
 			else {
 				Double numeric = cell.getNumericCellValue();
 				if (numeric != null) {
-					return numeric;
+					if ("date".equals(expectedType)) {
+						Date date = org.apache.poi.ss.usermodel.DateUtil.getJavaDate(cell.getNumericCellValue());
+						return date;
+					}
+					if ("int".equals(expectedType)) {
+						return numeric.intValue();
+					}
+					if ("double".equals(expectedType)) {
+						return numeric.doubleValue();
+					}
 				}
 				else {
 					return null;
@@ -247,7 +255,7 @@ public class ExcelImportUtils {
 	public static void main(String[] args) throws FileNotFoundException, IOException {
 
 		Workbook workbook = null;
-		String oriFileName = "d:\\tmp\\对照111.xlsx";
+		String oriFileName = "d:\\oracle\\cloud\\commerce\\sampleorder.xlsx";
 		if (oriFileName.endsWith("xlsx")) {
 			workbook = new XSSFWorkbook(new FileInputStream(oriFileName));
 		}
@@ -255,9 +263,9 @@ public class ExcelImportUtils {
 			workbook = new HSSFWorkbook(new FileInputStream(oriFileName));
 		}
 		
-		String config = "{\"sheet\":\"Sheet1\",\"firstRow\": 1,\"lastRow\":-1,\"columnMap\":{\"A\":\"miProductName\",\"B\":\"atProductCode\",\"C\":\"miProductCode\"},\"propertyMap\":{\"miProductName\":{\"type\":\"string\",\"defaultValue\":\"\"},\"atProductCode\":{\"type\":\"string\",\"defaultValue\":\"\"}}}";
+		//String config = "{\"sheet\":\"Sheet1\",\"firstRow\": 1,\"lastRow\":-1,\"columnMap\":{\"A\":\"miProductName\",\"B\":\"atProductCode\",\"C\":\"miProductCode\"},\"propertyMap\":{\"miProductName\":{\"type\":\"string\",\"defaultValue\":\"\"},\"atProductCode\":{\"type\":\"string\",\"defaultValue\":\"\"}}}";
 		//String config = "{\"sheet\":\"Sheet1\",\"firstRow\": 1,\"lastRow\":-1,\"columnMap\":{\"A\":\"miProductName\",\"B\":\"atProductCode\",\"C\":\"miProductCode\"}}";
-
+		String config = "{\"sheet\":\"Sheet1\",\"firstRow\":1,\"lastRow\":-1,\"columnMap\":{\"A\":\"categoryName\",\"B\":\"productCode\",\"C\":\"deliveryDate\",\"D\":\"amount\"},\"propertyMap\":{\"categoryName\":{\"type\":\"string\",\"defaultValue\":\"\"},\"productCode\":{\"type\":\"string\",\"defaultValue\":\"\"},\"deliveryDate\":{\"type\":\"date\",\"defaultValue\":\"\"},\"amount\":{\"type\":\"int\",\"defaultValue\":0}}}";
 		//ObjectMapper mapper = new ObjectMapper();
 		//System.out.println(mapper.readValue(config, WorkbookConfigBean.class).getSheet());
 		

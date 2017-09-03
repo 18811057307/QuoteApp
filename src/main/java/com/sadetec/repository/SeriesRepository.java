@@ -27,6 +27,8 @@ public interface SeriesRepository extends JpaRepository<Series, String> {
 	
 	Page<Series> findByCategoryCode(String categoryCode, Pageable page);
 	
+	Page<Series> findByIdContains(String id, Pageable page);
+	
 	long countByProcByIsNullAndProcFlagIsNull();
 	
 	@Modifying(clearAutomatically = true)

@@ -21,13 +21,16 @@ Ext.define('tms.module.CategoryModule', {
                 animCollapse:false,
                 constrainHeader:true,
                 layout:'border',
-                items:[
+                items:[{xtype:'panel',title:'产品系列',layout:'fit',items: [{xtype:'seriesList'}], border:false,  region: 'center'}
+                	,{xtype:'panel',title:'全部分类',layout:'fit',items: [{xtype:'categoryList'}],  split:true, width: 300,collapsible: true,region: 'west'}
+                	
+                	/*
                 	{xtype:'panel', layout: {
                         type: 'vbox',
                         align: 'stretch'
                     },title: '分类规格',items:[{xtype:'categorySpecList',flex:1},{xtype:'seriesSpecList',title:'系列规格',flex:1}],region:'east', split:true, width: 700,collapsible: true}
-                	,{xtype:'panel',title:'产品系列',layout:'fit',items: [{xtype:'seriesList'}], border:false,  region: 'center'}
-                	,{xtype:'panel',title:'全部分类',layout:'fit',items: [{xtype:'categoryList'}],  split:true, width: 300,collapsible: true,region: 'west'}
+                	*/
+                	
                 	]
             });
         }

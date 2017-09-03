@@ -22,6 +22,8 @@ public abstract class Series_ {
     public static volatile SingularAttribute<Series, String> brdName;
     public static volatile SingularAttribute<Series, String> brdCode;
     public static volatile SingularAttribute<Series, String> categoryCode;
+    public static volatile SingularAttribute<Series, String> quoteType;
+    public static volatile SingularAttribute<Series, String> remark;
     public static volatile SingularAttribute<Series, String> procBy;
     public static volatile SingularAttribute<Series, Boolean> procFlag;
     public static volatile SingularAttribute<Series, LocalDateTime> createDate;

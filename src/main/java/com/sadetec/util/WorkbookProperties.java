@@ -8,20 +8,38 @@ import org.springframework.stereotype.Component;
 public class WorkbookProperties {
 
 	private String productMapConfig;
+	private String productSeriesConfig;
 	private String quoteConfig;
+	private String salseOrderConfig;
+
 	public String getProductMapConfig() {
 		return productMapConfig;
 	}
+
 	public void setProductMapConfig(String productMapConfig) {
 		this.productMapConfig = productMapConfig;
 	}
+
+	public String getProductSeriesConfig() {
+		return productSeriesConfig;
+	}
+
+	public void setProductSeriesConfig(String productSeriesConfig) {
+		this.productSeriesConfig = productSeriesConfig;
+	}
+
 	public String getQuoteConfig() {
 		return quoteConfig;
 	}
+
 	public void setQuoteConfig(String quoteConfig) {
 		this.quoteConfig = quoteConfig;
 	}
-	
-	
-	
-}
+
+	public String getSalseOrderConfig() {
+		return salseOrderConfig;
+	}
+
+	public void setSalseOrderConfig(String salseOrderConfig) {
+		this.salseOrderConfig = salseOrderConfig;
+	}}
