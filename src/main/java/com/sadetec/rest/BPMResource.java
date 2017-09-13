@@ -384,9 +384,10 @@ public class BPMResource {
 	}
 	
 	@RequestMapping(value = "/deleteProcessDefinition", method = GET, produces = APPLICATION_JSON_VALUE)
-	public ResponseEntity<PageResponse<FormInstance>> deleteDeploy(@RequestParam(value = "processDefinitionId", required = true) String processDefinitionId) {
+	public ResponseEntity<PageResponse<FormInstance>> deleteDeploy(@RequestParam(value = "processDefinitionId", required = true) String processDefinitionId
+			,@RequestParam(value = "cascade", required = false, defaultValue= "false") Boolean cascade) {
 
-		repositoryService.deleteProcessDefinition(processDefinitionId, false);
+		repositoryService.deleteProcessDefinition(processDefinitionId, cascade);
 
 		PageResponse<FormInstance> pageResponse = new PageResponse<FormInstance>(null);
 		pageResponse.setMessage("成功删除流程定义" + processDefinitionId);

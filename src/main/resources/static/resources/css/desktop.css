@@ -313,6 +313,20 @@ div.ux-taskbar div.x-toolbar {
     background-image: url(../../images/shortcut/bpm_16.png) !important;
 }
 
+.resPartner-shortcut {
+    background-image: url(../../images/shortcut/partner_48.png) !important;
+}
+.resPartner-icon ,.icon-resPartner{
+    background-image: url(../../images/shortcut/partner_16.png) !important;
+}
+
+.stockQuant-shortcut {
+    background-image: url(../../images/shortcut/warehouse_48.png) !important;
+}
+.stockQuant-icon ,.icon-stockQuant{
+    background-image: url(../../images/shortcut/warehouse_16.png) !important;
+}
+
 .category-shortcut {
     background-image: url(../../images/shortcut/category_48.png) !important;
 }
@@ -499,4 +513,7 @@ em.black {
 	margin-bottom:1px;	
 	background-repeat:no-repeat;
 	background-image:url(/images/main/light/icon/cross.png);
+}
+.mail-message-trigger {
+	background-image:url(../../images/icons/fam/go_trigger.png);
 }	

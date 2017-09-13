@@ -113,7 +113,7 @@ public class SalesOrderResource {
 					salesOrderRepository.saveAndFlush(tempOrder);
 				}
 				catch (Exception e) {
-					log.error("导入产品对照信息出错：{},失败原因:{}", map, e.getCause());
+					log.error("导入订单出错：{},失败原因:{}", map, e.getCause());
 				}
 			}
 

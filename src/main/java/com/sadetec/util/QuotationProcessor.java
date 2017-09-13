@@ -170,6 +170,31 @@ public class QuotationProcessor {
 		return finishedPrice == null ? 0 : (Integer) finishedPrice;
 	}
 
+	public ManualProductMap hasMatchedRecord(String productCode) {
+		String beginStr = extractBeginChar(productCode);
+		log.info("尝试根据代码起始字符串:{}进行匹配.", beginStr);
+		List<ManualProductMap> mapLikeResults = manualProductMapRepository.findByIdOrMiProductCodeStartWith(beginStr, beginStr);
+		log.info("根据代码起始字符串:{},匹配到记录数量：{}.", beginStr, mapLikeResults.size());
+		
+		// 判断查询到的结果是否完全符合产品型号
+		for (ManualProductMap manualProductMap : mapLikeResults) {
+
+			Boolean fullyMatchAT = isFullyMatch(manualProductMap.getId(), productCode);
+
+			log.info("匹配到记录：{}, 检查后AT代码符合度为: {}", manualProductMap, fullyMatchAT);
+
+			// 如果匹配到AT的产品代码,则设置对应的Mi产品代码,跳出匹配循环
+			if (fullyMatchAT) {
+				log.info("匹配到AT产品:{}，转换为Mi产品:{}", manualProductMap.getId(), manualProductMap.getMiProductCode());
+				return manualProductMap;
+			}
+
+		}
+		
+		return null;
+
+	}
+	
 	/**
 	 * @param productCode
 	 * @param mapLikeResults
@@ -260,12 +285,15 @@ public class QuotationProcessor {
 		Matcher matcher = codePattern.matcher(upperTemplateCode);
 		String[] upperChars = codePattern.split(upperTemplateCode);
 		int splitIdx = 0;
+		int beginIdx = 0;
 		while (matcher.find()) {
 			String key = matcher.group();
 			log.debug("{}. 当前匹配:{}, 起始位置{}", splitIdx, key, upperChars[splitIdx]);
 
-			int beginIdx = upperProductCode.indexOf(upperChars[splitIdx]) + upperChars[splitIdx].length();
-
+			beginIdx = upperProductCode.indexOf(upperChars[splitIdx],beginIdx) + upperChars[splitIdx].length();
+			
+			log.debug("起始位置{}", beginIdx);
+			
 			String value = "";
 			if (splitIdx + 1 < upperChars.length) {
 				int endIdx = upperProductCode.indexOf(upperChars[splitIdx + 1], beginIdx);
@@ -370,6 +398,9 @@ public class QuotationProcessor {
 
 		QuotationProcessor processor = new QuotationProcessor();
 
+		System.out.println(processor.isFullyMatch("CSHV-①-②", "CSHV-10-100"));
+		System.out.println(processor.isFullyMatch("ASRKR-①-g6-②-F③-S④-KA⑤-A⑥-KB⑦-B⑧-KC⑨-C⑩-A", "ASRKR-10-g6-50-F10-S10-KA3-A6-KB3-B6-KC3-C6-A"));
+		
 		// {id=ASRKR-①-g6-②-F③-S④-KA⑤-A⑥-KB⑦-B⑧-KC⑨-C⑩-A,
 		// miProductCode=SFGKRRA①-②-F③-S④-KA⑤-A⑥-KB⑦-B⑧-KC⑨-C⑩\
 

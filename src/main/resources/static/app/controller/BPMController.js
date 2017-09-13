@@ -134,6 +134,12 @@ Ext.define('tms.controller.BPMController', {
             historicActivities.store.load({params:{
             	processInstanceId: record.get("processInstanceId")
     	    }});
+            
+            var mailMessages = Ext.ComponentQuery.query('mailMessageList')[0];
+            mailMessages.resId = record.get('formInstanceId');
+            mailMessages.msgView.store.load({params:{
+            	resId: record.get('formInstanceId')
+    	    }});
 
             taskProcWin.setTitle("处理任务："+record.get("title"));
             taskProcWin.show();
@@ -176,7 +182,7 @@ Ext.define('tms.controller.BPMController', {
     	    }});
             
             var mailMessages = Ext.ComponentQuery.query('mailMessageList')[0];
-            mailMessages.store.load({params:{
+            mailMessages.msgView.store.load({params:{
             	resId: record.get('formInstanceId')
     	    }});
 
@@ -286,16 +292,26 @@ Ext.define('tms.controller.BPMController', {
         
         formPanel.getForm().updateRecord(formInstance);
         
-    	Ext.Ajax.request({
-        	url: tms.getContextPath() + '/api/bpm/processes',
-            method: 'POST',
-            jsonData: {"data":formInstance.getData()},
-            success: function(result, request) {            	
-            	Ext.ComponentQuery.query('bpmTaskWindow')[0].close();
-            	tms.notify("已经成功启动了[" + formInstance.get("title") + "]的订单处理流程","成功发起流程");
-            },
-            scope:this
-    	});
+        Ext.MessageBox.confirm(
+                i18n.t('small_hint'),
+                '是否确认启动当前流程?',
+                function (btn) {
+                    if (btn == "yes") {
+                    	Ext.Ajax.request({
+                        	url: tms.getContextPath() + '/api/bpm/processes',
+                            method: 'POST',
+                            jsonData: {"data":formInstance.getData()},
+                            success: function(result, request) {            	
+                            	Ext.ComponentQuery.query('bpmTaskWindow')[0].close();
+                            	tms.notify("已经成功启动了[" + formInstance.get("title") + "]的订单处理流程","成功发起流程");
+                            },
+                            scope:this
+                    	});
+                    }
+                }, this);
+        
+        
+
     },
     
     deleteSalesOrder:function (me, e, eOpts) {
@@ -336,22 +352,30 @@ Ext.define('tms.controller.BPMController', {
         var grid = Ext.ComponentQuery.query('taskList')[0];
         var record = grid.getSelectionModel().getSelection()[0];
     	
+        Ext.MessageBox.confirm(
+                i18n.t('small_hint'),
+                '是否确认完成当前的任务?',
+                function (btn) {
+                    if (btn == "yes") {
+                    	Ext.Ajax.request({
+                        	url: tms.getContextPath() + '/api/bpm/complete',
+                            method: 'POST',
+                            jsonData: {"data":formInstance.getData(),"taskId":record.get("id")},
+                            success: function(result, request) {            	
+                            	//完成任务的处理，关闭弹出窗口
+                            	Ext.ComponentQuery.query('bpmTaskProcessWindow')[0].close();
+                            	tms.notify("已经成功处理了[" + formInstance.get("title") + "]的订单","任务处理");
+                            	grid.store.clearFilter();
+                            	grid.store.load({params:{
+                        			assignment: 'MY'
+                        	    }});
+                            },
+                            scope:this
+                    	});
+                    }
+                }, this);
         
-    	Ext.Ajax.request({
-        	url: tms.getContextPath() + '/api/bpm/complete',
-            method: 'POST',
-            jsonData: {"data":formInstance.getData(),"taskId":record.get("id")},
-            success: function(result, request) {            	
-            	//完成任务的处理，关闭弹出窗口
-            	Ext.ComponentQuery.query('bpmTaskProcessWindow')[0].close();
-            	tms.notify("已经成功处理了[" + formInstance.get("title") + "]的订单","任务处理");
-            	grid.store.clearFilter();
-            	grid.store.load({params:{
-        			assignment: 'MY'
-        	    }});
-            },
-            scope:this
-    	});
+
     },
     onSubmit:function (me, e, eOpts) {
         var formPanel = Ext.ComponentQuery.query('salesOrderProcessForm')[0];
@@ -360,25 +384,27 @@ Ext.define('tms.controller.BPMController', {
         
         formPanel.getForm().updateRecord(formInstance);
         
-        formInstance.save({
-            success:function () {
-            	//暂时保存流程表单，关闭弹出窗口
-            	Ext.ComponentQuery.query('bpmTaskWindow')[0].close();
-            },
-            failure:function (form, action) {
-                switch (action.failureType) {
-                    case Ext.form.action.Action.CLIENT_INVALID:
-                        Ext.Msg.alert(i18n.t('Failure!'), i18n.t('Check all your fields.'));
-                        break;
-                    case Ext.form.action.Action.CONNECT_FAILURE:
-                        Ext.Msg.alert(i18n.t('Failure!'), i18n.t('AJAX communication problem.'));
-                        break;
-                    case Ext.form.action.Action.SERVER_INVALID:
-                        Ext.Msg.alert(i18n.t('Failure!'), action.result.msg);
-                }
-            },
-            scope:this
-        });
+	   	 formInstance.save({
+	         success:function () {
+	         	//暂时保存流程表单，关闭弹出窗口
+	         	Ext.ComponentQuery.query('bpmTaskWindow')[0].close();
+	         },
+	         failure:function (form, action) {
+	             switch (action.failureType) {
+	                 case Ext.form.action.Action.CLIENT_INVALID:
+	                     Ext.Msg.alert(i18n.t('Failure!'), i18n.t('Check all your fields.'));
+	                     break;
+	                 case Ext.form.action.Action.CONNECT_FAILURE:
+	                     Ext.Msg.alert(i18n.t('Failure!'), i18n.t('AJAX communication problem.'));
+	                     break;
+	                 case Ext.form.action.Action.SERVER_INVALID:
+	                     Ext.Msg.alert(i18n.t('Failure!'), action.result.msg);
+	             }
+	         },
+	         scope:this
+	     });
+        
+       
     },
     _closeWin:function () {
         if(Ext.ComponentQuery.query('bpmTaskWindow')[0]) {

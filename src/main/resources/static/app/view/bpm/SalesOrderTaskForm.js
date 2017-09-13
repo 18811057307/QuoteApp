@@ -30,16 +30,11 @@ Ext.define('tms.view.bpm.SalesOrderTaskForm', {
             }]
         }
         ,{
-            xtype:'tabpanel',
-            plain:true,
-            activeTab: 0,
-            items:[{
                 title:'产品信息',
                 items: [{
                     xtype: 'salesOrderEditorList',
                     autoHeight: true
                 }]
-            }]
-        }
+            }
     ]
 });

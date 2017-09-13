@@ -7,6 +7,7 @@
  */
 package com.sadetec.repository;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import org.springframework.data.domain.Example;
@@ -40,4 +41,7 @@ public interface SalesOrderRepository extends JpaRepository<SalesOrder, Integer>
         Page<SalesOrder> page = findAll(Example.of(probe, matcher), new PageRequest(0, maxResults));
         return page.getContent();
     }
+
+    @Query(value="SELECT SUM(AMOUNT*UNIT_PRICE) FROM SALES_ORDER WHERE FORM_INSTANCE_ID = ?1", nativeQuery = true)
+	BigDecimal calcTotalPrice(Integer formInstanceId);
 }

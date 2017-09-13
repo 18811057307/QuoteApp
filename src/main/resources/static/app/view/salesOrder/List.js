@@ -80,5 +80,5 @@ Ext.define('tms.view.salesOrder.List', {
         }]}];
         
         this.callParent(arguments);
-    },
+    }
 });

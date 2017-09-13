@@ -6,34 +6,25 @@
     </bpmn:startEvent>
     <bpmn:parallelGateway id="parallel_order_start" name="订单处理开始">
       <bpmn:incoming>SequenceFlow_1dgzce7</bpmn:incoming>
-      <bpmn:outgoing>SequenceFlow_0vee4to</bpmn:outgoing>
-      <bpmn:outgoing>SequenceFlow_1kwk7an</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_0tg45gc</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_1gq5gpg</bpmn:outgoing>
     </bpmn:parallelGateway>
     <bpmn:sequenceFlow id="SequenceFlow_16sjhve" sourceRef="submit_order" targetRef="product_process" />
-    <bpmn:sequenceFlow id="SequenceFlow_0vee4to" sourceRef="parallel_order_start" targetRef="price_inquiry" />
-    <bpmn:sequenceFlow id="SequenceFlow_1kwk7an" sourceRef="parallel_order_start" targetRef="factory_accounting" />
-    <bpmn:sequenceFlow id="SequenceFlow_1dkj1eb" sourceRef="factory_accounting" targetRef="parallel_order_end" />
-    <bpmn:sequenceFlow id="SequenceFlow_1f4fte6" sourceRef="price_inquiry" targetRef="parallel_order_end" />
-    <bpmn:parallelGateway id="parallel_order_end" name="订单处理结束">
-      <bpmn:incoming>SequenceFlow_1dkj1eb</bpmn:incoming>
-      <bpmn:incoming>SequenceFlow_1f4fte6</bpmn:incoming>
-      <bpmn:outgoing>SequenceFlow_13v1hbi</bpmn:outgoing>
-    </bpmn:parallelGateway>
-    <bpmn:sequenceFlow id="SequenceFlow_13v1hbi" sourceRef="parallel_order_end" targetRef="quotation_audit" />
     <bpmn:endEvent id="EndEvent_1nyr5jo" name="处理完成">
       <bpmn:incoming>SequenceFlow_0x4zwkj</bpmn:incoming>
+      <bpmn:incoming>need_audit_no</bpmn:incoming>
     </bpmn:endEvent>
     <bpmn:sequenceFlow id="SequenceFlow_0x4zwkj" sourceRef="quotation_audit" targetRef="EndEvent_1nyr5jo" />
     <bpmn:userTask id="factory_accounting" name="工厂核算" camunda:formKey="order_process_factory" camunda:candidateGroups="FACOTRY_ADMIN">
-      <bpmn:incoming>SequenceFlow_1kwk7an</bpmn:incoming>
-      <bpmn:outgoing>SequenceFlow_1dkj1eb</bpmn:outgoing>
+      <bpmn:incoming>need_factory_yes</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0dfpq7m</bpmn:outgoing>
     </bpmn:userTask>
     <bpmn:userTask id="price_inquiry" name="采购询价" camunda:formKey="order_process_purchase" camunda:candidateGroups="PURCHASE_ADMIN">
-      <bpmn:incoming>SequenceFlow_0vee4to</bpmn:incoming>
-      <bpmn:outgoing>SequenceFlow_1f4fte6</bpmn:outgoing>
+      <bpmn:incoming>need_purchase_yes</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1fyq9uh</bpmn:outgoing>
     </bpmn:userTask>
     <bpmn:userTask id="quotation_audit" name="报价审核" camunda:formKey="order_process_quote_audit" camunda:candidateGroups="QUOTE_AUDITOR">
-      <bpmn:incoming>SequenceFlow_13v1hbi</bpmn:incoming>
+      <bpmn:incoming>need_autid_yes</bpmn:incoming>
       <bpmn:outgoing>SequenceFlow_0x4zwkj</bpmn:outgoing>
     </bpmn:userTask>
     <bpmn:serviceTask id="product_process" name="产品分类" camunda:delegateExpression="${salesOrderProcessService}">
@@ -41,6 +32,66 @@
       <bpmn:outgoing>SequenceFlow_1dgzce7</bpmn:outgoing>
     </bpmn:serviceTask>
     <bpmn:sequenceFlow id="SequenceFlow_1dgzce7" sourceRef="product_process" targetRef="parallel_order_start" />
+    <bpmn:exclusiveGateway id="need_purchase" name="需要询价?">
+      <bpmn:incoming>SequenceFlow_0tg45gc</bpmn:incoming>
+      <bpmn:outgoing>need_purchase_yes</bpmn:outgoing>
+      <bpmn:outgoing>need_purchase_no</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="SequenceFlow_0tg45gc" sourceRef="parallel_order_start" targetRef="need_purchase" />
+    <bpmn:sequenceFlow id="need_purchase_yes" name="是" sourceRef="need_purchase" targetRef="price_inquiry">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${needPurchase}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:parallelGateway id="parallel_order_end" name="订单处理结束">
+      <bpmn:incoming>SequenceFlow_1h3weyw</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_18j8u3v</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1i5q6zo</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:exclusiveGateway id="need_factory" name="需要核算?">
+      <bpmn:incoming>SequenceFlow_1gq5gpg</bpmn:incoming>
+      <bpmn:outgoing>need_factory_yes</bpmn:outgoing>
+      <bpmn:outgoing>need_factory_no</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="SequenceFlow_1gq5gpg" sourceRef="parallel_order_start" targetRef="need_factory" />
+    <bpmn:sequenceFlow id="need_factory_yes" name="是" sourceRef="need_factory" targetRef="factory_accounting">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${needFactory}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_1i5q6zo" sourceRef="parallel_order_end" targetRef="calc_total_price" />
+    <bpmn:serviceTask id="calc_total_price" name="核算总价" camunda:delegateExpression="${salesOrderProcessService}">
+      <bpmn:incoming>SequenceFlow_1i5q6zo</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0b7u9cw</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="need_audit" name="需要审核?">
+      <bpmn:incoming>SequenceFlow_0b7u9cw</bpmn:incoming>
+      <bpmn:outgoing>need_autid_yes</bpmn:outgoing>
+      <bpmn:outgoing>need_audit_no</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="SequenceFlow_0b7u9cw" sourceRef="calc_total_price" targetRef="need_audit" />
+    <bpmn:sequenceFlow id="need_autid_yes" name="是" sourceRef="need_audit" targetRef="quotation_audit">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${needAudit}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="need_audit_no" name="否" sourceRef="need_audit" targetRef="EndEvent_1nyr5jo">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${!needAudit}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:exclusiveGateway id="need_factory_end">
+      <bpmn:incoming>SequenceFlow_0dfpq7m</bpmn:incoming>
+      <bpmn:incoming>need_factory_no</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_18j8u3v</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="SequenceFlow_0dfpq7m" sourceRef="factory_accounting" targetRef="need_factory_end" />
+    <bpmn:sequenceFlow id="need_factory_no" name="否" sourceRef="need_factory" targetRef="need_factory_end">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${!needFactory}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:exclusiveGateway id="need_purchase_end">
+      <bpmn:incoming>SequenceFlow_1fyq9uh</bpmn:incoming>
+      <bpmn:incoming>need_purchase_no</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1h3weyw</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="SequenceFlow_1fyq9uh" sourceRef="price_inquiry" targetRef="need_purchase_end" />
+    <bpmn:sequenceFlow id="need_purchase_no" name="否" sourceRef="need_purchase" targetRef="need_purchase_end">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${!needPurchase}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_1h3weyw" sourceRef="need_purchase_end" targetRef="parallel_order_end" />
+    <bpmn:sequenceFlow id="SequenceFlow_18j8u3v" sourceRef="need_factory_end" targetRef="parallel_order_end" />
   </bpmn:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="sales_order_process">
@@ -65,72 +116,28 @@
           <dc:Bounds x="147" y="114" width="90" height="12" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="SequenceFlow_0vee4to_di" bpmnElement="SequenceFlow_0vee4to">
-        <di:waypoint xsi:type="dc:Point" x="374" y="145" />
-        <di:waypoint xsi:type="dc:Point" x="374" y="190" />
-        <di:waypoint xsi:type="dc:Point" x="539" y="190" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="389" y="161.5" width="0" height="12" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="SequenceFlow_1kwk7an_di" bpmnElement="SequenceFlow_1kwk7an">
-        <di:waypoint xsi:type="dc:Point" x="374" y="95" />
-        <di:waypoint xsi:type="dc:Point" x="374" y="62" />
-        <di:waypoint xsi:type="dc:Point" x="539" y="62" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="389" y="72.5" width="0" height="12" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="SequenceFlow_1dkj1eb_di" bpmnElement="SequenceFlow_1dkj1eb">
-        <di:waypoint xsi:type="dc:Point" x="639" y="62" />
-        <di:waypoint xsi:type="dc:Point" x="804" y="62" />
-        <di:waypoint xsi:type="dc:Point" x="804" y="95" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="721.5" y="41" width="0" height="12" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="SequenceFlow_1f4fte6_di" bpmnElement="SequenceFlow_1f4fte6">
-        <di:waypoint xsi:type="dc:Point" x="639" y="190" />
-        <di:waypoint xsi:type="dc:Point" x="804" y="190" />
-        <di:waypoint xsi:type="dc:Point" x="804" y="145" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="721.5" y="169" width="0" height="12" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNShape id="ParallelGateway_0jk5cty_di" bpmnElement="parallel_order_end">
-        <dc:Bounds x="779" y="95" width="50" height="50" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="772" y="149" width="66" height="12" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNEdge id="SequenceFlow_13v1hbi_di" bpmnElement="SequenceFlow_13v1hbi">
-        <di:waypoint xsi:type="dc:Point" x="829" y="120" />
-        <di:waypoint xsi:type="dc:Point" x="981" y="120" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="905" y="99" width="0" height="12" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="EndEvent_1nyr5jo_di" bpmnElement="EndEvent_1nyr5jo">
-        <dc:Bounds x="1197" y="102" width="36" height="36" />
+        <dc:Bounds x="1369" y="102" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1193" y="142" width="44" height="12" />
+          <dc:Bounds x="1365" y="142" width="44" height="12" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="SequenceFlow_0x4zwkj_di" bpmnElement="SequenceFlow_0x4zwkj">
-        <di:waypoint xsi:type="dc:Point" x="1081" y="120" />
-        <di:waypoint xsi:type="dc:Point" x="1197" y="120" />
+        <di:waypoint xsi:type="dc:Point" x="1293" y="9" />
+        <di:waypoint xsi:type="dc:Point" x="1387" y="9" />
+        <di:waypoint xsi:type="dc:Point" x="1387" y="102" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1139" y="99" width="0" height="12" />
+          <dc:Bounds x="1295" y="-12" width="90" height="12" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="UserTask_0sjnn96_di" bpmnElement="factory_accounting">
-        <dc:Bounds x="539" y="22" width="100" height="80" />
+        <dc:Bounds x="536" y="-60" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="UserTask_1hw2n3y_di" bpmnElement="price_inquiry">
-        <dc:Bounds x="539" y="150" width="100" height="80" />
+        <dc:Bounds x="536" y="230" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="UserTask_0c2a4ex_di" bpmnElement="quotation_audit">
-        <dc:Bounds x="981" y="80" width="100" height="80" />
+        <dc:Bounds x="1193" y="-31" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="ServiceTask_1med2zb_di" bpmnElement="product_process">
         <dc:Bounds x="202" y="80" width="100" height="80" />
@@ -140,6 +147,148 @@
         <di:waypoint xsi:type="dc:Point" x="349" y="120" />
         <bpmndi:BPMNLabel>
           <dc:Bounds x="325.5" y="99" width="0" height="12" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ExclusiveGateway_0nu9ty4_di" bpmnElement="need_purchase" isMarkerVisible="true">
+        <dc:Bounds x="349" y="245" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="349" y="299" width="50" height="12" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0tg45gc_di" bpmnElement="SequenceFlow_0tg45gc">
+        <di:waypoint xsi:type="dc:Point" x="374" y="145" />
+        <di:waypoint xsi:type="dc:Point" x="374" y="245" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="389" y="189" width="0" height="12" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1slgpxd_di" bpmnElement="need_purchase_yes">
+        <di:waypoint xsi:type="dc:Point" x="399" y="270" />
+        <di:waypoint xsi:type="dc:Point" x="536" y="270" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="462" y="249" width="11" height="12" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ParallelGateway_0jk5cty_di" bpmnElement="parallel_order_end">
+        <dc:Bounds x="779" y="95" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="772" y="149" width="66" height="12" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ExclusiveGateway_1ahifvj_di" bpmnElement="need_factory" isMarkerVisible="true">
+        <dc:Bounds x="349" y="-45" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="349" y="9" width="50" height="12" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1gq5gpg_di" bpmnElement="SequenceFlow_1gq5gpg">
+        <di:waypoint xsi:type="dc:Point" x="374" y="95" />
+        <di:waypoint xsi:type="dc:Point" x="374" y="5" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="389" y="44" width="0" height="12" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1u1lu0o_di" bpmnElement="need_factory_yes">
+        <di:waypoint xsi:type="dc:Point" x="399" y="-20" />
+        <di:waypoint xsi:type="dc:Point" x="536" y="-20" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="462" y="-41" width="11" height="12" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1i5q6zo_di" bpmnElement="SequenceFlow_1i5q6zo">
+        <di:waypoint xsi:type="dc:Point" x="829" y="120" />
+        <di:waypoint xsi:type="dc:Point" x="888" y="120" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="858.5" y="99" width="0" height="12" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ServiceTask_0cvb5gc_di" bpmnElement="calc_total_price">
+        <dc:Bounds x="888" y="80" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ExclusiveGateway_0efmo21_di" bpmnElement="need_audit" isMarkerVisible="true">
+        <dc:Bounds x="1077" y="95" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1077" y="149" width="50" height="12" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0b7u9cw_di" bpmnElement="SequenceFlow_0b7u9cw">
+        <di:waypoint xsi:type="dc:Point" x="988" y="120" />
+        <di:waypoint xsi:type="dc:Point" x="1077" y="120" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1032.5" y="99" width="0" height="12" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_113tevz_di" bpmnElement="need_autid_yes">
+        <di:waypoint xsi:type="dc:Point" x="1102" y="95" />
+        <di:waypoint xsi:type="dc:Point" x="1102" y="9" />
+        <di:waypoint xsi:type="dc:Point" x="1193" y="9" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1112" y="46" width="11" height="12" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0r5or01_di" bpmnElement="need_audit_no">
+        <di:waypoint xsi:type="dc:Point" x="1127" y="120" />
+        <di:waypoint xsi:type="dc:Point" x="1369" y="120" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1243" y="99" width="11" height="12" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ExclusiveGateway_0pf7zeu_di" bpmnElement="need_factory_end" isMarkerVisible="true">
+        <dc:Bounds x="779" y="-45" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="804" y="9" width="0" height="12" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0dfpq7m_di" bpmnElement="SequenceFlow_0dfpq7m">
+        <di:waypoint xsi:type="dc:Point" x="636" y="-20" />
+        <di:waypoint xsi:type="dc:Point" x="779" y="-20" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="707.5" y="-41" width="0" height="12" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1172l0g_di" bpmnElement="need_factory_no">
+        <di:waypoint xsi:type="dc:Point" x="374" y="-45" />
+        <di:waypoint xsi:type="dc:Point" x="374" y="-130" />
+        <di:waypoint xsi:type="dc:Point" x="804" y="-130" />
+        <di:waypoint xsi:type="dc:Point" x="804" y="-45" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="584" y="-151" width="11" height="12" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ExclusiveGateway_04i4fb3_di" bpmnElement="need_purchase_end" isMarkerVisible="true">
+        <dc:Bounds x="779" y="245" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="804" y="299" width="0" height="12" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1fyq9uh_di" bpmnElement="SequenceFlow_1fyq9uh">
+        <di:waypoint xsi:type="dc:Point" x="636" y="270" />
+        <di:waypoint xsi:type="dc:Point" x="779" y="270" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="707.5" y="249" width="0" height="12" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0pqlg6e_di" bpmnElement="need_purchase_no">
+        <di:waypoint xsi:type="dc:Point" x="374" y="295" />
+        <di:waypoint xsi:type="dc:Point" x="374" y="389" />
+        <di:waypoint xsi:type="dc:Point" x="804" y="389" />
+        <di:waypoint xsi:type="dc:Point" x="804" y="295" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="584" y="368" width="11" height="12" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1h3weyw_di" bpmnElement="SequenceFlow_1h3weyw">
+        <di:waypoint xsi:type="dc:Point" x="804" y="245" />
+        <di:waypoint xsi:type="dc:Point" x="804" y="145" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="819" y="189" width="0" height="12" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_18j8u3v_di" bpmnElement="SequenceFlow_18j8u3v">
+        <di:waypoint xsi:type="dc:Point" x="804" y="5" />
+        <di:waypoint xsi:type="dc:Point" x="804" y="95" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="819" y="44" width="0" height="12" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
