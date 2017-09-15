@@ -25,6 +25,9 @@ import com.sadetec.model.SalesOrder_;
 @Transactional
 public interface SalesOrderRepository extends JpaRepository<SalesOrder, Integer> {
 
+	@Query(value="SELECT DISTINCT(USER_ID) FROM SALES_ORDER WHERE FORM_INSTANCE_ID = ?1 AND PROC_FLAG=FALSE", nativeQuery = true)
+	List<String> findSalesOrderAssignees(Integer formInstanceId);
+	
 	List<SalesOrder> findByFormInstanceId(Integer formInstanceId);
 	
 	@Modifying(clearAutomatically = true)

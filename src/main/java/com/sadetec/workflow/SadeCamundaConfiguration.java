@@ -27,11 +27,13 @@ public class SadeCamundaConfiguration implements CamundaProcessEngineConfigurati
 
 	@Override
 	public void postProcessEngineBuild(ProcessEngine pe) {
-		logger.info("postProcessEngineBuild当前的身份服务{}",pe.getIdentityService());
+		//logger.info("postProcessEngineBuild当前的身份服务{}",pe.getIdentityService());
 	}
 
 	@Override
 	public void preInit(ProcessEngineConfigurationImpl pec) {
+		
+		/**
 		logger.info("preInit当前的身份服务1111111111111111111");
 		
 		LdapIdentityProviderPlugin ldapIdentityProviderPlugin = new LdapIdentityProviderPlugin();
@@ -56,6 +58,8 @@ public class SadeCamundaConfiguration implements CamundaProcessEngineConfigurati
 		processEnginePlugins.add(ldapIdentityProviderPlugin);
 		pec.setProcessEnginePlugins(processEnginePlugins);
 		logger.info("preInit当前的身份服务33333333333333333333333");
+		
+		**/
 		
 	}
 }

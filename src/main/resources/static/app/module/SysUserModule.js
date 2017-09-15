@@ -22,6 +22,7 @@ Ext.define('tms.module.SysUserModule', {
                 constrainHeader:true,
                 layout:'border',
                 items:[
+                	{xtype:'companyList',split:true, border:false, region:'west', width:200},
                     {xtype:'sysUserList', region:'center'},
                     {xtype:'panel',items: [{xtype:'sysRoleCheckTree'}], split:true,border:false, width: 400,  region: 'east'}
                 ]
