@@ -4,18 +4,22 @@ Ext.define('tms.view.bpm.NavPanel', {
     useArrows: true,
     alias:'widget.bpmNavPanel',
     initComponent: function() {
-        this.store = Ext.create('Ext.data.TreeStore', {
-            root: {
-                expanded: true,
-                children: [
-                    { text: "待处理", id:"MY", leaf: true },
-                    { text: "待认领", id:"GROUP", leaf: true },
-                    { text: "已处理", id:"DONE", leaf: true },
-                    { text: "由我发起", id:"BYME", leaf: true }
-                ]
-            }
-        });
 
+    	this.store = Ext.create('Ext.data.TreeStore', {
+        	storeId: 'BpmNavTreeStore',
+            proxy: {
+                type: 'ajax',
+                url: tms.getContextPath() + 'api/bpm/getNavTree',
+        		reader : {
+        			root : 'data',
+        			type : 'json'
+        		},
+        		pageSize : -1
+            },
+            autoLoad:false
+        });
+        
         this.callParent();
+
     } 
 });

@@ -14,8 +14,18 @@ Ext.define('tms.model.SalesOrder', {
     		,{name:'deliveryDate', type:'date', dateFormat: 'time'}
     		,{name:'amount', type:'string'}
     		,{name:'unit', type:'string'}
-    		,{name:'unitPrice', type:'string'}
-    		,{name:'comment', type:'string'}
+    		,{name:'unitPrice', type:'double'}
+    		,{name:'factoryPrice', type:'double'}
+    		,{name:'costPrice', type:'double'}
+    		,{name:'quoterId', type:'string'}
+    		,{name:'quoterName', type:'string'}
+    		,{name:'auditorId', type:'string'}
+    		,{name:'auditorName', type:'string'}
+    		,{name:'drawingUrl', type:'string'}
+    		,{name:'atProductCode', type:'string'}
+    		,{name:'brand', type:'string'}
+    		,{name:'needProc', type:'boolean'}
+    		,{name:'comment', type:'string'}    		
         ],
     getRecordName: function () {
         return this.get("id");

@@ -29,6 +29,17 @@ public abstract class SalesOrder_ {
     public static volatile SingularAttribute<SalesOrder, Date> deliveryDate;
     public static volatile SingularAttribute<SalesOrder, Integer> amount;
     public static volatile SingularAttribute<SalesOrder, String> unit;
+    public static volatile SingularAttribute<SalesOrder, BigDecimal> factoryPrice;
+    public static volatile SingularAttribute<SalesOrder, BigDecimal> costPrice;
     public static volatile SingularAttribute<SalesOrder, BigDecimal> unitPrice;
+    public static volatile SingularAttribute<SalesOrder, String> quoterId;
+    public static volatile SingularAttribute<SalesOrder, String> quoterName;
+    public static volatile SingularAttribute<SalesOrder, String> auditorId;
+    public static volatile SingularAttribute<SalesOrder, String> auditorName;
+    public static volatile SingularAttribute<SalesOrder, String> drawingUrl;
+    public static volatile SingularAttribute<SalesOrder, String> atProductCode;
+    public static volatile SingularAttribute<SalesOrder, String> brand;
+    public static volatile SingularAttribute<SalesOrder, Boolean> needProc;
     public static volatile SingularAttribute<SalesOrder, String> comment;
+    
 }

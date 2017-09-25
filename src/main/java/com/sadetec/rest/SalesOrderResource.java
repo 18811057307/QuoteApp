@@ -14,15 +14,19 @@ import static org.springframework.web.bind.annotation.RequestMethod.POST;
 import static org.springframework.web.bind.annotation.RequestMethod.PUT;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 import org.apache.commons.beanutils.BeanUtils;
+import org.apache.commons.lang.NumberUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -47,42 +51,57 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sadetec.model.Category;
+import com.sadetec.model.MailMessage;
 import com.sadetec.model.ManualProductMap;
 import com.sadetec.model.ProcessDefinitionDto;
 import com.sadetec.model.SalesOrder;
+import com.sadetec.model.SysUser;
+import com.sadetec.repository.CategoryRepository;
+import com.sadetec.repository.MailMessageRepository;
 import com.sadetec.repository.SalesOrderRepository;
+import com.sadetec.repository.SysUserRepository;
 import com.sadetec.rest.support.AutoCompleteQuery;
 import com.sadetec.rest.support.PageResponse;
 import com.sadetec.service.StorageException;
 import com.sadetec.service.StorageService;
 import com.sadetec.util.ExcelImportUtils;
+import com.sadetec.util.UserContext;
 import com.sadetec.util.WorkbookProperties;
 
 @RestController
 @RequestMapping("/api/salesOrder")
 public class SalesOrderResource {
 
-    private final Logger log = LoggerFactory.getLogger(SalesOrderResource.class);
+	private final Logger log = LoggerFactory.getLogger(SalesOrderResource.class);
 
-    @Autowired
-    private SalesOrderRepository salesOrderRepository;
-    
+	@Autowired
+	private SalesOrderRepository salesOrderRepository;
+
 	@Autowired
 	private StorageService storageService;
 
 	@Autowired
 	private WorkbookProperties workbookProperties;
-	
+
 	@Autowired
 	private ObjectMapper objectMapper;
-	
-    /**
-     * 上传销售订单，将订单中的产品信息进行预处理
-     * 
-     * @param file
-     * @return
-     * @throws IOException
-     */
+
+	@Autowired
+	private SysUserRepository sysUserRepository;
+
+	@Autowired
+	private MailMessageRepository mailMessageRepository;
+
+	@Autowired
+	private CategoryRepository categoryRepository;
+
+	/**
+	 * 上传销售订单，将订单中的产品信息进行预处理
+	 * 
+	 * @param file
+	 * @return
+	 * @throws IOException
+	 */
 	@PostMapping("/upload")
 	public ResponseEntity<PageResponse> handleFileUpload(@RequestParam("file") MultipartFile file,
 			@RequestParam(value = "formInstanceId", required = true) Integer formInstanceId) throws IOException {
@@ -109,6 +128,12 @@ public class SalesOrderResource {
 					SalesOrder tempOrder = new SalesOrder();
 					BeanUtils.populate(tempOrder, map);
 					tempOrder.setFormInstanceId(formInstanceId);
+					
+					tempOrder.setCostPrice(BigDecimal.ZERO);
+					tempOrder.setFactoryPrice(BigDecimal.ZERO);
+					tempOrder.setUnitPrice(BigDecimal.ZERO);
+					
+					tempOrder.setNeedProc(true);
 					log.info("待保存订单产品信息:{}", tempOrder);
 					salesOrderRepository.saveAndFlush(tempOrder);
 				}
@@ -126,43 +151,43 @@ public class SalesOrderResource {
 			return new ResponseEntity<PageResponse>(pageResponse, HttpStatus.OK);
 		}
 	}
-    
-    /**
-     * Create a new SalesOrder.
-     */
-    @RequestMapping(value = "/", method = POST, produces = APPLICATION_JSON_VALUE)
-    public ResponseEntity<SalesOrder> create(@RequestBody SalesOrder salesOrderDTO) throws URISyntaxException {
 
-        log.debug("Create SalesOrder : {}", salesOrderDTO);
+	/**
+	 * Create a new SalesOrder.
+	 */
+	@RequestMapping(value = "/", method = POST, produces = APPLICATION_JSON_VALUE)
+	public ResponseEntity<SalesOrder> create(@RequestBody SalesOrder salesOrderDTO) throws URISyntaxException {
 
-        if (salesOrderDTO.isIdSet()) {
-            return ResponseEntity.badRequest().header("Failure", "Cannot create SalesOrder with existing ID").body(null);
-        }
+		log.debug("Create SalesOrder : {}", salesOrderDTO);
 
-        SalesOrder result = salesOrderRepository.save(salesOrderDTO);
+		if (salesOrderDTO.isIdSet()) {
+			return ResponseEntity.badRequest().header("Failure", "Cannot create SalesOrder with existing ID").body(null);
+		}
 
-        return ResponseEntity.created(new URI("/api/salesOrders/" + result.getId())).body(result);
-    }
+		SalesOrder result = salesOrderRepository.save(salesOrderDTO);
 
-    /**
-    * Find by id SalesOrder.
-    */
-    @RequestMapping(value = "/{id}", method = GET, produces = APPLICATION_JSON_VALUE)
-    public ResponseEntity<SalesOrder> findById(@PathVariable Integer id) throws URISyntaxException {
+		return ResponseEntity.created(new URI("/api/salesOrders/" + result.getId())).body(result);
+	}
 
-        log.debug("Find by id SalesOrder : {}", id);
+	/**
+	 * Find by id SalesOrder.
+	 */
+	@RequestMapping(value = "/{id}", method = GET, produces = APPLICATION_JSON_VALUE)
+	public ResponseEntity<SalesOrder> findById(@PathVariable Integer id) throws URISyntaxException {
 
-        return Optional.ofNullable(salesOrderRepository.findOne(id)).map(salesOrderDTO -> new ResponseEntity<>(salesOrderDTO, HttpStatus.OK))
-                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
-    }
+		log.debug("Find by id SalesOrder : {}", id);
 
-    /**
-     * Update SalesOrder.
-     */
-    @RequestMapping(value = "/update", method = POST, produces = APPLICATION_JSON_VALUE)
-    public ResponseEntity<PageResponse<SalesOrder>> update(@RequestBody String json) throws URISyntaxException {
+		return Optional.ofNullable(salesOrderRepository.findOne(id)).map(salesOrderDTO -> new ResponseEntity<>(salesOrderDTO, HttpStatus.OK))
+				.orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+	}
 
-    	log.debug("Update SalesOrder : {}", json);
+	/**
+	 * Update SalesOrder.
+	 */
+	@RequestMapping(value = "/update", method = POST, produces = APPLICATION_JSON_VALUE)
+	public ResponseEntity<PageResponse<SalesOrder>> update(@RequestBody String json) throws URISyntaxException {
+
+		log.debug("Update SalesOrder : {}", json);
 		PageResponse<SalesOrder> pageResponse = new PageResponse<SalesOrder>(null);
 		TypeReference<List<SalesOrder>> typeRef = new TypeReference<List<SalesOrder>>() {
 		};
@@ -173,11 +198,15 @@ public class SalesOrderResource {
 				List<SalesOrder> temps = objectMapper.convertValue(tempNode, typeRef);
 				for (Iterator<SalesOrder> ketIter = temps.iterator(); ketIter.hasNext();) {
 					SalesOrder tempObj = ketIter.next();
+
+					recordChangeSummary(tempObj);
+
 					salesOrderRepository.save(tempObj);
 				}
 			}
 			else {
 				SalesOrder tempObj = objectMapper.convertValue(tempNode, SalesOrder.class);
+				recordChangeSummary(tempObj);
 				salesOrderRepository.save(tempObj);
 			}
 
@@ -191,37 +220,137 @@ public class SalesOrderResource {
 			pageResponse.setMessage("Update SalesOrder Failure");
 			return new ResponseEntity<PageResponse<SalesOrder>>(pageResponse, HttpStatus.OK);
 		}
-    }
+	}
 
-    /**
-     * Find a Page of SalesOrder using query by example.
-     */
-    @RequestMapping(value = "/page", method = GET, produces = APPLICATION_JSON_VALUE)
-    public ResponseEntity<PageResponse<SalesOrder>> findPage(
-    		@RequestParam(value = "formInstanceId", required = true) Integer formInstanceId) throws URISyntaxException {
-		List<SalesOrder> results = salesOrderRepository.findByFormInstanceId(formInstanceId);
+	private void recordChangeSummary(SalesOrder salesOrder) {
+		if (null != salesOrder.getId()) {
+			SalesOrder oriOrder = salesOrderRepository.findOne(salesOrder.getId());
+
+			if (null != oriOrder) {
+				String comment = "";
+				if (oriOrder.getAmount() != salesOrder.getAmount()) {
+					comment += String.format("数量由%d变更为%d;", oriOrder.getAmount(), salesOrder.getAmount());
+				}
+
+				if (BigDecimal.ZERO.compareTo(oriOrder.getCostPrice()) == 0 && oriOrder.getCostPrice().compareTo(salesOrder.getCostPrice()) != 0) {
+					comment += String.format("成本价设置为%f;", salesOrder.getCostPrice());
+				}
+				
+				if (BigDecimal.ZERO.compareTo(oriOrder.getCostPrice()) != 0 && oriOrder.getCostPrice().compareTo(salesOrder.getCostPrice()) != 0) {
+					comment += String.format("成本价由%f变更为%f;", oriOrder.getCostPrice(), salesOrder.getCostPrice());
+				}
+
+				if (BigDecimal.ZERO.compareTo(oriOrder.getFactoryPrice()) == 0 && oriOrder.getFactoryPrice().compareTo(salesOrder.getFactoryPrice()) != 0) {
+					comment += String.format("出厂价设置为%f;", salesOrder.getFactoryPrice());
+				}
+				
+				if (BigDecimal.ZERO.compareTo(oriOrder.getFactoryPrice()) != 0 && oriOrder.getFactoryPrice().compareTo(salesOrder.getFactoryPrice()) != 0) {
+					comment += String.format("出厂价由%f变更为%f;", oriOrder.getFactoryPrice(), salesOrder.getFactoryPrice());
+				}
+				
+				if (BigDecimal.ZERO.compareTo(oriOrder.getUnitPrice()) == 0 && oriOrder.getUnitPrice().compareTo(salesOrder.getUnitPrice()) != 0) {
+					comment += String.format("统一价设置为%f;", salesOrder.getUnitPrice());
+				}
+				
+				if (BigDecimal.ZERO.compareTo(oriOrder.getUnitPrice()) != 0 && oriOrder.getUnitPrice().compareTo(salesOrder.getUnitPrice()) != 0) {
+					comment += String.format("统一价由%f变更为%f;", oriOrder.getUnitPrice(), salesOrder.getUnitPrice());
+				}
+
+				if (!StringUtils.equals(oriOrder.getAuditorId(), salesOrder.getAuditorId())) {
+					SysUser oriAuditor = sysUserRepository.getByLoginName(oriOrder.getAuditorId());
+					SysUser newAuditor = sysUserRepository.getByLoginName(salesOrder.getAuditorId());
+
+					if (null == oriAuditor) {
+						comment += String.format("审核员指定为%s;", newAuditor.getName());
+					}
+					else {
+						comment += String.format("审核员由%s变更为%s;", oriAuditor.getName(), newAuditor.getName());
+					}
+				}
+
+				if (!StringUtils.equals(oriOrder.getQuoterId(), salesOrder.getQuoterId())) {
+					SysUser oriQuoter = sysUserRepository.getByLoginName(oriOrder.getQuoterId());
+					SysUser neworiQuoter = sysUserRepository.getByLoginName(salesOrder.getQuoterId());
+
+					if (null == oriQuoter) {
+						comment += String.format("采购员指定为%s;", neworiQuoter.getName());
+					}
+					else {
+						comment += String.format("采购员由%s变更为%s;", oriQuoter.getName(), neworiQuoter.getName());
+					}
+				}
+
+				if (StringUtils.isNotEmpty(comment)) {
+					comment = String.format("产品(%s)的%s", oriOrder.getProductCode(), comment);
+					SysUser curUser = sysUserRepository.getByLoginName(UserContext.getUsername());
+					MailMessage tempObj = new MailMessage();
+					tempObj.setAuthorId(curUser.getName());
+					tempObj.setCreateUid(curUser.getLoginName());
+					tempObj.setBody(comment);
+					tempObj.createDate(new Date());
+					tempObj.setResId(oriOrder.getFormInstanceId());
+					mailMessageRepository.save(tempObj);
+				}
+
+
+			}
+
+		}
+	}
+
+	/**
+	 * Find a Page of SalesOrder using query by example.
+	 */
+	@RequestMapping(value = "/page", method = GET, produces = APPLICATION_JSON_VALUE)
+	public ResponseEntity<PageResponse<SalesOrder>> findPage(
+			@RequestParam(value = "formInstanceId", required = true) Integer formInstanceId
+			,@RequestParam(value = "taskDefinitionKey", required = false) String taskDefinitionKey)
+			throws URISyntaxException {
+		List<SalesOrder> results = new ArrayList<>();
 		
+		if(null == taskDefinitionKey) {
+			results = salesOrderRepository.findByFormInstanceIdOrderById(formInstanceId);
+		}
+		
+		//如果是任务分配环节,则获取所有的产品信息
+		if("manual_allocation".equals(taskDefinitionKey)) {
+			results = salesOrderRepository.findByFormInstanceIdOrderById(formInstanceId);
+		}
+		
+		//如果是询价环节,则至获取当前用户被分配的产品信息
+		if("price_inquiry".equals(taskDefinitionKey)) {
+			results = salesOrderRepository.findByFormInstanceIdAndQuoterIdAndNeedProc(formInstanceId, UserContext.getUsername(), true);
+		}
+		
+		//如果是审核环节,则至获取当前用户被分配的,以及所有大类的
+		if("price_audit".equals(taskDefinitionKey)) {
+			results.addAll(salesOrderRepository.findByFormInstanceIdAndAuditorId(formInstanceId, UserContext.getUsername()));
+			results.addAll(salesOrderRepository.findByCategoryName(formInstanceId, UserContext.getUsername()));
+		}
+		
+
 		PageResponse<SalesOrder> pageResponse = new PageResponse<SalesOrder>(results);
 		pageResponse.setSuccess(Boolean.TRUE);
 		pageResponse.setTotal(results.size());
 
 		return new ResponseEntity<PageResponse<SalesOrder>>(pageResponse, HttpStatus.OK);
-    }
+	}
 
-    /**
-     * Delete SalesOrder By FormInstance ID.
-     */
-    @RequestMapping(value = "/delete", method = POST, produces = APPLICATION_JSON_VALUE)
-    public ResponseEntity<Void> delete(@RequestParam(value = "formInstanceId", required = true) Integer formInstanceId) throws URISyntaxException {
+	/**
+	 * Delete SalesOrder By FormInstance ID.
+	 */
+	@RequestMapping(value = "/delete", method = POST, produces = APPLICATION_JSON_VALUE)
+	public ResponseEntity<Void> delete(@RequestParam(value = "formInstanceId", required = true) Integer formInstanceId) throws URISyntaxException {
 
-        log.debug("Delete by FormInstanceId : {}", formInstanceId);
+		log.debug("Delete by FormInstanceId : {}", formInstanceId);
 
-        try {
-            salesOrderRepository.deleteRows(formInstanceId);
-            return ResponseEntity.ok().build();
-        } catch (Exception x) {
-        	x.printStackTrace();
-            return ResponseEntity.status(HttpStatus.CONFLICT).build();
-        }
-    }
+		try {
+			salesOrderRepository.deleteRows(formInstanceId);
+			return ResponseEntity.ok().build();
+		}
+		catch (Exception x) {
+			x.printStackTrace();
+			return ResponseEntity.status(HttpStatus.CONFLICT).build();
+		}
+	}
 }

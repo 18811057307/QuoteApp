@@ -8,7 +8,9 @@
 package com.sadetec.repository;
 
 import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
@@ -20,15 +22,21 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.sadetec.model.SalesOrder;
+import com.sadetec.model.SalesOrderWithStock;
 import com.sadetec.model.SalesOrder_;
 
 @Transactional
 public interface SalesOrderRepository extends JpaRepository<SalesOrder, Integer> {
 
-	@Query(value="SELECT DISTINCT(USER_ID) FROM SALES_ORDER WHERE FORM_INSTANCE_ID = ?1 AND PROC_FLAG=FALSE", nativeQuery = true)
+	@Query(value="SELECT DISTINCT(QUOTER_ID) FROM SALES_ORDER WHERE FORM_INSTANCE_ID = ?1 AND QUOTER_ID IS NOT NULL AND NEED_PROC=TRUE", nativeQuery = true)
 	List<String> findSalesOrderAssignees(Integer formInstanceId);
 	
-	List<SalesOrder> findByFormInstanceId(Integer formInstanceId);
+	List<SalesOrder> findByFormInstanceIdOrderById(Integer formInstanceId);
+	
+	@Query(value="SELECT SALES_ORDER.BRAND,SALES_ORDER.CATEGORY_NAME,SALES_ORDER.PRODUCT_CODE,SALES_ORDER.AT_PRODUCT_CODE,SALES_ORDER.AMOUNT,SALES_ORDER.UNIT,SALES_ORDER.UNIT_PRICE,STOCK_QUANT.USE_QTY FROM SALES_ORDER LEFT JOIN STOCK_QUANT ON ( SALES_ORDER.product_code = STOCK_QUANT.product_id OR SALES_ORDER.at_product_code = STOCK_QUANT.product_id ) WHERE SALES_ORDER.FORM_INSTANCE_ID = ?1", nativeQuery = true)
+	//@Query(value="SELECT new com.sadetec.model.SalesOrderWithStock(SalesOrder.brand,SalesOrder.categoryName,SalesOrder.productCode,SalesOrder.atProductCode,SalesOrder.amount,SalesOrder.unit,SalesOrder.unitPrice,StockQuant.useQty) FROM SalesOrder LEFT JOIN StockQuant ON ( SalesOrder.productCode = StockQuant.productId OR SalesOrder.atProductCode = StockQuant.productId ) WHERE SalesOrder.formInstanceId = ?1")
+	//@Query(value="SELECT new com.sadetec.model.SalesOrderWithStock(so.brand,so.categoryName,so.productCode,so.atProductCode,so.amount,so.unit,so.unitPrice,sq.useQty) FROM SalesOrder so LEFT JOIN StockQuant sq ON ( so.productCode = sq.productId OR so.atProductCode = sq.productId ) WHERE so.formInstanceId = ?1")
+	List<Object[]> findSalesOrderWithStock(Integer formInstanceId);
 	
 	@Modifying(clearAutomatically = true)
     @Query(value="DELETE FROM SALES_ORDER WHERE FORM_INSTANCE_ID = ?1", nativeQuery = true)
@@ -47,4 +55,15 @@ public interface SalesOrderRepository extends JpaRepository<SalesOrder, Integer>
 
     @Query(value="SELECT SUM(AMOUNT*UNIT_PRICE) FROM SALES_ORDER WHERE FORM_INSTANCE_ID = ?1", nativeQuery = true)
 	BigDecimal calcTotalPrice(Integer formInstanceId);
+
+    List<SalesOrder> findByFormInstanceIdAndQuoterId(Integer formInstanceId, String priceInquiryAssignee);
+
+	List<SalesOrder> findByFormInstanceIdAndAuditorIdAndNeedProc(int parseInt, String priceAuditorAssignee, Boolean needProc);
+
+	List<SalesOrder> findByFormInstanceIdAndQuoterIdAndNeedProc(Integer formInstanceId, String quoterId, boolean needProc);
+
+	List<SalesOrder> findByFormInstanceIdAndAuditorId(Integer formInstanceId, String username);
+
+	@Query(value="SELECT * FROM SALES_ORDER WHERE  FORM_INSTANCE_ID = ?1 AND (AUDITOR_ID != ?2 OR AUDITOR_ID IS NULL) AND CATEGORY_NAME IN (SELECT CATEGORY_NAME FROM CATEGORY WHERE AUDITOR_ID = ?2)", nativeQuery = true)
+	List<SalesOrder> findByCategoryName(Integer formInstanceId, String username);
 }

@@ -15,7 +15,24 @@ Ext.define('tms.controller.CategoryController', {
                     scope:this
                 }
             },
-            
+            'categoryList button[action=createSubCategory]':{
+                click:{
+                    fn:this.createSubCategory,
+                    scope:this
+                }
+            },
+            'categoryList button[action=modifyCategory]':{
+                click:{
+                    fn:this.modifyCategory,
+                    scope:this
+                }
+            },
+            'categoryList button[action=deleteCategory]':{
+                click:{
+                    fn:this.deleteCategory,
+                    scope:this
+                }
+            },
             'seriesList':{
                 itemclick:{
                     fn:this.onSeriesClick,
@@ -61,12 +78,74 @@ Ext.define('tms.controller.CategoryController', {
                     fn:this.onCancel,
                     scope:this
                 }
+            },
+            'categoryUpdate button[action=submitForm]':{
+                click:{
+                    fn:this.onCategorySubmit,
+                    scope:this
+                }
+            },
+            'categoryUpdate button[action=cancelForm]':{
+                click:{
+                    fn:this.onCategoryCancel,
+                    scope:this
+                }
             }
         });
         
         this._getStore().load();
     },
 
+    createSubCategory:function (me, e, eOpts) {
+    	var record = Ext.create('tms.model.Category',{hasChildCategory:false});
+        var updateWin = Ext.create('tms.view.category.Update');
+        updateWin.width = Ext.getBody().getViewSize().width * 0.6;
+        updateWin.height = Ext.getBody().getViewSize().height * 0.6;
+        var form = Ext.ComponentQuery.query('categoryForm')[0];
+        form.loadRecord(record);            
+        updateWin.show();
+    },
+    modifyCategory:function (me, e, eOpts) {
+        var treePanel = Ext.ComponentQuery.query('categoryList')[0];
+        var selectNode = treePanel.getSelectionModel().getSelection()[0];
+        if(selectNode) {
+        	var record = Ext.create('tms.model.Category',selectNode.raw.category);
+            var updateWin = Ext.create('tms.view.category.Update');
+            updateWin.width = Ext.getBody().getViewSize().width * 0.6;
+            updateWin.height = Ext.getBody().getViewSize().height * 0.6;
+            var form = Ext.ComponentQuery.query('categoryForm')[0];
+            form.getForm().setValues(selectNode.raw.category);            
+            updateWin.show();
+	    } else {
+	    	tms.notify("请选择一个要修改的分类");
+	    }
+        
+    },
+    deleteCategory:function (me, e, eOpts) {
+        var treePanel = Ext.ComponentQuery.query('categoryList')[0];
+        var selectNode = treePanel.getSelectionModel().getSelection()[0];
+        if(selectNode) {
+        	
+        	if(selectNode.data.leaf) {
+	        	Ext.Ajax.request({
+	            	url: tms.getContextPath() + 'api/categories/delete',
+	                method: 'POST',
+	                jsonData: {"data":selectNode.raw.category},
+	                success: function(result, request) {            	
+	                	tms.notify("删除完成.");
+	                	Ext.data.StoreManager.lookup('CategoryTreeStore').load();
+	                },
+	                scope:this
+	        	});
+        	} else {
+        		tms.notify("包含下级分类的类别,不能直接删除.");
+        	}
+        	
+	    } else {
+	    	tms.notify("请选择一个要删除的分类");
+	    }
+        
+    },
     onItemClick:function (me, record, item, index, e, eOpts) {
     	//选中分类，则显示该分类下的产品犀利
     	if(record.data.leaf) {
@@ -186,6 +265,37 @@ Ext.define('tms.controller.CategoryController', {
     },
     onCancel:function (me, e, eOpts) {
         this._closeWin();
+    },
+    onCategorySubmit:function (me, e, eOpts) {
+        var formPanel = Ext.ComponentQuery.query('categoryForm')[0];
+        if (formPanel.getForm().isValid()) {
+        	var submitUrl = tms.getContextPath() + 'api/categories/create';
+        	formPanel.getForm().submit({
+        	    clientValidation: true,
+        	    url: submitUrl,
+        	    success: function(form, action) {
+        	    	this.onCategoryCancel();
+        	    	Ext.data.StoreManager.lookup('CategoryTreeStore').load();
+        	    },
+        	    failure: function(form, action) {
+        	        switch (action.failureType) {
+        	            case Ext.form.action.Action.CLIENT_INVALID:
+        	                Ext.Msg.alert('Failure', 'Form fields may not be submitted with invalid values');
+        	                break;
+        	            case Ext.form.action.Action.CONNECT_FAILURE:
+        	                Ext.Msg.alert('Failure', 'Ajax communication failed');
+        	                break;
+        	            case Ext.form.action.Action.SERVER_INVALID:
+        	               Ext.Msg.alert('Failure', action.result.msg);
+        	       }
+        	    },
+        	    scope:this
+        	});
+        }
+    },
+    onCategoryCancel:function (me, e, eOpts) {
+        var win = Ext.ComponentQuery.query('categoryUpdate')[0];
+        win.close();
     }
     
 });

@@ -5,6 +5,7 @@ Ext.define('tms.view.Desktop', {
         'Ext.window.MessageBox',
         'Ext.ux.desktop.ShortcutModel',
         'tms.module.Settings',
+        'tms.module.ProfilesModule',
         'tms.module.TempProductMapModule',
         'tms.module.ManualProductMapModule',
         'tms.module.ProductCategoryModule',
@@ -70,12 +71,19 @@ Ext.define('tms.view.Desktop', {
         var me = this, ret = me.callParent();
 
         return Ext.apply(ret, {
-            //title:'Don Griffin',
+            title:"欢迎,"+curUser.name,
             iconCls:'user',
             height:300,
             toolConfig:{
                 width:100,
                 items:[
+                    {
+                        text:i18n.t('modify_password'),
+                        iconCls:'settings',
+                        handler:me.onModifyPassword,
+                        scope:me
+                    },
+                    '-',
                     {
                         text:i18n.t('Settings'),
                         iconCls:'settings',
@@ -119,6 +127,13 @@ Ext.define('tms.view.Desktop', {
 
     onSettings:function () {
         var dlg = new tms.module.Settings({
+            desktop:this.desktop
+        });
+        dlg.show();
+    },
+    
+    onModifyPassword:function () {
+        var dlg = new tms.module.ProfilesModule({
             desktop:this.desktop
         });
         dlg.show();

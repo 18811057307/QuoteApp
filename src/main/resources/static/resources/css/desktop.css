@@ -517,3 +517,23 @@ em.black {
 .mail-message-trigger {
 	background-image:url(../../images/icons/fam/go_trigger.png);
 }	
+
+.new-icon{
+	background-image:url(../../images/new.gif);
+}
+
+/*
+ * StatusColumn styles
+ */
+.x-grid-statusheader-unchecked {
+    height: 24px;
+    width: 24px;
+    cursor: pointer;
+    background: url('../../images/uncheck_24.png') ;
+}
+.x-grid-statusheader-checked  {
+	height: 24px;
+    width: 24px;
+    cursor: pointer;
+    background: url('../../images/check_24.png');
+}

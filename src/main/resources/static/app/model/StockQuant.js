@@ -4,6 +4,7 @@ Ext.define('tms.model.StockQuant', {
     fields:[
     		{name:'id', type:'string'}
     		,{name:'productId', type:'string'}
+    		,{name:'productName', type:'string'}
     		,{name:'qty', type:'string'}
     		,{name:'useQty', type:'string'}
     		,{name:'unit', type:'string'}
@@ -15,6 +16,8 @@ Ext.define('tms.model.StockQuant', {
     		,{name:'lotId', type:'string'}
     		,{name:'locationId', type:'string'}
     		,{name:'lot', type:'string'}
+    		,{name:'lotCata1', type:'string'}
+    		,{name:'lotCata2', type:'string'}
     		,{name:'location', type:'string'}
     		,{name:'reservationId', type:'string'}
     		,{name:'packagingTypeId', type:'string'}

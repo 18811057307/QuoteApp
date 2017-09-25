@@ -1,5 +1,6 @@
 Ext.define('tms.view.company.List', {
     extend:'Ext.grid.Panel',
+    requires: ['tms'],
     selModel:{mode:'SINGLE'},
     forceFit:true,
     columnLines:true,
@@ -12,11 +13,8 @@ Ext.define('tms.view.company.List', {
 		{width: 50,  header:i18n.t('company_name'), sortable:true, dataIndex:'name', filter:true}
     ],
     initComponent: function() {
-        var companyStore = Ext.create('tms.store.CompanyStore');
-        Ext.apply(this, {
-            store: companyStore
-        });
-
+        this.store = Ext.create('tms.store.CompanyStore');
+        this.store.load();
         this.dockedItems = new Array();
         if (this.showTopToolbar) {
             this.topToolbar = Ext.create('Ext.toolbar.Toolbar',{
@@ -51,16 +49,6 @@ Ext.define('tms.view.company.List', {
                     }]
             });
             this.dockedItems.push(this.topToolbar);
-        }
-
-        if(this.showBottomToolbar) {
-            this.bottomToolbar = Ext.create("Ext.toolbar.Paging", {
-                store: this.store,
-                enableOverflow: true,
-                dock: 'bottom',
-                displayInfo: true
-            });
-            this.dockedItems.push(this.bottomToolbar);
         }
 
         this.callParent(arguments);

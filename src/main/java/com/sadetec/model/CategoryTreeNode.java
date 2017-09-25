@@ -1,40 +1,58 @@
 package com.sadetec.model;
 
-public class CategoryTreeNode {
-	
-	private String id;
-	private String text;
-	private Boolean leaf;
+import java.math.BigDecimal;
+
+public class CategoryTreeNode extends BaseTreeNode {
+
+	private String categoryName;
+	private String quoterName;
+	private String auditorName;
+	private BigDecimal factoryRatio;
+	private BigDecimal unitRatio;
 	private Category category;
-	
-	public CategoryTreeNode(String id,String text,Boolean leaf, Category data) {
-		this.id = id;
-		this.text = text;
-		this.leaf = leaf;
-		this.category = data;
-		
+
+	public CategoryTreeNode(String id, String text, Boolean leaf, String iconCls, String cls, String qtip) {
+		super(id, text, leaf, iconCls, cls, qtip);
 	}
 
-	
-	public String getId() {
-		return id;
+	public String getCategoryName() {
+		return categoryName;
 	}
 
-	public void setId(String id) {
-		this.id = id;
+	public void setCategoryName(String categoryName) {
+		this.categoryName = categoryName;
 	}
 
-	public String getText() {
-		return text;
+	public String getQuoterName() {
+		return quoterName;
 	}
-	public void setText(String text) {
-		this.text = text;
+
+	public void setQuoterName(String quoterName) {
+		this.quoterName = quoterName;
 	}
-	public Boolean getLeaf() {
-		return leaf;
+
+	public String getAuditorName() {
+		return auditorName;
 	}
-	public void setLeaf(Boolean leaf) {
-		this.leaf = leaf;
+
+	public void setAuditorName(String auditorName) {
+		this.auditorName = auditorName;
+	}
+
+	public BigDecimal getFactoryRatio() {
+		return factoryRatio;
+	}
+
+	public void setFactoryRatio(BigDecimal factoryRatio) {
+		this.factoryRatio = factoryRatio;
+	}
+
+	public BigDecimal getUnitRatio() {
+		return unitRatio;
+	}
+
+	public void setUnitRatio(BigDecimal unitRatio) {
+		this.unitRatio = unitRatio;
 	}
 
 	public Category getCategory() {
@@ -43,7 +61,6 @@ public class CategoryTreeNode {
 
 	public void setCategory(Category category) {
 		this.category = category;
-	}	
-	
-	
+	}
+
 }

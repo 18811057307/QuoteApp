@@ -49,4 +49,6 @@ public interface CategoryRepository extends JpaRepository<Category, Integer> {
         Page<Category> page = findAll(Example.of(probe, matcher), new PageRequest(0, maxResults));
         return page.getContent();
     }
+
+	Long countByParentCode(String id);
 }

@@ -19,6 +19,7 @@ public abstract class StockQuant_ {
     // Raw attributes
     public static volatile SingularAttribute<StockQuant, Integer> id;
     public static volatile SingularAttribute<StockQuant, String> productId;
+    public static volatile SingularAttribute<StockQuant, String> productName;
     public static volatile SingularAttribute<StockQuant, BigDecimal> qty;
     public static volatile SingularAttribute<StockQuant, BigDecimal> useQty;
     public static volatile SingularAttribute<StockQuant, String> unit;
@@ -27,10 +28,12 @@ public abstract class StockQuant_ {
     public static volatile SingularAttribute<StockQuant, BigDecimal> cost;
     public static volatile SingularAttribute<StockQuant, Integer> propagatedFromId;
     public static volatile SingularAttribute<StockQuant, Integer> packageId;
-    public static volatile SingularAttribute<StockQuant, Integer> lotId;
     public static volatile SingularAttribute<StockQuant, Integer> locationId;
-    public static volatile SingularAttribute<StockQuant, String> lot;
     public static volatile SingularAttribute<StockQuant, String> location;    
+    public static volatile SingularAttribute<StockQuant, Integer> lotId;
+    public static volatile SingularAttribute<StockQuant, String> lot;
+    public static volatile SingularAttribute<StockQuant, String> lotCata1;
+    public static volatile SingularAttribute<StockQuant, String> lotCata2;
     public static volatile SingularAttribute<StockQuant, Integer> reservationId;
     public static volatile SingularAttribute<StockQuant, Integer> packagingTypeId;
     public static volatile SingularAttribute<StockQuant, Integer> negativeMoveId;

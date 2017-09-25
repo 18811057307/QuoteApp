@@ -7,6 +7,7 @@
  */
 package com.sadetec.model;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import javax.persistence.metamodel.SingularAttribute;
@@ -26,4 +27,11 @@ public abstract class Category_ {
     public static volatile SingularAttribute<Category, Boolean> procFlag;
     public static volatile SingularAttribute<Category, LocalDateTime> createDate;
     public static volatile SingularAttribute<Category, LocalDateTime> updateDate;
+    public static volatile SingularAttribute<SalesOrder, String> quoterId;
+    public static volatile SingularAttribute<SalesOrder, String> quoterName;
+    public static volatile SingularAttribute<SalesOrder, String> auditorId;
+    public static volatile SingularAttribute<SalesOrder, String> auditorName;
+    public static volatile SingularAttribute<Category, Integer> sequence;
+    public static volatile SingularAttribute<Category, BigDecimal> factoryRatio;
+    public static volatile SingularAttribute<Category, BigDecimal> unitRatio;
 }

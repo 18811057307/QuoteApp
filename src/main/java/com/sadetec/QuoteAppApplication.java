@@ -13,6 +13,8 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.sadetec.service.StorageProperties;
 
@@ -21,6 +23,11 @@ import com.sadetec.service.StorageProperties;
 public class QuoteAppApplication {
 	
     protected static final Logger logger = LoggerFactory.getLogger(QuoteAppApplication.class);
+    
+	@Bean
+	public PasswordEncoder passwordEncoder() {
+		return new BCryptPasswordEncoder();
+	}
     
 	public static void main(String[] args) {
 		SpringApplication.run(QuoteAppApplication.class, args);

@@ -22,7 +22,7 @@ Ext.define('tms.module.CategoryModule', {
                 constrainHeader:true,
                 layout:'border',
                 items:[{xtype:'panel',title:'产品系列',layout:'fit',items: [{xtype:'seriesList'}], border:false,  region: 'center'}
-                	,{xtype:'panel',title:'全部分类',layout:'fit',items: [{xtype:'categoryList'}],  split:true, width: 300,collapsible: true,region: 'west'}
+                	,{xtype:'panel',title:'全部分类',layout:'fit',items: [{xtype:'categoryList'}],  split:true, width: 600,collapsible: true,region: 'west'}
                 	
                 	/*
                 	{xtype:'panel', layout: {

@@ -2,7 +2,7 @@ Ext.define('tms.controller.BPMController', {
     extend:'Ext.app.Controller',
     stores:['tms.store.CategoryStore'],
     models:['tms.model.Category'],
-    views:['tms.view.bpm.NavPanel','tms.view.bpm.ProcessDefPanel','tms.view.bpm.List','tms.view.bpm.HistoricActivityList','tms.view.mailMessage.List'],
+    views:['tms.view.salesOrder.AuditList','tms.view.bpm.NavPanel','tms.view.bpm.ProcessDefPanel','tms.view.bpm.List','tms.view.bpm.HistoricActivityList','tms.view.mailMessage.List', 'tms.view.sysUser.UserCombo', 'tms.view.company.CompanyCombo'],
     init:function (application) {
         this.control({
             'bpmNavPanel':{
@@ -76,7 +76,6 @@ Ext.define('tms.controller.BPMController', {
                 }
             }
         });
-        
     },
     
     claimTask:function (me, e, eOpts) {
@@ -108,41 +107,56 @@ Ext.define('tms.controller.BPMController', {
         var record = grid.getSelectionModel().getSelection()[0];
     	
         if(record) {
-        	var taskProcWin = Ext.create('tms.view.bpm.TaskProcessWindow');
-        	taskProcWin.width = Ext.getBody().getViewSize().width * 0.9;
-        	taskProcWin.height = Ext.getBody().getViewSize().height * 0.9;
         	
-            var form = Ext.ComponentQuery.query('salesOrderTaskForm')[0];
-            
-	    	Ext.Ajax.request({
-	        	url: tms.getContextPath() + '/api/formInstance/' + record.get("formInstanceId"),
-	            method: 'GET',
-	            success: function(result, request) {
-	            	var json = Ext.decode(result.responseText);
-	                var formInstance = Ext.create("tms.model.FormInstance",json);	                
-	                form.loadRecord(formInstance);
-	            }
-	    	});
-                        
-            var orders = Ext.ComponentQuery.query('salesOrderEditorList')[0];
-            orders.formInstanceId = record.get('formInstanceId');
-            orders.store.load({params:{
-            	formInstanceId: orders.formInstanceId
-    	    }});
-            
-            var historicActivities = Ext.ComponentQuery.query('historicActivityList')[0];
-            historicActivities.store.load({params:{
-            	processInstanceId: record.get("processInstanceId")
-    	    }});
-            
-            var mailMessages = Ext.ComponentQuery.query('mailMessageList')[0];
-            mailMessages.resId = record.get('formInstanceId');
-            mailMessages.msgView.store.load({params:{
-            	resId: record.get('formInstanceId')
-    	    }});
-
-            taskProcWin.setTitle("处理任务："+record.get("title"));
-            taskProcWin.show();
+        	Ext.Ajax.request({
+        	    url: tms.getContextPath() + '/api/bpm/taskForm',
+        	    method: 'GET',
+        	    params: {'taskId': record.get("id") },
+        	    success: function(response){
+        	        var result = Ext.decode(response.responseText);
+        	        var metaData = Ext.decode(result.metadata);
+        	        if(metaData.hasDetail) {
+        	        	Ext.apply(metaData.detailConfig,{formInstanceId:record.get('formInstanceId'),taskDefinitionKey:record.get('taskDefinitionKey')})
+        	        	var detailList = Ext.create(metaData.detailType,metaData.detailConfig);
+            	        var detailsContainer = Ext.create('Ext.container.Container',  {
+            	            "xtype": "container",
+            	            "anchor": "98%",
+            	            "items": [detailList]
+            	        });
+        	        	
+        	        	metaData.items.push(detailsContainer);
+        	        }
+        	        var metaFrom = Ext.create("tms.base.Form",metaData); 
+        	        
+        	        var taskProcWin = Ext.create('tms.view.bpm.TaskProcessWindow',{'mainForm':metaFrom});
+        	        taskProcWin.width = Ext.getBody().getViewSize().width;
+        	        taskProcWin.height = Ext.getBody().getViewSize().height * 0.9;
+        	        
+                    var historicActivities = Ext.ComponentQuery.query('historicActivityList')[0];
+                    historicActivities.store.load({params:{
+                    	processInstanceId: record.get("processInstanceId")
+            	    }});
+                    
+                    var mailMessages = Ext.ComponentQuery.query('mailMessageList')[0];
+                    mailMessages.resId = record.get('formInstanceId');
+                    mailMessages.msgView.store.load({params:{
+                    	resId: record.get('formInstanceId')
+            	    }});
+                    
+        	    	Ext.Ajax.request({
+        	        	url: tms.getContextPath() + '/api/formInstance/' + record.get('formInstanceId'),
+        	            method: 'GET',
+        	            success: function(result, request) {
+        	            	var json = Ext.decode(result.responseText);
+        	                var formInstance = Ext.create("tms.model.FormInstance",json);	                
+        	                metaFrom.loadRecord(formInstance);
+        	            }
+        	    	});
+        	    	
+        	        taskProcWin.setTitle("处理任务："+record.get("title"));
+                    taskProcWin.show();
+        		}
+        	});
             
         } else {
         	tms.notify("请在列表中选择一个要处理的任务");
@@ -169,8 +183,11 @@ Ext.define('tms.controller.BPMController', {
 	                form.loadRecord(formInstance);
 	            }
 	    	});
-                        
+            
             var orders = Ext.ComponentQuery.query('salesOrderEditorList')[0];
+            if(grid.byme) {
+            	orders.metaChange();
+            }
             orders.formInstanceId = record.get('formInstanceId');
             orders.store.load({params:{
             	formInstanceId: orders.formInstanceId
@@ -181,10 +198,13 @@ Ext.define('tms.controller.BPMController', {
             	processInstanceId: record.get("processInstanceId")
     	    }});
             
-            var mailMessages = Ext.ComponentQuery.query('mailMessageList')[0];
-            mailMessages.msgView.store.load({params:{
-            	resId: record.get('formInstanceId')
-    	    }});
+            //发起人不能查看办理意见
+            if(!grid.byme) {
+	            var mailMessages = Ext.ComponentQuery.query('mailMessageList')[0];
+	            mailMessages.msgView.store.load({params:{
+	            	resId: record.get('formInstanceId')
+	    	    }});
+            }
 
             tasViewWin.setTitle("查看流程："+record.get("title"));
             tasViewWin.show();
@@ -221,6 +241,11 @@ Ext.define('tms.controller.BPMController', {
     		
     		if(record.data.id == 'GROUP' || record.data.id == 'DONE' || record.data.id == 'BYME') {
     			viewButton.enable();
+    			if(record.data.id == 'BYME') {
+    				taskGrid.byme = true;
+    			} else {
+    				taskGrid.byme = false;
+    			}
     		} else {
     			viewButton.setDisabled(true);
     		}
@@ -247,8 +272,8 @@ Ext.define('tms.controller.BPMController', {
     onStartForm:function (me, e, eOpts) {
     	
         var grid = Ext.ComponentQuery.query('processDefPanel')[0];
-        var record = grid.getSelectionModel().getSelection()[0];
-    	
+        if(grid.getSelectionModel().getCount() == 0) grid.getSelectionModel().select(0);
+        var record = grid.getSelectionModel().getSelection()[0];        
         if(record) {
 	    	//创建或获取表单实例
 	    	Ext.Ajax.request({
@@ -345,7 +370,9 @@ Ext.define('tms.controller.BPMController', {
     },
     
     completeTask:function (me, e, eOpts) {
-        var formPanel = Ext.ComponentQuery.query('salesOrderTaskForm')[0];        
+    	
+    	var taskProcWin = Ext.ComponentQuery.query('bpmTaskProcessWindow')[0];    	
+        var formPanel = taskProcWin.mainForm;        
         var formInstance = formPanel.getForm().getRecord();        
         formPanel.getForm().updateRecord(formInstance);
         
@@ -363,7 +390,7 @@ Ext.define('tms.controller.BPMController', {
                             jsonData: {"data":formInstance.getData(),"taskId":record.get("id")},
                             success: function(result, request) {            	
                             	//完成任务的处理，关闭弹出窗口
-                            	Ext.ComponentQuery.query('bpmTaskProcessWindow')[0].close();
+                            	taskProcWin.close();
                             	tms.notify("已经成功处理了[" + formInstance.get("title") + "]的订单","任务处理");
                             	grid.store.clearFilter();
                             	grid.store.load({params:{
@@ -414,6 +441,7 @@ Ext.define('tms.controller.BPMController', {
         if(Ext.ComponentQuery.query('bpmTaskProcessWindow')[0]) {
         	Ext.ComponentQuery.query('bpmTaskProcessWindow')[0].close();
         }
+
     },
     onCancel:function (me, e, eOpts) {
         this._closeWin();

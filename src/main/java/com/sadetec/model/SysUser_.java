@@ -15,6 +15,7 @@ public abstract class SysUser_ {
 
     // Raw attributes
     public static volatile SingularAttribute<SysUser, Integer> id;
+    public static volatile SingularAttribute<SysUser, Integer> companyId;
     public static volatile SingularAttribute<SysUser, String> loginName;
     public static volatile SingularAttribute<SysUser, String> password;
     public static volatile SingularAttribute<SysUser, String> name;

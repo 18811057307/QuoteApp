@@ -33,7 +33,7 @@ Ext.define('tms.view.bpm.ProcessDefPanel', {
                 }
             ]});
         
-        if(tms.isAdmin) {
+        if(tms.isGuoTao) {
             this.topToolbar = Ext.create('Ext.toolbar.Toolbar',{
                 dock: 'top',
                 enableOverflow: true,

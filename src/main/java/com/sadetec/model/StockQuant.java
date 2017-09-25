@@ -34,19 +34,22 @@ public class StockQuant implements Serializable {
 
     // Raw attributes
     private Integer id;
+    private Integer locationId;
+    private String location;
+    private Integer lotId;
+    private String lot;
     private String productId;
+    private String productName;
+    private String unit;
     private BigDecimal qty;
     private BigDecimal useQty;
-    private String unit;
+    private String lotCata1;
+    private String lotCata2;
     private String createUid;
     private LocalDateTime createDate;
     private BigDecimal cost;
     private Integer propagatedFromId;
     private Integer packageId;
-    private Integer lotId;
-    private Integer locationId;
-    private String lot;
-    private String location;
     private Integer reservationId;
     private Integer packagingTypeId;
     private Integer negativeMoveId;
@@ -327,9 +330,39 @@ public class StockQuant implements Serializable {
     	setLocation(location);
         return this;
     }
-    // -- [reservationId] ------------------------
+    
+    @Size(max = 64)
+    @Column(name = "product_name", length = 64)    
+    public String getProductName() {
+		return productName;
+	}
 
-    /**
+	public void setProductName(String productName) {
+		this.productName = productName;
+	}
+
+	@Size(max = 64)
+    @Column(name = "lot_cata1", length = 64)    
+	public String getLotCata1() {
+		return lotCata1;
+	}
+
+	public void setLotCata1(String lotCata1) {
+		this.lotCata1 = lotCata1;
+	}
+
+	@Size(max = 64)
+    @Column(name = "lot_cata2", length = 64)    
+	public String getLotCata2() {
+		return lotCata2;
+	}
+
+	public void setLotCata2(String lotCata2) {
+		this.lotCata2 = lotCata2;
+	}
+
+	// -- [reservationId] ------------------------
+	/**
      * Reserved for Move
      */
     @Digits(integer = 10, fraction = 0)

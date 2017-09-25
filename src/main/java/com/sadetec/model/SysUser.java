@@ -34,6 +34,8 @@ public class SysUser implements Serializable {
 
     // Raw attributes
     private Integer id;
+    private Integer companyId;
+    private Integer sequence;
     private String loginName;
     private String password;
     private String name;
@@ -70,6 +72,34 @@ public class SysUser implements Serializable {
     public boolean isIdSet() {
         return id != null;
     }
+    
+    // -- [company_id] ------------------------
+
+    @Column(name = "company_id", precision = 10)
+    public Integer getCompanyId() {
+        return companyId;
+    }
+
+    public void setCompanyId(Integer companyId) {
+        this.companyId = companyId;
+    }
+
+    public SysUser companyId(Integer companyId) {
+        setId(companyId);
+        return this;
+    }
+    
+    // -- [sequence] ------------------------
+
+    @Column(name = "sequence", precision = 10)
+    public Integer getSequence() {
+        return sequence;
+    }
+
+    public void setSequence(Integer sequence) {
+        this.sequence = sequence;
+    }
+    
     // -- [loginName] ------------------------
 
     /**

@@ -2,7 +2,7 @@ Ext.define('tms.controller.SysUserController', {
     extend:'Ext.app.Controller',
     stores:['tms.store.SysUserStore'],
     models:['tms.model.SysUser'],
-    views:['tms.view.sysUser.List','tms.view.sysRole.CheckTree'],
+    views:['tms.view.sysUser.List','tms.view.sysRole.CheckTree','tms.view.company.List'],
     init:function (application) {
         this.control({
             'sysUserList':{

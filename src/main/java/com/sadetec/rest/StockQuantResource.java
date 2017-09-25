@@ -175,6 +175,19 @@ public class StockQuantResource {
 		return new ResponseEntity<PageResponse<StockQuant>>(pageResponse, HttpStatus.OK);
 
 	}
+	
+	@RequestMapping(value = "/findStock", method = GET, produces = APPLICATION_JSON_VALUE)
+	public ResponseEntity<PageResponse<StockQuant>> findStock(
+			@RequestParam(value = "formInstanceId", required = false) Integer formInstanceId) throws URISyntaxException {
+
+		List<StockQuant> result  = stockQuantRepository.findByProductIdInSalesOrder(formInstanceId);
+		PageResponse<StockQuant> pageResponse = new PageResponse<StockQuant>(result);
+		pageResponse.setSuccess(Boolean.TRUE);
+		pageResponse.setTotal(result.size());
+
+		return new ResponseEntity<PageResponse<StockQuant>>(pageResponse, HttpStatus.OK);
+
+	}
 
 	@RequestMapping(value = "/update", method = POST, produces = APPLICATION_JSON_VALUE)
 	public ResponseEntity<PageResponse<StockQuant>> update(@RequestBody String json) throws URISyntaxException {

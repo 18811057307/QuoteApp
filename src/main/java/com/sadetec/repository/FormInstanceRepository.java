@@ -24,7 +24,12 @@ public interface FormInstanceRepository extends JpaRepository<FormInstance, Inte
 
 	List<FormInstance> findByDrafterIdAndProcessInstanceId(String deafterId, String processInstanceId);
 	
-	List<FormInstance> findByDrafterIdAndProcessInstanceIdNot(String deafterId,String processInstanceId);
+	@Query(value="SELECT * FROM FORM_INSTANCE WHERE PROCESS_INSTANCE_ID != '' AND (DRAFTER_ID = ?1 OR DRAFTER = ?2) ORDER BY CREATE_DATE DESC", nativeQuery=true)    
+	List<FormInstance> findByDrafterIdOrDrafter(String deafterId,String deafter);
+	
+	List<FormInstance> findByProcessDefinitionId(String processDefinitionId);
+	
+	Long countByDrafterIdAndProcessInstanceIdNot(String deafterId,String processInstanceId);
 	
 	FormInstance findOneByProcessInstanceId(String processInstanceId);
 	
@@ -41,5 +46,8 @@ public interface FormInstanceRepository extends JpaRepository<FormInstance, Inte
     
     @Query(value="SELECT * FROM FORM_INSTANCE WHERE PROCESS_INSTANCE_ID IN (SELECT DISTINCT(PROC_INST_ID_) FROM ACT_HI_TASKINST WHERE END_TIME_ IS NOT NULL AND ASSIGNEE_ = ?1) ORDER BY LAST_MODIFIED DESC", nativeQuery=true)
     List<FormInstance> findCompleteFormInstanceByAssignee (String assignee);
+    
+    @Query(value="SELECT COUNT(*) FROM FORM_INSTANCE WHERE PROCESS_INSTANCE_ID IN (SELECT DISTINCT(PROC_INST_ID_) FROM ACT_HI_TASKINST WHERE END_TIME_ IS NOT NULL AND ASSIGNEE_ = ?1) ORDER BY LAST_MODIFIED DESC", nativeQuery=true)
+    Long countCompleteFormInstanceByAssignee (String assignee);
     
 }

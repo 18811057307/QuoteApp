@@ -11,7 +11,6 @@ import static javax.persistence.GenerationType.IDENTITY;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.logging.Logger;
 
@@ -30,7 +29,6 @@ import javax.validation.constraints.Size;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Objects;
 
 @Entity
 @Table(name = "sales_order")
@@ -38,7 +36,7 @@ public class SalesOrder implements Serializable {
     private static final long serialVersionUID = 1L;
     private static final Logger log = Logger.getLogger(SalesOrder.class.getName());
 
-    // Raw attributes
+ // Raw attributes
     private Integer id;
     private Integer formInstanceId;
     private String categoryCode;
@@ -52,10 +50,20 @@ public class SalesOrder implements Serializable {
 	@Temporal(TemporalType.TIMESTAMP)
 	@DateTimeFormat(style = "S-")
     private Date deliveryDate;
-	
-    private Integer amount;
+    
+	private Integer amount;
     private String unit;
+    private BigDecimal costPrice;
+    private BigDecimal factoryPrice;
     private BigDecimal unitPrice;
+    private String quoterId;
+    private String quoterName;
+    private String auditorId;
+    private String auditorName;
+    private String drawingUrl;
+    private String atProductCode;
+    private String brand;
+    private Boolean needProc;
     private String comment;
 
     public String entityClassName() {
@@ -264,6 +272,197 @@ public class SalesOrder implements Serializable {
         setAmount(amount);
         return this;
     }
+    
+    // -- [quoterId] ------------------------
+
+    /**
+     * 办理人
+     */
+    @Size(max = 64)
+    @Column(name = "quoter_id", length = 64)
+    public String getQuoterId() {
+        return quoterId;
+    }
+
+    public void setQuoterId(String quoterId) {
+        this.quoterId = quoterId;
+    }
+
+    public SalesOrder quoterId(String quoterId) {
+        setQuoterId(quoterId);
+        return this;
+    }
+    // -- [quoterName] ------------------------
+
+    /**
+     * 办理人
+     */
+    @Size(max = 64)
+    @Column(name = "quoter_name", length = 64)
+    public String getQuoterName() {
+        return quoterName;
+    }
+
+    public void setQuoterName(String quoterName) {
+        this.quoterName = quoterName;
+    }
+
+    public SalesOrder quoterName(String quoterName) {
+        setQuoterName(quoterName);
+        return this;
+    }
+    // -- [auditorId] ------------------------
+
+    /**
+     * 审批人
+     */
+    @Size(max = 64)
+    @Column(name = "auditor_id", length = 64)
+    public String getAuditorId() {
+        return auditorId;
+    }
+
+    public void setAuditorId(String auditorId) {
+        this.auditorId = auditorId;
+    }
+
+    public SalesOrder auditorId(String auditorId) {
+        setAuditorId(auditorId);
+        return this;
+    }
+    // -- [auditorName] ------------------------
+
+    /**
+     * 审批人
+     */
+    @Size(max = 64)
+    @Column(name = "auditor_name", length = 64)
+    public String getAuditorName() {
+        return auditorName;
+    }
+
+    public void setAuditorName(String auditorName) {
+        this.auditorName = auditorName;
+    }
+
+    public SalesOrder auditorName(String auditorName) {
+        setAuditorName(auditorName);
+        return this;
+    }
+    // -- [drawingUrl] ------------------------
+
+    /**
+     * 图纸
+     */
+    @Size(max = 512)
+    @Column(name = "drawing_url", length = 512)
+    public String getDrawingUrl() {
+        return drawingUrl;
+    }
+
+    public void setDrawingUrl(String drawingUrl) {
+        this.drawingUrl = drawingUrl;
+    }
+
+    public SalesOrder drawingUrl(String drawingUrl) {
+        setDrawingUrl(drawingUrl);
+        return this;
+    }
+    // -- [atProductCode] ------------------------
+
+    /**
+     * A&T??
+     */
+    @Size(max = 256)
+    @Column(name = "at_product_code", length = 256)
+    public String getAtProductCode() {
+        return atProductCode;
+    }
+
+    public void setAtProductCode(String atProductCode) {
+        this.atProductCode = atProductCode;
+    }
+
+    public SalesOrder atProductCode(String atProductCode) {
+        setAtProductCode(atProductCode);
+        return this;
+    }
+    // -- [brand] ------------------------
+
+    /**
+     * 品牌
+     */
+    @Size(max = 256)
+    @Column(name = "brand", length = 256)
+    public String getBrand() {
+        return brand;
+    }
+
+    public void setBrand(String brand) {
+        this.brand = brand;
+    }
+
+    public SalesOrder brand(String brand) {
+        setBrand(brand);
+        return this;
+    }
+    // -- [costPrice] ------------------------
+
+    /**
+     * 成本价格
+     */
+    @Digits(integer = 11, fraction = 4)
+    @Column(name = "cost_price", precision = 15, scale = 4)
+    public BigDecimal getCostPrice() {
+        return costPrice;
+    }
+
+    public void setCostPrice(BigDecimal costPrice) {
+        this.costPrice = costPrice;
+    }
+
+    public SalesOrder costPrice(BigDecimal costPrice) {
+        setCostPrice(costPrice);
+        return this;
+    }
+    // -- [factoryPrice] ------------------------
+
+    /**
+     * 出厂价格
+     */
+    @Digits(integer = 11, fraction = 4)
+    @Column(name = "factory_price", precision = 15, scale = 4)
+    public BigDecimal getFactoryPrice() {
+        return factoryPrice;
+    }
+
+    public void setFactoryPrice(BigDecimal factoryPrice) {
+        this.factoryPrice = factoryPrice;
+    }
+
+    public SalesOrder factoryPrice(BigDecimal factoryPrice) {
+        setFactoryPrice(factoryPrice);
+        return this;
+    }
+    // -- [needProc] ------------------------
+
+    /**
+     * 是否需要询价处理
+     */
+    @Column(name = "need_proc", length = 1)
+    public Boolean getNeedProc() {
+        return needProc;
+    }
+
+    public void setNeedProc(Boolean needProc) {
+        this.needProc = needProc;
+    }
+
+    public SalesOrder needProc(Boolean needProc) {
+        setNeedProc(needProc);
+        return this;
+    }
+    
     // -- [comment] ------------------------
 
     @Size(max = 512)
@@ -281,7 +480,7 @@ public class SalesOrder implements Serializable {
         return this;
     }
 
-    /**
+	/**
      * Apply the default values.
      */
     public SalesOrder withDefaults() {

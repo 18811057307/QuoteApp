@@ -180,12 +180,18 @@ public class QuotationProcessor {
 		for (ManualProductMap manualProductMap : mapLikeResults) {
 
 			Boolean fullyMatchAT = isFullyMatch(manualProductMap.getId(), productCode);
+			Boolean fullyMatchMI = isFullyMatch(manualProductMap.getMiProductCode(), productCode);
 
-			log.info("匹配到记录：{}, 检查后AT代码符合度为: {}", manualProductMap, fullyMatchAT);
+			log.info("匹配到记录：{}, 检查后AT代码符合度为: {}, MI代码符合度为：{}", manualProductMap, fullyMatchAT, fullyMatchMI);
 
 			// 如果匹配到AT的产品代码,则设置对应的Mi产品代码,跳出匹配循环
 			if (fullyMatchAT) {
 				log.info("匹配到AT产品:{}，转换为Mi产品:{}", manualProductMap.getId(), manualProductMap.getMiProductCode());
+				return manualProductMap;
+			}
+			
+			if (fullyMatchMI) {
+				log.info("匹配到Mi产品:{}，转换为AT产品:{}", manualProductMap.getMiProductCode(), manualProductMap.getId());
 				return manualProductMap;
 			}
 
@@ -320,7 +326,7 @@ public class QuotationProcessor {
 	 * @param targetType 目标产品类型代码： 如：PSFGKRRA①-②-F③-S④-KA⑤-A⑥-KB⑦-B⑧-KC⑨-C⑩
 	 * @return 转换后的结果 PSFGKRRA10-50-F10-S10-KA3-A6-KB3-B6-KC3-C6
 	 */
-	private String mapProductCode(String oriCode, String selfType, String targetType) {
+	public String mapProductCode(String oriCode, String selfType, String targetType) {
 
 		if (null == oriCode || null == selfType || null == targetType) {
 			log.error("输入参数oriCode:{},selfType:{},targetType:{}", oriCode, selfType, targetType);

@@ -6,9 +6,13 @@ import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
+import org.apache.commons.io.IOUtils;
 import org.camunda.bpm.engine.FormService;
 import org.camunda.bpm.engine.HistoryService;
 import org.camunda.bpm.engine.IdentityService;
@@ -24,6 +28,7 @@ import org.camunda.bpm.engine.task.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
@@ -37,6 +42,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sadetec.model.BaseTreeNode;
 import com.sadetec.model.FormInstance;
 import com.sadetec.model.HistoricActivityInstanceDto;
 import com.sadetec.model.ProcessDefinitionDto;
@@ -84,6 +90,9 @@ public class BPMResource {
 
 	@Autowired
 	private StorageService storageService;
+	
+	@Autowired
+	private ResourceLoader resourceLoader;
 
 	/**
 	 * 
@@ -125,11 +134,14 @@ public class BPMResource {
 			formInstance.setProcessDefinitionId(processDefinitionId);
 			formInstance.setProcessInstanceId("");
 			formInstance.setDrafterId(sysUser.getLoginName());
-			formInstance.setDrafter(sysUser.getName());
+			formInstance.setDraftOrg(sysUser.getCompanyId().toString());
+			formInstance.setCreateDate(new Date());
 			formInstanceRepository.save(formInstance);
 		}
 		else {
 			formInstance = draftInstance.get(0);
+			formInstance.setProcessDefinitionId(processDefinitionId);
+			formInstance.setCreateDate(new Date());
 			formInstanceRepository.save(formInstance);
 		}
 
@@ -142,6 +154,22 @@ public class BPMResource {
 		pageResponse.setTotal(results.size());
 
 		return new ResponseEntity<PageResponse<FormInstance>>(pageResponse, HttpStatus.OK);
+	}
+	
+	@RequestMapping(value = "/taskForm", method = GET, produces = APPLICATION_JSON_VALUE)
+	public ResponseEntity<Map<String, String>> getTaskForm(
+			@RequestParam(value = "taskId", required = true) String taskId) throws IOException {
+
+		Map<String, String> formModel = new HashMap<>();
+		String formKey = formService.getTaskFormData(taskId).getFormKey();
+		
+		String getRenderedTaskForm = IOUtils.toString(resourceLoader.getResource("classpath:/forms/"+formKey+".json").getInputStream());
+		
+		log.info("根据FormKey:{},获取到的内容:{}",formKey,getRenderedTaskForm);
+		
+		formModel.put("metadata", getRenderedTaskForm);
+		return new ResponseEntity<Map<String, String>>(formModel, HttpStatus.OK);
+
 	}
 
 	/**
@@ -234,6 +262,38 @@ public class BPMResource {
 
 	}
 
+	@RequestMapping(value = "/getNavTree", method = GET, produces = APPLICATION_JSON_VALUE)
+	public ResponseEntity<PageResponse<BaseTreeNode>> navTree() {
+
+		String userName = UserContext.getUsername();
+		Long myTasksNum = taskService.createTaskQuery().taskAssignee(userName).count();
+		Long myGroupNum = 0L;
+		List<String> roles = UserContext.getRoles();
+		for (String role : roles) {
+			myGroupNum += taskService.createTaskQuery().taskCandidateGroup(role).count();
+		}
+		
+		Long myDoneNum = formInstanceRepository.countCompleteFormInstanceByAssignee(userName);
+		Long myStartNum = formInstanceRepository.countByDrafterIdAndProcessInstanceIdNot(userName, "");
+		
+		BaseTreeNode myTask = new BaseTreeNode("MY", String.format("待处理(%d)",myTasksNum), true, myTasksNum > 0 ? "new-icon" : "",myTasksNum > 0 ? "ux-desktop-black" : "","");
+		BaseTreeNode myGroup = new BaseTreeNode("GROUP", String.format("待认领(%d)",myGroupNum), true, myGroupNum > 0 ? "new-icon" : "",myTasksNum > 0 ? "ux-desktop-black" : "","");
+		BaseTreeNode myDone = new BaseTreeNode("DONE", String.format("已处理(%d)",myDoneNum), true, "","","");
+		BaseTreeNode myStart = new BaseTreeNode("BYME", String.format("由我发起(%d)",myStartNum), true, "","","");
+		
+		List<BaseTreeNode> navtree = new ArrayList<>();
+		navtree.add(myTask);
+		navtree.add(myGroup);
+		navtree.add(myDone);
+		navtree.add(myStart);
+		
+		PageResponse<BaseTreeNode> pageResponse = new PageResponse<BaseTreeNode>(navtree);
+		pageResponse.setSuccess(Boolean.TRUE);
+		pageResponse.setTotal(navtree.size());
+		
+		return ResponseEntity.ok().body(pageResponse);
+	}
+	
 	/**
 	 * 获取待办
 	 */
@@ -245,8 +305,6 @@ public class BPMResource {
 		List<FormInstance> historyFormInstances = new ArrayList<>();
 
 		String userName = UserContext.getUsername();
-		log.info("获取{},{}的待办事项", assignment, userName);
-
 		switch (assignment) {
 		case "MY":
 			tasks = taskService.createTaskQuery().taskAssignee(userName).list();
@@ -261,7 +319,7 @@ public class BPMResource {
 			historyFormInstances = formInstanceRepository.findCompleteFormInstanceByAssignee(userName);
 			break;
 		case "BYME":
-			historyFormInstances = formInstanceRepository.findByDrafterIdAndProcessInstanceIdNot(userName, "");
+			historyFormInstances = formInstanceRepository.findByDrafterIdOrDrafter(userName, userName);
 			break;
 		default:
 			break;
@@ -269,6 +327,7 @@ public class BPMResource {
 
 		List<TaskInstance> mytasks = new ArrayList<>();
 		for (Task task : tasks) {
+			log.info("获取到的事项:{}",task);
 			FormInstance formInstance = formInstanceRepository.findOneByProcessInstanceId(task.getProcessInstanceId());
 			TaskInstance tempTask = new TaskInstance(task);
 			tempTask.setTitle(formInstance.getTitle());
@@ -339,7 +398,10 @@ public class BPMResource {
 			HistoricActivityInstanceDto temp = HistoricActivityInstanceDto.fromHistoricActivityInstance(historicActivityInstance);
 
 			// Gateway类型的环节不显示
-			if (!temp.getActivityType().contains("Gateway")) {
+			if (!temp.getActivityType().contains("Gateway") 
+					&& !temp.getActivityType().contains("multiInstanceBody") 
+					&& !temp.getActivityType().contains("subProcess")
+					&& !temp.getActivityType().contains("serviceTask")) {
 				if (!StringUtils.isEmpty(temp.getAssignee())) {
 					SysUser sysUser = sysUserRepository.getByLoginName(temp.getAssignee());
 					if (null != sysUser) {
@@ -353,8 +415,10 @@ public class BPMResource {
 
 		FormInstance formInstance = formInstanceRepository.findOneByProcessInstanceId(processInstanceId);
 		log.info("根据流程ID{},查询到的发起人{}", processInstanceId, formInstance.getDrafter());
-		results.get(results.size() - 1).setAssignee(formInstance.getDrafter());
-
+		SysUser drafer = sysUserRepository.getByLoginName(formInstance.getDrafter());
+		if(null != drafer) {
+			results.get(results.size() - 1).setAssignee(drafer.getName());
+		}
 		PageResponse<HistoricActivityInstanceDto> pageResponse = new PageResponse<HistoricActivityInstanceDto>(results);
 
 		pageResponse.setSuccess(Boolean.TRUE);
@@ -387,8 +451,15 @@ public class BPMResource {
 	public ResponseEntity<PageResponse<FormInstance>> deleteDeploy(@RequestParam(value = "processDefinitionId", required = true) String processDefinitionId
 			,@RequestParam(value = "cascade", required = false, defaultValue= "false") Boolean cascade) {
 
+		log.warn("危险操作：删除流程定义{}",processDefinitionId);
+		List<FormInstance> formInstance = formInstanceRepository.findByProcessDefinitionId(processDefinitionId);
+		for (FormInstance temp : formInstance) {
+			formInstanceRepository.delete(temp);
+		}
+		
 		repositoryService.deleteProcessDefinition(processDefinitionId, cascade);
-
+		
+		
 		PageResponse<FormInstance> pageResponse = new PageResponse<FormInstance>(null);
 		pageResponse.setMessage("成功删除流程定义" + processDefinitionId);
 		pageResponse.setSuccess(Boolean.TRUE);

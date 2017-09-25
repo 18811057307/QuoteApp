@@ -1,38 +1,50 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_1" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="1.9.0">
   <bpmn:process id="request_for_price" name="产品询价" isExecutable="true" camunda:versionTag="1.0">
-    <bpmn:startEvent id="submit_order" name="提交销售订单" camunda:formKey="order_process_start">
+    <bpmn:startEvent id="submit_order" name="提交询价单" camunda:formKey="rfp_start">
       <bpmn:outgoing>SequenceFlow_16sjhve</bpmn:outgoing>
     </bpmn:startEvent>
     <bpmn:sequenceFlow id="SequenceFlow_16sjhve" sourceRef="submit_order" targetRef="product_process" />
-    <bpmn:endEvent id="EndEvent_1nyr5jo" name="处理完成">
-      <bpmn:incoming>SequenceFlow_10kyifc</bpmn:incoming>
+    <bpmn:endEvent id="EndEvent_1nyr5jo" name="询价完成">
+      <bpmn:incoming>SequenceFlow_19xpq9c</bpmn:incoming>
     </bpmn:endEvent>
     <bpmn:serviceTask id="product_process" name="自动分类" camunda:delegateExpression="${salesOrderProcessService}">
       <bpmn:incoming>SequenceFlow_16sjhve</bpmn:incoming>
       <bpmn:outgoing>SequenceFlow_1dgzce7</bpmn:outgoing>
     </bpmn:serviceTask>
-    <bpmn:sequenceFlow id="SequenceFlow_1dgzce7" sourceRef="product_process" targetRef="manual_allocation" />
+    <bpmn:sequenceFlow id="SequenceFlow_1dgzce7" sourceRef="product_process" targetRef="need_manual_allocation" />
     <bpmn:subProcess id="price_inquiry_sub_flow" name="工厂核算与采购询价">
-      <bpmn:incoming>SequenceFlow_0ior3oc</bpmn:incoming>
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="Input_17fnc19" />
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>need_manual_allocation_no</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_1o4t339</bpmn:incoming>
       <bpmn:outgoing>SequenceFlow_10kyifc</bpmn:outgoing>
       <bpmn:multiInstanceLoopCharacteristics camunda:collection="${salesOrderRepository.findSalesOrderAssignees(businessKey)}" camunda:elementVariable="participant" />
-      <bpmn:startEvent id="StartEvent_1lywb22" name="任务处理">
+      <bpmn:startEvent id="StartEvent_1lywb22" name="开始询价任务">
         <bpmn:outgoing>SequenceFlow_1xblwbq</bpmn:outgoing>
       </bpmn:startEvent>
       <bpmn:sequenceFlow id="SequenceFlow_1xblwbq" sourceRef="StartEvent_1lywb22" targetRef="price_inquiry" />
       <bpmn:sequenceFlow id="SequenceFlow_176podh" sourceRef="price_inquiry" targetRef="assign_price_auditor" />
-      <bpmn:endEvent id="EndEvent_1mv9aoo" name="处理完成">
+      <bpmn:endEvent id="EndEvent_1mv9aoo" name="完成任务">
         <bpmn:incoming>audit_result_pass</bpmn:incoming>
       </bpmn:endEvent>
       <bpmn:sequenceFlow id="SequenceFlow_02yurql" sourceRef="price_audit" targetRef="check_audit_result" />
       <bpmn:sequenceFlow id="SequenceFlow_0sl1yry" sourceRef="assign_price_auditor" targetRef="price_audit" />
-      <bpmn:userTask id="price_inquiry" name="询价" camunda:assignee="${participant}">
+      <bpmn:userTask id="price_inquiry" name="询价" camunda:formKey="rfp_price_inquiry" camunda:assignee="${participant}">
+        <bpmn:extensionElements>
+          <camunda:taskListener delegateExpression="${notificationService}" event="assignment" />
+        </bpmn:extensionElements>
         <bpmn:incoming>SequenceFlow_1xblwbq</bpmn:incoming>
         <bpmn:incoming>audit_result_fail</bpmn:incoming>
         <bpmn:outgoing>SequenceFlow_176podh</bpmn:outgoing>
       </bpmn:userTask>
-      <bpmn:userTask id="price_audit" name="报价审核" camunda:assignee="${priceAuditor}">
+      <bpmn:userTask id="price_audit" name="报价审核" camunda:formKey="rfp_price_audit" camunda:assignee="${priceAuditor}">
+        <bpmn:extensionElements>
+          <camunda:taskListener delegateExpression="${notificationService}" event="assignment" />
+        </bpmn:extensionElements>
         <bpmn:incoming>SequenceFlow_0sl1yry</bpmn:incoming>
         <bpmn:outgoing>SequenceFlow_02yurql</bpmn:outgoing>
       </bpmn:userTask>
@@ -57,44 +69,61 @@
         <bpmn:outgoing>SequenceFlow_0vro4p2</bpmn:outgoing>
       </bpmn:serviceTask>
     </bpmn:subProcess>
-    <bpmn:userTask id="manual_allocation" name="分配任务" camunda:candidateGroups="RFP_TASK_ADMIN">
-      <bpmn:incoming>SequenceFlow_1dgzce7</bpmn:incoming>
-      <bpmn:outgoing>SequenceFlow_0ior3oc</bpmn:outgoing>
+    <bpmn:userTask id="manual_allocation" name="分配任务" camunda:formKey="rfp_manual_allocation" camunda:candidateGroups="RFP_TASK_ADMIN">
+      <bpmn:extensionElements>
+        <camunda:taskListener delegateExpression="${notificationService}" event="create" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>need_manual_allocation_yes</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1o4t339</bpmn:outgoing>
     </bpmn:userTask>
-    <bpmn:sequenceFlow id="SequenceFlow_0ior3oc" sourceRef="manual_allocation" targetRef="price_inquiry_sub_flow" />
-    <bpmn:sequenceFlow id="SequenceFlow_10kyifc" sourceRef="price_inquiry_sub_flow" targetRef="EndEvent_1nyr5jo" />
+    <bpmn:sequenceFlow id="SequenceFlow_10kyifc" sourceRef="price_inquiry_sub_flow" targetRef="send_mail" />
+    <bpmn:exclusiveGateway id="need_manual_allocation" name="是否需要手工分配">
+      <bpmn:incoming>SequenceFlow_1dgzce7</bpmn:incoming>
+      <bpmn:outgoing>need_manual_allocation_yes</bpmn:outgoing>
+      <bpmn:outgoing>need_manual_allocation_no</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="need_manual_allocation_yes" name="是" sourceRef="need_manual_allocation" targetRef="manual_allocation">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${needManualAllocation}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="need_manual_allocation_no" name="否" sourceRef="need_manual_allocation" targetRef="price_inquiry_sub_flow">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${!needManualAllocation}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_1o4t339" sourceRef="manual_allocation" targetRef="price_inquiry_sub_flow" />
+    <bpmn:sequenceFlow id="SequenceFlow_19xpq9c" sourceRef="send_mail" targetRef="EndEvent_1nyr5jo" />
+    <bpmn:serviceTask id="send_mail" name="发送邮件" camunda:delegateExpression="${salesOrderProcessService}">
+      <bpmn:incoming>SequenceFlow_10kyifc</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_19xpq9c</bpmn:outgoing>
+    </bpmn:serviceTask>
   </bpmn:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="request_for_price">
       <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="submit_order">
-        <dc:Bounds x="78" y="102" width="36" height="36" />
+        <dc:Bounds x="-10" y="102" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="64" y="138" width="66" height="12" />
+          <dc:Bounds x="-18" y="138" width="55" height="12" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="SequenceFlow_16sjhve_di" bpmnElement="SequenceFlow_16sjhve">
-        <di:waypoint xsi:type="dc:Point" x="114" y="120" />
-        <di:waypoint xsi:type="dc:Point" x="177" y="120" />
-        <di:waypoint xsi:type="dc:Point" x="177" y="120" />
-        <di:waypoint xsi:type="dc:Point" x="202" y="120" />
+        <di:waypoint xsi:type="dc:Point" x="26" y="120" />
+        <di:waypoint xsi:type="dc:Point" x="100" y="120" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="359" y="114" width="90" height="12" />
+          <dc:Bounds x="18" y="99" width="90" height="12" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="EndEvent_1nyr5jo_di" bpmnElement="EndEvent_1nyr5jo">
-        <dc:Bounds x="1652" y="102" width="36" height="36" />
+        <dc:Bounds x="1861" y="102" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1648" y="142" width="44" height="12" />
+          <dc:Bounds x="1857" y="142" width="44" height="12" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="ServiceTask_1med2zb_di" bpmnElement="product_process">
-        <dc:Bounds x="202" y="80" width="100" height="80" />
+        <dc:Bounds x="100" y="80" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="SequenceFlow_1dgzce7_di" bpmnElement="SequenceFlow_1dgzce7">
-        <di:waypoint xsi:type="dc:Point" x="302" y="120" />
-        <di:waypoint xsi:type="dc:Point" x="379" y="120" />
+        <di:waypoint xsi:type="dc:Point" x="200" y="120" />
+        <di:waypoint xsi:type="dc:Point" x="249" y="120" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="295.5" y="99" width="90" height="12" />
+          <dc:Bounds x="179.5" y="99" width="90" height="12" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="SubProcess_0blv5ja_di" bpmnElement="price_inquiry_sub_flow" isExpanded="true">
@@ -103,21 +132,12 @@
       <bpmndi:BPMNShape id="StartEvent_1lywb22_di" bpmnElement="StartEvent_1lywb22">
         <dc:Bounds x="591.9251497005988" y="56" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="588" y="96.30139720558884" width="44" height="12" />
+          <dc:Bounds x="577" y="96" width="66" height="12" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="UserTask_0kuwz3h_di" bpmnElement="manual_allocation">
-        <dc:Bounds x="379" y="80" width="100" height="80" />
+        <dc:Bounds x="342" y="-26" width="100" height="80" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNEdge id="SequenceFlow_0ior3oc_di" bpmnElement="SequenceFlow_0ior3oc">
-        <di:waypoint xsi:type="dc:Point" x="479" y="120" />
-        <di:waypoint xsi:type="dc:Point" x="511" y="120" />
-        <di:waypoint xsi:type="dc:Point" x="511" y="120" />
-        <di:waypoint xsi:type="dc:Point" x="543" y="120" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="526" y="114" width="0" height="12" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="SequenceFlow_1xblwbq_di" bpmnElement="SequenceFlow_1xblwbq">
         <di:waypoint xsi:type="dc:Point" x="628" y="74" />
         <di:waypoint xsi:type="dc:Point" x="692" y="73" />
@@ -163,11 +183,9 @@
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="SequenceFlow_10kyifc_di" bpmnElement="SequenceFlow_10kyifc">
         <di:waypoint xsi:type="dc:Point" x="1571" y="120" />
-        <di:waypoint xsi:type="dc:Point" x="1611" y="120" />
-        <di:waypoint xsi:type="dc:Point" x="1611" y="120" />
-        <di:waypoint xsi:type="dc:Point" x="1652" y="120" />
+        <di:waypoint xsi:type="dc:Point" x="1667" y="120" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1626" y="114" width="0" height="12" />
+          <dc:Bounds x="1574" y="99" width="90" height="12" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="ExclusiveGateway_1jsk5w2_di" bpmnElement="ExclusiveGateway_1jsk5w2" isMarkerVisible="true">
@@ -201,6 +219,46 @@
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="ServiceTask_13z5hfn_di" bpmnElement="check_audit_result">
         <dc:Bounds x="1198.925149700599" y="34" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ExclusiveGateway_089rh4v_di" bpmnElement="need_manual_allocation" isMarkerVisible="true">
+        <dc:Bounds x="248.72928821470248" y="95" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="231" y="149" width="88" height="12" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1rej9kq_di" bpmnElement="need_manual_allocation_yes">
+        <di:waypoint xsi:type="dc:Point" x="274" y="95" />
+        <di:waypoint xsi:type="dc:Point" x="274" y="14" />
+        <di:waypoint xsi:type="dc:Point" x="342" y="14" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="302.92500000000007" y="-7" width="11" height="12" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1c2nusi_di" bpmnElement="need_manual_allocation_no">
+        <di:waypoint xsi:type="dc:Point" x="299" y="120" />
+        <di:waypoint xsi:type="dc:Point" x="543" y="120" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="415.5" y="98.99999999999999" width="11" height="12" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1o4t339_di" bpmnElement="SequenceFlow_1o4t339">
+        <di:waypoint xsi:type="dc:Point" x="442" y="14" />
+        <di:waypoint xsi:type="dc:Point" x="492" y="14" />
+        <di:waypoint xsi:type="dc:Point" x="492" y="120" />
+        <di:waypoint xsi:type="dc:Point" x="543" y="120" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="507" y="61" width="0" height="12" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_19xpq9c_di" bpmnElement="SequenceFlow_19xpq9c">
+        <di:waypoint xsi:type="dc:Point" x="1767" y="120" />
+        <di:waypoint xsi:type="dc:Point" x="1861" y="120" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1814" y="99" width="0" height="12" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ServiceTask_1igg2d7_di" bpmnElement="send_mail">
+        <dc:Bounds x="1667" y="80" width="100" height="80" />
       </bpmndi:BPMNShape>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>

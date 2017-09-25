@@ -145,7 +145,7 @@ Ext.define("Ext.ux.exporter.excelFormatter.ExcelFormatter", {
             '<ss:Row ss:Height="38">' +
             '<ss:Cell ss:StyleID="title" ss:MergeAcross="' + (visibleColumnCount - 1) + '">' +
             '<ss:Data xmlns:html="http://www.w3.org/TR/REC-html40" ss:Type="String">' +
-            '<html:B>参考报价单对照表</html:B></ss:Data><ss:NamedCell ss:Name="Print_Titles" />' +
+            '<html:B>' + grid.title + '</html:B></ss:Data><ss:NamedCell ss:Name="Print_Titles" />' +
             '</ss:Cell>' +
             '</ss:Row>' +
             '<ss:Row ss:AutoFitHeight="1">' +

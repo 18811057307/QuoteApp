@@ -8,22 +8,27 @@
 package com.sadetec.model;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.logging.Logger;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 import javax.validation.constraints.Digits;
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 import org.hibernate.validator.constraints.NotEmpty;
 import org.hibernate.validator.constraints.URL;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Objects;
 
 @Entity
 @Table(name = "category")
@@ -40,8 +45,23 @@ public class Category implements Serializable {
     private Boolean hasChildCategory;
     private String procBy;
     private Boolean procFlag;
-    private LocalDateTime createDate;
-    private LocalDateTime updateDate;
+    
+	@Temporal(TemporalType.TIMESTAMP)
+	@DateTimeFormat(style = "S-")
+    private Date createDate;
+	
+	@Temporal(TemporalType.TIMESTAMP)
+	@DateTimeFormat(style = "S-")
+    private Date updateDate;
+	
+    private String quoterId;
+    private String quoterName;
+    private String auditorId;
+    private String auditorName;
+    
+    private Integer sequence;
+    private BigDecimal factoryRatio;
+    private BigDecimal unitRatio;
 
     public String entityClassName() {
         return Category.class.getSimpleName();
@@ -194,15 +214,15 @@ public class Category implements Serializable {
      * 创建时间
      */
     @Column(name = "create_date", length = 19)
-    public LocalDateTime getCreateDate() {
+    public Date getCreateDate() {
         return createDate;
     }
 
-    public void setCreateDate(LocalDateTime createDate) {
+    public void setCreateDate(Date createDate) {
         this.createDate = createDate;
     }
 
-    public Category createDate(LocalDateTime createDate) {
+    public Category createDate(Date createDate) {
         setCreateDate(createDate);
         return this;
     }
@@ -212,20 +232,127 @@ public class Category implements Serializable {
      * 更新时间
      */
     @Column(name = "update_date", length = 19)
-    public LocalDateTime getUpdateDate() {
+    public Date getUpdateDate() {
         return updateDate;
     }
 
-    public void setUpdateDate(LocalDateTime updateDate) {
+    public void setUpdateDate(Date updateDate) {
         this.updateDate = updateDate;
     }
 
-    public Category updateDate(LocalDateTime updateDate) {
+    public Category updateDate(Date updateDate) {
         setUpdateDate(updateDate);
         return this;
     }
+    
+    // -- [quoterId] ------------------------
 
     /**
+     * 办理人
+     */
+    @Size(max = 64)
+    @Column(name = "quoter_id", length = 64)
+    public String getQuoterId() {
+        return quoterId;
+    }
+
+    public void setQuoterId(String quoterId) {
+        this.quoterId = quoterId;
+    }
+
+    public Category quoterId(String quoterId) {
+        setQuoterId(quoterId);
+        return this;
+    }
+    // -- [quoterName] ------------------------
+
+    /**
+     * 办理人
+     */
+    @Size(max = 64)
+    @Column(name = "quoter_name", length = 64)
+    public String getQuoterName() {
+        return quoterName;
+    }
+
+    public void setQuoterName(String quoterName) {
+        this.quoterName = quoterName;
+    }
+
+    public Category quoterName(String quoterName) {
+        setQuoterName(quoterName);
+        return this;
+    }
+    // -- [auditorId] ------------------------
+
+    /**
+     * 审批人
+     */
+    @Size(max = 64)
+    @Column(name = "auditor_id", length = 64)
+    public String getAuditorId() {
+        return auditorId;
+    }
+
+    public void setAuditorId(String auditorId) {
+        this.auditorId = auditorId;
+    }
+
+    public Category auditorId(String auditorId) {
+        setAuditorId(auditorId);
+        return this;
+    }
+    // -- [auditorName] ------------------------
+
+    /**
+     * 审批人
+     */
+    @Size(max = 64)
+    @Column(name = "auditor_name", length = 64)
+    public String getAuditorName() {
+        return auditorName;
+    }
+
+    public void setAuditorName(String auditorName) {
+        this.auditorName = auditorName;
+    }
+
+    public Category auditorName(String auditorName) {
+        setAuditorName(auditorName);
+        return this;
+    }
+    
+    @Digits(integer = 10, fraction = 0)
+    @Column(name = "sequence", precision = 10)
+    public Integer getSequence() {
+		return sequence;
+	}
+
+	public void setSequence(Integer sequence) {
+		this.sequence = sequence;
+	}
+
+    @Digits(integer = 11, fraction = 4)
+    @Column(name = "factory_ratio", precision = 15, scale = 4)
+	public BigDecimal getFactoryRatio() {
+		return factoryRatio;
+	}
+
+	public void setFactoryRatio(BigDecimal factoryRatio) {
+		this.factoryRatio = factoryRatio;
+	}
+
+    @Digits(integer = 11, fraction = 4)
+    @Column(name = "unit_ratio", precision = 15, scale = 4)
+	public BigDecimal getUnitRatio() {
+		return unitRatio;
+	}
+
+	public void setUnitRatio(BigDecimal unitRatio) {
+		this.unitRatio = unitRatio;
+	}
+
+	/**
      * Apply the default values.
      */
     public Category withDefaults() {

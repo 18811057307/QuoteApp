@@ -36,6 +36,9 @@ public interface SysRoleRepository extends JpaRepository<SysRole, Integer> {
     @Query("select r from SysRole r where r.id in (select ur.id.roleId from SysUserRole ur where ur.id.userId = ?1)")
     List<SysRole> findByUserId(Integer userId);
     
+    @Query("select r.name from SysRole r where r.id in (select ur.id.roleId from SysUserRole ur where ur.id.userId in (select su.id from SysUser su where su.loginName = ?1))")
+    List<String> findUserRoles(String loginName);
+    
     default List<SysRole> complete(String query, int maxResults) {
         SysRole probe = new SysRole();
         probe.setName(query);

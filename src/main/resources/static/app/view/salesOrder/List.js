@@ -11,17 +11,17 @@ Ext.define('tms.view.salesOrder.List', {
         enableTextSelection: true
     },
     alias:'widget.salesOrderList',
-    store: 'SalesOrderStore',
     formInstanceId: '',
     columns:[
-		{width: 20,  header:i18n.t('salesOrder_category_name'), sortable:true, dataIndex:'categoryName'}
+    	{width: 30,  header:i18n.t('salesOrder_category_name'), sortable:true, dataIndex:'categoryName'}
+    	,{width: 20,  header:'品牌', dataIndex:'brand'}
 		,{width: 50,  header:i18n.t('salesOrder_product_code'), sortable:true, dataIndex:'productCode'}
-		,{width: 50,  header:i18n.t('salesOrder_delivery_date'), sortable:true, dataIndex:'deliveryDate', xtype:'datecolumn', format:'y年m月d日'}
+		,{width: 20,  header:'单位', sortable:true, dataIndex:'unit'}
 		,{width: 20,  header:i18n.t('salesOrder_amount'), sortable:true, dataIndex:'amount'}
-		//,{width: 20,  header:i18n.t('salesOrder_price'), sortable:true, dataIndex:'unitPrice'}
-		//,{width: 30,  header:i18n.t('salesOrder_process_type'), sortable:true, dataIndex:'processType'}
+		,{width: 30,  header:i18n.t('salesOrder_comment'), sortable:true, dataIndex:'comment'}
     ],
     initComponent:function () {
+    	this.store = Ext.create('tms.store.SalesOrderStore');
         this.dockedItems = [{xtype: 'toolbar',dock: 'top',items:["->",{
             xtype: 'button',
             action: 'delete',

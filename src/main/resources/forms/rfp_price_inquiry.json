@@ -1,0 +1,87 @@
+{
+    "unstyled": false,
+    "hasDetail": true,
+    "detailType":"tms.view.salesOrder.EditorList",
+    "detailConfig" : {
+        "title": "产品信息",
+        "autoHeight": true,
+        "border": true
+	},
+    "items": [
+        {
+            "xtype": "container",
+            "anchor": "100%",
+            "layout": "hbox",
+            "items": [
+                {
+                    "xtype": "container",
+                    "flex": 1,
+                    "layout": "anchor",
+                    "items": [
+                        {
+                            "xtype": "hidden",
+                            "name": "id",
+                            "anchor": "95%"
+                        },
+                        {
+                            "xtype": "hidden",
+                            "name": "processInstanceId",
+                            "anchor": "95%"
+                        },
+                        {
+                            "xtype": "textfield",
+                            "name": "title",
+                            "fieldLabel": "客户名称",
+                            "anchor": "95%"
+                        },
+                        {
+                            "xtype": "userCombo",
+                            "name": "drafter",
+                            "fieldLabel": "销售",
+                            "readOnly":"true",
+                            "anchor": "95%"
+                        },
+                        {
+                            "xtype": "userCombo",
+                            "name": "drafterId",
+                            "fieldLabel": "内勤",
+                            "readOnly":"true",
+                            "anchor": "95%"
+                        }
+                    ]
+                },
+                {
+                    "xtype": "container",
+                    "flex": 1,
+                    "layout": "anchor",
+                    "items": [
+                        {
+                            "xtype": "datefield",
+                            "name": "createDate",
+                            "fieldLabel": "单据日期",
+                            "anchor": "95%"
+                        },
+                        {
+                            "xtype": "companyCombo",
+                            "name": "draftOrg",
+                            "fieldLabel": "所属公司",
+                            "readOnly":"true",
+                            "anchor": "95%"
+                        },
+                        {
+                            "xtype": "textfield",
+                            "name": "comment",
+                            "fieldLabel": "备注信息",
+                            "anchor": "95%"
+                        },
+                        {
+                            "xtype": "hidden",
+                            "name": "processDefinitionId",
+                            "anchor": "95%"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

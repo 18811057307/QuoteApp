@@ -24,7 +24,26 @@ Ext.define('tms.module.BPMModule', {
                 items:[
                 	{xtype:'panel', layout: {type: 'vbox', align: 'stretch'},title: '任务列表',items:[{xtype:'taskList',flex:1}],region:'center'}
                 	,{xtype:'panel',title:'任务类别',layout: {type: 'vbox',align: 'stretch'},items: [{xtype:'bpmNavPanel',flex:1},{xtype:'processDefPanel',title:'启动流程',flex:1}],  split:true, width: 300,collapsible: true,region: 'west'}
-                	]
+                	],
+            	listeners:{
+            		show : function() {
+            			win.loadNavTreeTask = {
+                    	    run: function(){
+                    	    	var navTreeStore = Ext.data.StoreManager.lookup('BpmNavTreeStore');
+                    	    	if(navTreeStore && !navTreeStore.isLoading()) {
+                    	    		navTreeStore.load();
+                    	    	}
+                    	    },
+                    	    interval: 10000 //5 second
+                    	};
+                        
+                        Ext.TaskManager.start(win.loadNavTreeTask);
+            		},
+            		hide :function() {
+            			Ext.TaskManager.stop(win.loadNavTreeTask);
+            		}
+
+            	}
             });
         }
         return win;

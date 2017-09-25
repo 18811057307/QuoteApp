@@ -2,7 +2,8 @@ Ext.define('tms.model.SysUser', {
     extend:'Ext.data.Model',
     proxy: tms.getAjaxProxy('sysUser'),
     fields:[
-    		{name:'id', type:'string'}
+    		{name:'id', type:'int'}
+    		,{name:'companyId', type:'int'}
     		,{name:'loginName', type:'string'}
     		,{name:'password', type:'string'}
     		,{name:'name', type:'string'}

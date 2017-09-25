@@ -1,21 +1,43 @@
 package com.sadetec.service;
 
+import java.io.OutputStream;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.poi.ss.usermodel.FillPatternType;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFCellStyle;
+import org.apache.poi.xssf.usermodel.XSSFColor;
+import org.apache.poi.xssf.usermodel.XSSFFont;
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.camunda.bpm.engine.delegate.DelegateExecution;
 import org.camunda.bpm.engine.delegate.JavaDelegate;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
+import com.sadetec.model.Category;
 import com.sadetec.model.FormInstance;
 import com.sadetec.model.ManualProductMap;
 import com.sadetec.model.SalesOrder;
+import com.sadetec.model.SysUser;
+import com.sadetec.repository.CategoryRepository;
 import com.sadetec.repository.FormInstanceRepository;
 import com.sadetec.repository.ManualProductMapRepository;
 import com.sadetec.repository.SalesOrderRepository;
+import com.sadetec.repository.SysUserRepository;
 import com.sadetec.util.QuotationProcessor;
 
 @Service("salesOrderProcessService")
@@ -28,17 +50,29 @@ public class SalesOrderProcessService implements JavaDelegate {
 
 	@Autowired
 	private SalesOrderRepository salesOrderRepository;
+	
+	@Autowired
+	private SysUserRepository sysUserRepository;
 
 	@Autowired
 	private ManualProductMapRepository manualProductMapRepository;
 	
 	@Autowired
 	private QuotationProcessor quotationProcessor;
+	
+	@Autowired
+	private CategoryRepository categoryRepository;
 
+	@Autowired
+	private StorageService storageService;
+	
+	@Autowired
+	private JavaMailSender javaMailSender;
+	
 	@Override
 	public void execute(DelegateExecution execution) throws Exception {
 		log.info("当前活动ID:{}", execution.getCurrentActivityId());
-		String businessKey = execution.getBusinessKey();
+		String businessKey = execution.getProcessBusinessKey();
 		FormInstance formInstance = formInstanceRepository.findOne(Integer.parseInt(businessKey));
 		
 		
@@ -46,65 +80,196 @@ public class SalesOrderProcessService implements JavaDelegate {
 
 			log.info("开始进行订单:{}的产品分类处理", businessKey);
 
-			List<SalesOrder> salesOrders = salesOrderRepository.findByFormInstanceId(formInstance.getId());
-
-			Boolean needFactory = false;
-			Boolean needPurchase = false;
+			List<SalesOrder> salesOrders = salesOrderRepository.findByFormInstanceIdOrderById(formInstance.getId());
+			
+			Boolean needManualAllocation = Boolean.FALSE;
 
 			for (SalesOrder salesOrder : salesOrders) {
-				ManualProductMap productMap = manualProductMapRepository.findById(salesOrder.getProductCode());
-
+				
+				//按照品牌进行查询
+				ManualProductMap productMap = null;
+				if(StringUtils.containsIgnoreCase(salesOrder.getBrand(),"A&T") || StringUtils.containsIgnoreCase(salesOrder.getBrand(),"爱安特")) {
+					productMap = manualProductMapRepository.findById(salesOrder.getProductCode());
+				} 
+				
+				if(StringUtils.containsIgnoreCase(salesOrder.getBrand(),"misumi") || StringUtils.containsIgnoreCase(salesOrder.getBrand(),"米思米")) {
+					List<ManualProductMap> productMaps = manualProductMapRepository.findByMiProductCode(salesOrder.getProductCode());
+					if(productMaps.size() > 0) {
+						productMap = productMaps.get(0);
+						salesOrder.setAtProductCode(productMap.getId());
+					}
+				} 
+				
 				if (null == productMap) {
-					
 					//判断是否存在模糊匹配的情况
 					ManualProductMap matchedMap = quotationProcessor.hasMatchedRecord(salesOrder.getProductCode());					
 					if(null == matchedMap) {
 						salesOrder.setProcessType("工厂核算");
-						needFactory = true;
 					} else {
 						productMap = matchedMap;
+						if(!(StringUtils.contains(salesOrder.getBrand(),"A&T") || StringUtils.contains(salesOrder.getBrand(),"爱安特"))) {
+							salesOrder.setAtProductCode(quotationProcessor.mapProductCode(salesOrder.getProductCode(), matchedMap.getMiProductCode(), matchedMap.getId()));
+						} 
 					}
-					
-				}
+				} 
 
 				if (null != productMap && null != productMap.getUniQuote() && (productMap.getUniQuote().compareTo(BigDecimal.ZERO) == 1)) {
 					salesOrder.setProcessType("自动报价");
 					salesOrder.setUnitPrice(productMap.getUniQuote());
+					salesOrder.setNeedProc(false);
 				}
 
 				if (null != productMap && null == productMap.getUniQuote()) {
 					salesOrder.setProcessType("采购询价");
-					needPurchase = true;
 				}
 
 				if (null != productMap && null != productMap.getUniQuote() && (productMap.getUniQuote().compareTo(BigDecimal.ZERO) < 1)) {
 					salesOrder.setProcessType("采购询价");
-					needPurchase = true;
 				}
-
+				
+				Category belongCata = categoryRepository.getByCategoryName(salesOrder.getCategoryName());
+				if(null != belongCata) {
+					//只有非自动报价的才需要进行核价
+					if(!"自动报价".equals(salesOrder.getProcessType())) {
+						if(belongCata.getQuoterId() != null) {
+							salesOrder.setQuoterId(belongCata.getQuoterId());
+							salesOrder.setAuditorId(belongCata.getAuditorId());
+						} else {
+							needManualAllocation = true;
+						}
+						salesOrder.setNeedProc(true);
+					}
+				}
+				
 				salesOrderRepository.saveAndFlush(salesOrder);
 
 			}
 
-			execution.setVariable("needFactory", needFactory);
-			execution.setVariable("needPurchase", needPurchase);
+			execution.setVariable("businessKey", businessKey);
+			execution.setVariable("needManualAllocation", needManualAllocation);
+			
 
 		}
 
-		if ("calc_total_price".equals(execution.getCurrentActivityId())) {
-			log.info("开始计算订单总价:{}", businessKey);
-
-			BigDecimal totalPrice = salesOrderRepository.calcTotalPrice(formInstance.getId());
-
-			Boolean needAudit = false;
-			if (null != totalPrice) {
-				if (totalPrice.intValue() >= 10000) {
-					needAudit = true;
+		if ("assign_price_auditor".equals(execution.getCurrentActivityId())) {
+			String priceInquiryAssignee = execution.getVariable("participant").toString();
+			log.info("{}处理完毕,开始分配审核人.", priceInquiryAssignee);
+			List<SalesOrder> doneOrder = salesOrderRepository.findByFormInstanceIdAndQuoterId(Integer.parseInt(businessKey),priceInquiryAssignee);
+			if(doneOrder.size() > 0) {
+				
+				//设置出厂价以及统一价
+				for (SalesOrder salesOrder : doneOrder) {
+					String catagoryName = salesOrder.getCategoryName();
+					Category category = categoryRepository.getByCategoryName(catagoryName);
+					if(null != category) {
+						BigDecimal factoryRatio = category.getFactoryRatio();
+						BigDecimal unitRatio = category.getUnitRatio();
+						BigDecimal costPrice = salesOrder.getCostPrice();						
+						salesOrder.setFactoryPrice(costPrice.divide(factoryRatio, 4, BigDecimal.ROUND_HALF_UP));						
+						salesOrder.setUnitPrice(salesOrder.getFactoryPrice().multiply(unitRatio).setScale(4, BigDecimal.ROUND_HALF_UP));
+						salesOrderRepository.save(salesOrder);
+					}
 				}
+				
+				execution.setVariable("priceAuditor", doneOrder.get(0).getAuditorId());
+			}
+		}
+		
+		if ("check_audit_result".equals(execution.getCurrentActivityId())) {
+			String priceAuditorAssignee = execution.getVariable("priceAuditor").toString();
+			log.info("{}处理完毕,审核结果判断.", priceAuditorAssignee);
+
+			Boolean isPass = false;
+			
+			List<SalesOrder> needProcOrders = salesOrderRepository.findByFormInstanceIdAndAuditorIdAndNeedProc(Integer.parseInt(businessKey), priceAuditorAssignee, true);
+
+			if(needProcOrders.size() == 0) {
+				isPass = true;
 			}
 
-			execution.setVariable("needAudit", needAudit);
+			execution.setVariable("isPass", isPass);
 
+		}
+		
+		if ("send_mail".equals(execution.getCurrentActivityId())) {
+			log.info("{}询价处理完毕,开始发送邮件.", formInstance.getTitle());
+			XSSFWorkbook salesOrderExcel = new XSSFWorkbook();
+			XSSFSheet productSheet = salesOrderExcel.createSheet("产品信息");
+			
+			XSSFCellStyle style = salesOrderExcel.createCellStyle();
+	        XSSFFont font = salesOrderExcel.createFont();
+	        font.setFontName("微软雅黑");
+	        font.setBold(true);
+	        style.setFont(font);
+	        
+			// create header row
+	        XSSFRow header = productSheet.createRow(0);
+	        header.createCell(0).setCellValue("品牌");
+	        header.getCell(0).setCellStyle(style);
+	        header.createCell(1).setCellValue("产品品类");
+	        header.getCell(1).setCellStyle(style);
+	        header.createCell(2).setCellValue("产品型号");
+			header.getCell(2).setCellStyle(style);
+			header.createCell(3).setCellValue("AT型号");
+			header.getCell(3).setCellStyle(style);
+			header.createCell(4).setCellValue("数量");
+			header.getCell(4).setCellStyle(style);
+			header.createCell(5).setCellValue("单位");
+			header.getCell(5).setCellStyle(style);
+			header.createCell(6).setCellValue("统一价");
+			header.getCell(6).setCellStyle(style);
+			header.createCell(7).setCellValue("可用库存");
+			header.getCell(7).setCellStyle(style);
+			
+			List<Object[]> salesOrders = salesOrderRepository.findSalesOrderWithStock(formInstance.getId());
+			int rowCount = 1;
+			for (Object[] order : salesOrders) {
+				XSSFRow aRow = productSheet.createRow(rowCount++);
+				aRow.createCell(0).setCellValue(order[0] != null ? order[0].toString() : "");
+				aRow.createCell(1).setCellValue(order[1] != null ? order[1].toString() : "");
+				aRow.createCell(2).setCellValue(order[2] != null ? order[2].toString() : "");
+				aRow.createCell(3).setCellValue(order[3] != null ? order[3].toString() : "");
+				aRow.createCell(4).setCellValue(order[4] != null ? order[4].toString() : "");
+				aRow.createCell(5).setCellValue(order[5] != null ? order[5].toString() : "");
+				aRow.createCell(6).setCellValue(order[6] != null ? order[6].toString() : "");
+				aRow.createCell(7).setCellValue(order[7] != null ? order[7].toString() : "");
+			}
+			
+			DateTimeFormatter format = DateTimeFormat.forPattern("yyyyMMdd");
+			
+			String fileName = formInstance.getTitle() + "-" + formInstance.getDrafter() + "-" + format.print(formInstance.getCreateDate().getTime()) + ".xlsx";
+			
+			OutputStream os = storageService.openOutPutStream(fileName);
+			salesOrderExcel.write(os);
+			salesOrderExcel.close();
+			os.close();
+			
+			MimeMessage mailMsg = javaMailSender.createMimeMessage();
+			MimeMessageHelper helper = new MimeMessageHelper(mailMsg,true);
+			try {
+				List<String> receiptens = new ArrayList<>();
+				SysUser drafter = sysUserRepository.getByLoginName(formInstance.getDrafter());
+				SysUser sales = sysUserRepository.getByLoginName(formInstance.getDrafterId());
+				if(drafter != null) {
+					if(StringUtils.isNotEmpty(drafter.getEmail())) {
+						receiptens.add(drafter.getEmail());
+					}
+				}
+				if(sales != null) {
+					if(StringUtils.isNotEmpty(sales.getEmail())) {
+						receiptens.add(sales.getEmail());
+					}
+				}
+				helper.setFrom("service@sadetec.com");
+				helper.setTo(receiptens.toArray(new String[0]));
+				helper.setSubject(formInstance.getTitle() + "询价完成");
+				helper.setText(String.format("询价结果请参考附件内容或登录系统查看:%s","http://121.197.3.238:8088/sadetec/"));
+				helper.addAttachment(fileName, storageService.load(fileName).toFile());
+				javaMailSender.send(mailMsg);
+			}
+			catch (MessagingException e) {
+				log.error("发送通知邮件失败 ,原因:{}",e.getCause());
+			}
 		}
 
 	}

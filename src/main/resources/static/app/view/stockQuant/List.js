@@ -5,9 +5,13 @@ Ext.define('tms.view.stockQuant.List', {
     columns:[
     	{width: 50,  header:i18n.t('stockQuant_location_id'), sortable:true, dataIndex:'location', filter:true}
     	,{width: 50,  header:i18n.t('stockQuant_lot_id'), sortable:true, dataIndex:'lot', filter:true}
+    	,{width: 50,  header:i18n.t('stockQuant_product_name'), sortable:true, dataIndex:'productName', filter:true}
 		,{width: 50,  header:i18n.t('stockQuant_product_id'), sortable:true, dataIndex:'productId', filter:true}
+		,{width: 50,  header:i18n.t('stockQuant_unit'), sortable:true, dataIndex:'unit', filter:true}
 		,{width: 50,  header:i18n.t('stockQuant_qty'), sortable:true, dataIndex:'qty', filter:true}
-		,{width: 50,  header:i18n.t('stockQuant_use_qty'), sortable:true, dataIndex:'useQty', filter:true}		
+		,{width: 50,  header:i18n.t('stockQuant_use_qty'), sortable:true, dataIndex:'useQty', filter:true}	
+		,{width: 50,  header:i18n.t('stockQuant_lot_cata1'), sortable:true, dataIndex:'lotCata1', filter:true}
+		,{width: 50,  header:i18n.t('stockQuant_lot_cata2'), sortable:true, dataIndex:'lotCata2', filter:true}
     ],
     dockedItems: [{
         xtype: 'pagingtoolbar',

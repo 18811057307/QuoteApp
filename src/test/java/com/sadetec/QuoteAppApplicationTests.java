@@ -1,8 +1,10 @@
 package com.sadetec;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -16,9 +18,11 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import com.sadetec.model.Category;
 import com.sadetec.model.QuotationLogStatistics;
+import com.sadetec.model.SalesOrderWithStock;
 import com.sadetec.model.Series;
 import com.sadetec.repository.CategoryRepository;
 import com.sadetec.repository.QuotationLogRepository;
+import com.sadetec.repository.SalesOrderRepository;
 import com.sadetec.repository.SeriesRepository;
 import com.sadetec.util.CategoryPageProcessor;
 import com.sadetec.util.CategorySpecProcessor;
@@ -62,14 +66,23 @@ public class QuoteAppApplicationTests {
 	@Autowired
 	private QuotationLogRepository quotationLogRepository;
 
+	@Autowired
+	private SalesOrderRepository salesOrderRepository;
+
 	
 	@Test
 	public void contextLoads() {
 		
+		List<Object[]> results = salesOrderRepository.findSalesOrderWithStock(64);
+		for (Object[] temp : results) {
+			log.info("库存信息{}",temp[0]);
+		}
+		/*
 		 List<QuotationLogStatistics> result = quotationLogRepository.findTopName();
 		 for (QuotationLogStatistics quotationLogStatistics : result) {
 			System.out.println(quotationLogStatistics);
 		}
+		*/
 		
 		/*
 		 * categoryRepository.deleteAll();

@@ -9,8 +9,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -101,5 +103,22 @@ public class FileSystemStorageService implements StorageService {
 			throw new StorageFileNotFoundException("Could not read file: " + filename, e);
 		}
 		return ios;
+	}
+	
+	@Override
+	public OutputStream openOutPutStream(String filename) {
+		OutputStream os = null;
+		try {
+			Path file = rootLocation.resolve(filename);
+			Files.createFile(file);
+			os = new FileOutputStream(file.toFile());
+		}
+		catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+		}
+		return os;
 	}
 }
