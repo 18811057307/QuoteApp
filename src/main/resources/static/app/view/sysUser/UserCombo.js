@@ -5,6 +5,12 @@ Ext.define('tms.view.sysUser.UserCombo', {
     valueField: 'id',
     minPickerHeight:'300',  
     matchFieldWidth:false,
+    onItemClick: function(view, record, node, rowIndex, e) {
+    	//只选择人员，不能选择目录一级的公司
+    	if(record.data.leaf == true) {
+    		this.selectItem(record);
+    	}
+    },
     setValue: function(value) {
 	        var me = this,
 	        record;

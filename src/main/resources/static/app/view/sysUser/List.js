@@ -27,6 +27,12 @@ Ext.define('tms.view.sysUser.List', {
             text: '重置密码',
             action: 'refresh',
             iconCls: 'refresh'
+        },'->',{
+            xtype: 'searchfield',
+            name: 'searchField',
+            width: 300,
+            store: this.store,
+            paramName : 'loginName'
         });
     }
 });

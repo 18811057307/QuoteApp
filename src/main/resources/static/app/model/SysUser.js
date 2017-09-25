@@ -4,6 +4,7 @@ Ext.define('tms.model.SysUser', {
     fields:[
     		{name:'id', type:'int'}
     		,{name:'companyId', type:'int'}
+    		,{name:'sequence', type:'int'}
     		,{name:'loginName', type:'string'}
     		,{name:'password', type:'string'}
     		,{name:'name', type:'string'}

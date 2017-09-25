@@ -460,6 +460,7 @@
 	"temp_quote_process" : "报价处理",
 	"Upload_mi_quote":"上传待对比的报价单",
 	"sysUser_id" : "ID",
+	"sysUser_sequence":"序号",
 	"sysUser_login_name" : "帐号",
 	"sysUser_password" : "密码",
 	"sysUser_name" : "中文名",
