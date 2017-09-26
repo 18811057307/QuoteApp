@@ -110,8 +110,13 @@ Ext.define('tms.view.salesOrder.EditorList', {
                     summaryRenderer: function(value, summaryData, dataIndex) {
                         return ((value === 0 || value > 1) ? '(共计 ' + value + ' 种产品)' : '(共计 1 种产品)');
                     }}
-        		,{width: 60,  header:'对应AT型号', sortable:true, dataIndex:'atProductCode'}
+        		,{width: 60,  header:i18n.t('salesOrder_at_product_code'), sortable:true, dataIndex:'atProductCode'}
         		,{width: 40,  header:i18n.t('salesOrder_process_type'), sortable:true, dataIndex:'processType'}
+        		,{width: 30,  header:i18n.t('salesOrder_drawing_url'), sortable:true, dataIndex:'drawingUrl', renderer: function(value, metaData, record) {
+	   	   			 if(""!=value) {
+	   	   				 return "<a href='" + tms.getContextPath() + "api/salesOrder/drawingDownload?salesOrderId=" + record.get("id") + "'>下载</a>";
+	   	   			 } 		     
+	   	        }}
         		,{width: 30,  header:'单位', sortable:true, dataIndex:'unit'}
         		,{width: 30,  header:i18n.t('salesOrder_amount'), sortable:true, dataIndex:'amount',editor: {xtype: 'numberfield'}}    		
         		,{width: 30,  header:i18n.t('salesOrder_unit_price'), sortable:true, dataIndex:'unitPrice',editor: {xtype: 'numberfield'}}
@@ -141,8 +146,13 @@ Ext.define('tms.view.salesOrder.EditorList', {
 	                summaryRenderer: function(value, summaryData, dataIndex) {
 	                    return ((value === 0 || value > 1) ? '(共计 ' + value + ' 种产品)' : '(共计 1 种产品)');
 	                }}
-	    		,{width: 60,  header:'对应AT型号', sortable:true, dataIndex:'atProductCode'}
+	    		,{width: 60,  header:i18n.t('salesOrder_at_product_code'), sortable:true, dataIndex:'atProductCode'}
 	    		,{width: 40,  header:i18n.t('salesOrder_process_type'), sortable:true, dataIndex:'processType'}
+	    		,{width: 30,  header:i18n.t('salesOrder_drawing_url'), sortable:true, dataIndex:'drawingUrl', renderer: function(value, metaData, record) {
+	   	   			 if(""!=value) {
+	   	   				 return "<a href='" + tms.getContextPath() + "api/salesOrder/drawingDownload?salesOrderId=" + record.get("id") + "'>下载</a>";
+	   	   			 } 		     
+	   	        }}
 	    		,{width: 30,  header:'单位', sortable:true, dataIndex:'unit'}
 	    		,{width: 30,  header:i18n.t('salesOrder_amount'), sortable:true, dataIndex:'amount',editor: {xtype: 'numberfield'}}    		
 	    		,{width: 30,  header:'成本价', sortable:true, dataIndex:'costPrice',editor: {xtype: 'numberfield'}}

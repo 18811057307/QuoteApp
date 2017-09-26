@@ -274,7 +274,21 @@ public class BPMResource {
 		}
 		
 		Long myDoneNum = formInstanceRepository.countCompleteFormInstanceByAssignee(userName);
-		Long myStartNum = formInstanceRepository.countByDrafterIdAndProcessInstanceIdNot(userName, "");
+		
+		Long myStartNum = 0L;
+		
+		//如果角色是销售经理,则获取本部门的所有发起的询价流程
+		if(roles.contains("SALES_MANAGER")) {
+			SysUser curUser = sysUserRepository.getByLoginName(UserContext.getUsername());
+			if(null != curUser.getCompanyId() && 0 != curUser.getCompanyId()) {
+				myStartNum = formInstanceRepository.countByCompanyId(curUser.getCompanyId());
+			} else {
+				myStartNum = formInstanceRepository.countByDrafterId(userName);
+			}
+			
+		} else {			
+			myStartNum = formInstanceRepository.countByDrafterId(userName);			
+		}
 		
 		BaseTreeNode myTask = new BaseTreeNode("MY", String.format("待处理(%d)",myTasksNum), true, myTasksNum > 0 ? "new-icon" : "",myTasksNum > 0 ? "ux-desktop-black" : "","");
 		BaseTreeNode myGroup = new BaseTreeNode("GROUP", String.format("待认领(%d)",myGroupNum), true, myGroupNum > 0 ? "new-icon" : "",myTasksNum > 0 ? "ux-desktop-black" : "","");
@@ -319,7 +333,19 @@ public class BPMResource {
 			historyFormInstances = formInstanceRepository.findCompleteFormInstanceByAssignee(userName);
 			break;
 		case "BYME":
-			historyFormInstances = formInstanceRepository.findByDrafterIdOrDrafter(userName, userName);
+			//如果角色是销售经理,则获取本部门的所有发起的询价流程
+			if(UserContext.getRoles().contains("SALES_MANAGER")) {
+				SysUser curUser = sysUserRepository.getByLoginName(userName);
+				if(null != curUser.getCompanyId() && 0 != curUser.getCompanyId()) {
+					historyFormInstances = formInstanceRepository.findByCompanyId(curUser.getCompanyId());
+				} else {
+					historyFormInstances = formInstanceRepository.findByDrafter(userName);
+				}
+			} else {	
+				historyFormInstances = formInstanceRepository.findByDrafter(userName);
+			}
+			
+			
 			break;
 		default:
 			break;
@@ -387,7 +413,8 @@ public class BPMResource {
 
 	@RequestMapping(value = "/history", method = GET, produces = APPLICATION_JSON_VALUE)
 	public ResponseEntity<PageResponse<HistoricActivityInstanceDto>> history(
-			@RequestParam(value = "processInstanceId", required = true) String processInstanceId) {
+			@RequestParam(value = "processInstanceId", required = true) String processInstanceId
+			,@RequestParam(value = "ignoreStep", required = false, defaultValue="false") Boolean ignoreStep) {
 		log.info("流程办理情况{}", processInstanceId);
 
 		List<HistoricActivityInstance> hais = historyService.createNativeHistoricActivityInstanceQuery()
@@ -409,7 +436,15 @@ public class BPMResource {
 					}
 				}
 
-				results.add(temp);
+				//对于销售流程发起人,至查看启动和结束两个环节
+				if(ignoreStep) {
+					if((temp.getActivityType().contains("EndEvent") || temp.getActivityType().contains("startEvent")) && !temp.getParentActivityInstanceId().contains("sub_flow")) {
+						results.add(temp);
+					}
+					
+				} else {
+					results.add(temp);					
+				}
 			}
 		}
 

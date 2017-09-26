@@ -26,4 +26,6 @@ public interface StorageService {
 
     void deleteAll();
 
+	Path store(String prePath, MultipartFile file);
+
 }

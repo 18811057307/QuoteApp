@@ -8,15 +8,17 @@
 package com.sadetec.rest;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
-import static org.springframework.web.bind.annotation.RequestMethod.DELETE;
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
-import static org.springframework.web.bind.annotation.RequestMethod.PUT;
 
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
@@ -25,42 +27,38 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.apache.commons.beanutils.BeanUtils;
-import org.apache.commons.lang.NumberUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.camunda.bpm.engine.repository.ProcessDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.FileSystemUtils;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sadetec.model.Category;
 import com.sadetec.model.MailMessage;
-import com.sadetec.model.ManualProductMap;
-import com.sadetec.model.ProcessDefinitionDto;
 import com.sadetec.model.SalesOrder;
 import com.sadetec.model.SysUser;
 import com.sadetec.repository.CategoryRepository;
 import com.sadetec.repository.MailMessageRepository;
 import com.sadetec.repository.SalesOrderRepository;
 import com.sadetec.repository.SysUserRepository;
-import com.sadetec.rest.support.AutoCompleteQuery;
 import com.sadetec.rest.support.PageResponse;
 import com.sadetec.service.StorageException;
 import com.sadetec.service.StorageService;
@@ -152,6 +150,50 @@ public class SalesOrderResource {
 		}
 	}
 
+	//drawingUpload
+	@PostMapping("/drawingUpload")
+	public ResponseEntity<PageResponse> drawingUpload(@RequestParam("file") MultipartFile file,
+			@RequestParam(value = "salesOrderId", required = true) Integer salesOrderId) throws IOException {
+		try {
+			Path storePath = storageService.store("询价图纸/"+salesOrderId,file);
+
+			SalesOrder tempOrder = salesOrderRepository.findOne(salesOrderId);
+			if(null != tempOrder) {
+				tempOrder.setDrawingUrl(storePath.toString());
+				salesOrderRepository.save(tempOrder);
+			}
+			PageResponse pageResponse = new PageResponse(null);
+			pageResponse.setSuccess(true);
+			pageResponse.setMessage("图纸保存成功,路径为："+storePath.toString());
+			return new ResponseEntity<PageResponse>(pageResponse, HttpStatus.OK);
+		}
+		catch (StorageException se) {
+			PageResponse pageResponse = new PageResponse(null);
+			pageResponse.setSuccess(false);
+			pageResponse.setMessage(se.getMessage());
+			return new ResponseEntity<PageResponse>(pageResponse, HttpStatus.OK);
+		}
+	}
+	
+	//drawingUpload
+	@RequestMapping(value = "/drawingDownload", method = GET)
+	@ResponseBody
+	public ResponseEntity<Resource> drawingDownload(@RequestParam(value = "salesOrderId", required = true) Integer salesOrderId) throws IOException {
+		SalesOrder tempOrder = salesOrderRepository.findOne(salesOrderId);
+		String relativePath = tempOrder.getDrawingUrl();
+		String fileName;
+		if(relativePath.lastIndexOf(FileSystems.getDefault().getSeparator()) != -1) {
+			fileName = relativePath.substring(relativePath.lastIndexOf(FileSystems.getDefault().getSeparator()));			
+		} else {
+			fileName = relativePath;
+		}
+		HttpHeaders respHeaders = new HttpHeaders();
+		respHeaders.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+		respHeaders.set("Content-Disposition", "attachment; filename="+fileName);
+		Resource fileResource = storageService.loadAsResource(relativePath);
+		
+		return new ResponseEntity<Resource>(fileResource, respHeaders, HttpStatus.OK);
+	}
 	/**
 	 * Create a new SalesOrder.
 	 */

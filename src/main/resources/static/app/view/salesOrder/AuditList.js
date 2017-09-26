@@ -95,14 +95,18 @@ Ext.define('tms.view.salesOrder.AuditList', {
                 summaryRenderer: function(value, summaryData, dataIndex) {
                     return ((value === 0 || value > 1) ? '(共计 ' + value + ' 种产品)' : '(共计 1 种产品)');
                 }}
-    		,{width: 60,  header:'对应AT型号', sortable:true, dataIndex:'atProductCode'}
+    		,{width: 60,  header:i18n.t('salesOrder_at_product_code'), sortable:true, dataIndex:'atProductCode'}
     		,{width: 40,  header:i18n.t('salesOrder_process_type'), sortable:true, dataIndex:'processType'}
-    		//,{width: 50,  header:i18n.t('salesOrder_delivery_date'), sortable:true, dataIndex:'deliveryDate', xtype:'datecolumn', format:'y年m月d日'}
+    		,{width: 30,  header:i18n.t('salesOrder_drawing_url'), sortable:true, dataIndex:'drawingUrl', renderer: function(value, metaData, record) {
+  	   			 if(""!=value) {
+  	   				 return "<a href='" + tms.getContextPath() + "api/salesOrder/drawingDownload?salesOrderId=" + record.get("id") + "'>下载</a>";
+  	   			 } 		     
+  	        }}    		
     		,{width: 30,  header:'单位', sortable:true, dataIndex:'unit'}
     		,{width: 30,  header:i18n.t('salesOrder_amount'), sortable:true, dataIndex:'amount',editor: {xtype: 'textfield'}}
     		,{width: 30,  header:'成本价', sortable:true, dataIndex:'costPrice',editor: {xtype: 'numberfield'}}
     		,{width: 30,  header:'出厂价', sortable:true, dataIndex:'factoryPrice',editor: {xtype: 'numberfield'}}
-    		,{width: 30,  header:'统一价', sortable:true, dataIndex:'unitPrice',editor: {xtype: 'numberfield'}}
+    		,{width: 30,  header:i18n.t('salesOrder_unit_price'), sortable:true, dataIndex:'unitPrice',editor: {xtype: 'numberfield'}}
     		,{width: 30,  header:'可用库存', sortable:true, dataIndex:'atProductCode',renderer: function(value,metaData,record) {
     			if(value && value != "") {
     				var stock = stockStore.findRecord("productId", value);

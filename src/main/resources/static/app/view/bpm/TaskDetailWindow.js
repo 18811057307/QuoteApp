@@ -28,7 +28,13 @@ Ext.define('tms.view.bpm.TaskDetailWindow', {
 				url : tms.getContextPath() + 'xls/样例订单.xlsx',
 				linkText : '下载Excel模板'
 			} ]
-		} ],
+		} ,{
+			xtype : 'manualProductMapHelper',
+			data : [ {
+				title : '上传产品图纸',
+				content : '选中要添加图纸的产品信息，点击产品信息表格下的【选择要上传的图纸】按钮，可上传产品图纸.',
+			} ]
+		}],
 		split : true,
 		border : false,
 		width : 400,

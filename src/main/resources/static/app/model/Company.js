@@ -5,7 +5,7 @@ Ext.define('tms.model.Company', {
 		{name:'id', type:'string'}
 		,{name:'name', type:'string'}
 		,{name:'parentId', type:'string'}
-		,{name:'sequence', type:'string'}
+		,{name:'sequence', type:'int'}
 		,{name:'createDate', type:'date', dateFormat: 'time'}
 		,{name:'email', type:'string'}
 		,{name:'phone', type:'string'}

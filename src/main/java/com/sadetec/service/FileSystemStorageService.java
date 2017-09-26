@@ -1,12 +1,5 @@
 package com.sadetec.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
-import org.springframework.stereotype.Service;
-import org.springframework.util.FileSystemUtils;
-import org.springframework.web.multipart.MultipartFile;
-
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -19,6 +12,14 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.stream.Stream;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.stereotype.Service;
+import org.springframework.util.FileSystemUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class FileSystemStorageService implements StorageService {
@@ -37,6 +38,25 @@ public class FileSystemStorageService implements StorageService {
 				throw new StorageException("Failed to store empty file " + file.getOriginalFilename());
 			}
 			Files.copy(file.getInputStream(), this.rootLocation.resolve(file.getOriginalFilename()), StandardCopyOption.REPLACE_EXISTING);
+		}
+		catch (IOException e) {
+			throw new StorageException("Failed to store file " + file.getOriginalFilename(), e);
+		}
+	}
+	
+	@Override
+	public Path store(String prePath, MultipartFile file) {
+		try {
+			if (file.isEmpty()) {
+				throw new StorageException("Failed to store empty file " + file.getOriginalFilename());
+			}
+			
+			Path newPath = Files.createDirectories(this.rootLocation.resolve(prePath));
+			
+			Path filePath = newPath.resolve(file.getOriginalFilename());
+			Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+			
+			return this.rootLocation.relativize(filePath);
 		}
 		catch (IOException e) {
 			throw new StorageException("Failed to store file " + file.getOriginalFilename(), e);
@@ -75,7 +95,7 @@ public class FileSystemStorageService implements StorageService {
 		catch (MalformedURLException e) {
 			throw new StorageFileNotFoundException("Could not read file: " + filename, e);
 		}
-	}
+	}	
 
 	@Override
 	public void deleteAll() {

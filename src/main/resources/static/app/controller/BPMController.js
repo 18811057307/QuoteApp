@@ -194,9 +194,11 @@ Ext.define('tms.controller.BPMController', {
     	    }});
             
             var historicActivities = Ext.ComponentQuery.query('historicActivityList')[0];
-            historicActivities.store.load({params:{
-            	processInstanceId: record.get("processInstanceId")
-    	    }});
+            
+        	historicActivities.store.load({params:{
+        		processInstanceId: record.get("processInstanceId"),
+        		ignoreStep:grid.byme
+        	}});            	
             
             //发起人不能查看办理意见
             if(!grid.byme) {
