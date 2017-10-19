@@ -133,7 +133,10 @@ public class SalesOrderResource {
 					
 					tempOrder.setNeedProc(true);
 					log.info("待保存订单产品信息:{}", tempOrder);
-					salesOrderRepository.saveAndFlush(tempOrder);
+					//BUG - 过滤Excel中的空行
+					if(StringUtils.isNotEmpty(tempOrder.getProductCode()) && StringUtils.isNotEmpty(tempOrder.getCategoryName())) {
+						salesOrderRepository.saveAndFlush(tempOrder);
+					}
 				}
 				catch (Exception e) {
 					log.error("导入订单出错：{},失败原因:{}", map, e.getCause());

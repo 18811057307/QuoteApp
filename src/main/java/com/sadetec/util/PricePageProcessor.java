@@ -9,11 +9,11 @@ import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.Proxy.Type;
 import java.nio.charset.Charset;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.zip.GZIPInputStream;
 
-import org.jsoup.Jsoup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,14 +24,13 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.http.converter.StringHttpMessageConverter;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -41,11 +40,20 @@ import com.sadetec.repository.ProductRepository;
 @Component("pricePageProcessor")
 public class PricePageProcessor {
 
-	private final Logger log = LoggerFactory.getLogger(PricePageProcessor.class);
 
-	private static final String loginUrl = "https://cn.misumi-ec.com/mydesk2/s/login_frame";
-	private static final  String quoteReqUrl = "http://cn.misumi-ec.com/mydesk2/s/quotation_request";
+	private final Logger log = LoggerFactory.getLogger(PricePageProcessor.class);
+	
+	//v1,https://cn.misumi-ec.com/mydesk2/s/login_frame
+	//v2,https://api.cn.misumi-ec.com/api/v1/auth/login
+	private static final String loginUrl = "https://api.cn.misumi-ec.com/api/v1/auth/login";
+	
+	//v1,http://cn.misumi-ec.com/mydesk2/s/quotation_request
+	//v2,https://api.cn.misumi-ec.com/api/v1/price/check
+	private static final  String quoteReqUrl = "https://api.cn.misumi-ec.com/api/v1/price/check";
 	private static final  String quoteInqUrl = "http://cn.misumi-ec.com/mydesk2/s/quotation_inquiry";
+	private static final String applicationId = "77f56fb2-4165-4116-b82f-e495838bb6e1";
+	
+	
 	private Boolean isLogin = false;
 
 	private SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
@@ -60,6 +68,7 @@ public class PricePageProcessor {
 	
 	private String userid;
 	private String password;
+	private String sessionId;
 	
 	@Autowired
 	private ProductRepository productRepository;
@@ -112,12 +121,21 @@ public class PricePageProcessor {
 
 		requestFactory.setReadTimeout(60000);		
 		HttpHeaders headers = new HttpHeaders();
-		headers.setContentType(new MediaType("application", "x-www-form-urlencoded", Charset.forName("UTF-8")));
-		MultiValueMap<String, String> countParams = new LinkedMultiValueMap<String, String>();
-		countParams.add("userid", userid);
-		countParams.add("password", password);
-		HttpEntity<MultiValueMap<String, String>> loginReq = new HttpEntity<MultiValueMap<String, String>>(countParams, headers);
-		HttpEntity<String> response = restTemplate.exchange(loginUrl, HttpMethod.POST, loginReq, String.class);
+		headers.setContentType(new MediaType("application", "json", Charset.forName("UTF-8")));
+		
+		JSONObject loginReq = new JSONObject();
+		loginReq.put("loginId", userid);
+		loginReq.put("password", password);
+		
+		HttpEntity<String> entity = new HttpEntity<String>(loginReq.toString(), headers);
+		
+		UriComponentsBuilder loginReqUriBuilder = UriComponentsBuilder.fromHttpUrl(loginUrl)
+				.queryParam("lang", "CHN")
+				.queryParam("suppressResponseCode", "true")
+				.queryParam("applicationId", applicationId)
+				.queryParam("_", String.valueOf(System.currentTimeMillis()));
+		
+		HttpEntity<String> response = restTemplate.exchange(loginReqUriBuilder.build().encode().toUri(), HttpMethod.POST, entity, String.class);
 
 		HttpHeaders loginRespHeader = response.getHeaders();
 		List<String> cookies = loginRespHeader.get("Set-Cookie");
@@ -127,34 +145,45 @@ public class PricePageProcessor {
 			}
 		}
 
-		String wosCookie = Jsoup.parse(response.getBody()).select("div.wrapper img").first().attr("src");
-		String ssoCookie = Jsoup.parse(response.getBody()).select("div.wrapper img").last().attr("src");
-
-		HttpHeaders imgHeader = new HttpHeaders();
-		imgHeader.set("Accept", "image/webp,image/*,*/*;q=0.8");
-		imgHeader.set("Accept-Encoding", "gzip, deflate, sdch, br");
-		imgHeader.set("Accept-Language", "zh-CN,zh;q=0.8,en-GB;q=0.6,en;q=0.4");
-		imgHeader.set("User-Agent", "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.87 Safari/537.36");
-		HttpEntity<?> imgEntity = new HttpEntity<>(null, imgHeader);
-		HttpEntity<String> wosResp = restTemplate.exchange(wosCookie, HttpMethod.GET, imgEntity, String.class);
-		List<String> wosCookies = wosResp.getHeaders().get(HttpHeaders.SET_COOKIE);
-
-		if (wosCookies != null && !wosCookies.isEmpty()) {
-			for (String cookie : wosCookies) {
-				loginHeader.add(HttpHeaders.COOKIE, cookie);
+		try{
+			log.debug("应答信息:{}",response.getBody());
+			String loginResp = response.getBody();
+			JsonNode root = objectMapper.readTree(loginResp);
+			
+			String sessId = root.get("sessionId").asText();
+			if(!StringUtils.isEmpty(sessId)) {
+				this.sessionId = sessId;
 			}
-		}
-
-		HttpEntity<String> ssoResp = restTemplate.exchange(ssoCookie, HttpMethod.GET, imgEntity, String.class);
-		List<String> ssoCookies = ssoResp.getHeaders().get(HttpHeaders.SET_COOKIE);
-
-		if (ssoCookies != null && !ssoCookies.isEmpty()) {
-			for (String cookie : ssoCookies) {
-				loginHeader.add(HttpHeaders.COOKIE, cookie);
+			
+			Iterator<JsonNode> createCookieUrls = root.get("createCookieUrlList").elements();
+			
+			HttpHeaders imgHeader = new HttpHeaders();
+			imgHeader.set("Accept", "image/webp,image/*,*/*;q=0.8");
+			imgHeader.set("Accept-Encoding", "gzip, deflate, sdch, br");
+			imgHeader.set("Accept-Language", "zh-CN,zh;q=0.8,en-GB;q=0.6,en;q=0.4");
+			imgHeader.set("User-Agent", "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.87 Safari/537.36");
+			HttpEntity<?> imgEntity = new HttpEntity<>(null, imgHeader);
+			while (createCookieUrls.hasNext()) {
+				JsonNode jsonNode = (JsonNode) createCookieUrls.next();
+				log.debug("创建客户端Cookie的URL:{}", jsonNode.asText());
+				HttpEntity<String> setCookieResp = restTemplate.exchange(jsonNode.asText(), HttpMethod.GET, imgEntity, String.class);
+				List<String> setCookies = setCookieResp.getHeaders().get(HttpHeaders.SET_COOKIE);
+				
+				if (setCookies != null && !setCookies.isEmpty()) {
+					for (String cookie : setCookies) {
+						loginHeader.add(HttpHeaders.COOKIE, cookie);
+					}
+				}
 			}
-		}
 
-		log.info("登录Cookie值:{}", loginHeader.get(HttpHeaders.COOKIE));
+			log.info("登录Cookie值:{}", loginHeader.get(HttpHeaders.COOKIE));
+			
+			
+		} catch(Exception e) {
+			e.printStackTrace();
+			log.info("登录出错:{}", e.getMessage());
+		}
+		
 		this.userid = userid;
 		this.password = password;
 		this.isLogin = true;
@@ -163,11 +192,10 @@ public class PricePageProcessor {
 	public BigDecimal process(Product product, Integer quantity) {
 		try {
 			UriComponentsBuilder quoteReqUriBuilder = UriComponentsBuilder.fromHttpUrl(quoteReqUrl)
-														.queryParam("brand_code", product.getBrdCode())
-														.queryParam("part_number", toPartNum(product.getId()))
-														.queryParam("quantity", String.valueOf(quantity))
-														.queryParam("response_type", "json")
-														.queryParam("callback", "_jsonp_0_")
+														.queryParam("lang", "CHN")
+														.queryParam("suppressResponseCode", "true")
+														.queryParam("applicationId", applicationId)
+														.queryParam("sessionId", this.sessionId)
 														.queryParam("_", String.valueOf(System.currentTimeMillis()));
 			loginHeader.set("Accept", "*/*");
 			loginHeader.set("Accept-Encoding","gzip, deflate, sdch");
@@ -176,40 +204,42 @@ public class PricePageProcessor {
 			loginHeader.set("Referer",product.getProductUrl());
 			loginHeader.set("User-Agent","Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36");
 
-			HttpEntity<?> quoteReq = new HttpEntity<>(loginHeader);
+			//{quantity: 1, partNumber: "PSFGT6-300-M3", brandCode: "MSM1"}
+			JSONObject prodJson = new JSONObject();
+			prodJson.put("quantity", String.valueOf(quantity));
+			prodJson.put("partNumber", toPartNum(product.getId()));
+			
+			if(StringUtils.isEmpty(product.getBrdCode())) {
+				prodJson.put("brandCode", "MSM1");
+			} else {
+				prodJson.put("brandCode", product.getBrdCode());
+			}
+
+			JSONArray productList = new JSONArray();
+			productList.add(prodJson);
+			
+			JSONObject quoteReq = new JSONObject();
+			quoteReq.put("productList", productList);
+			
+			HttpEntity<String> entity = new HttpEntity<String>(quoteReq.toString(), loginHeader);
 			
 			restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(Charset.forName("UTF-8")));
-			HttpEntity<String> quoteResp = restTemplate.exchange(quoteReqUriBuilder.build().encode().toUri(), HttpMethod.GET, quoteReq, String.class);
-			String quoteRespString = quoteResp.getBody();
+			HttpEntity<byte[]> quoteResp = restTemplate.exchange(quoteReqUriBuilder.build().encode().toUri(), HttpMethod.POST, entity, byte[].class);
+			
+			String quoteRespString;
+			
+			if("gzip".equalsIgnoreCase(quoteResp.getHeaders().getFirst("Content-Encoding"))) {
+				quoteRespString = this.decompress(quoteResp);				
+			} else {
+				quoteRespString = new String(quoteResp.getBody(),"UTF-8");
+			}
+			
 			
 			log.info("询价请求应答:{}",quoteRespString);
 			
-			String quoteRespJson = this.jsonpTojson(quoteRespString);
-			JsonNode root = objectMapper.readTree(quoteRespJson);
-			String receptionCode = root.get("result").get("RECEPTION_CODE").asText();
-
-			log.info("确认价格请求:{}", receptionCode);
-			UriComponentsBuilder quoteInqUriBuilder = UriComponentsBuilder.fromHttpUrl(quoteInqUrl)
-					.queryParam("reception_code", receptionCode)
-					.queryParam("response_type", "json")
-					.queryParam("callback", "_jsonp_1_")
-					.queryParam("_", String.valueOf(System.currentTimeMillis()));
-
-			HttpEntity<?> quoteInqReq = new HttpEntity<>(loginHeader);
-			HttpEntity<byte[]> quoteInqResp = restTemplate.exchange(quoteInqUriBuilder.build().encode().toUri(), HttpMethod.GET, quoteInqReq, byte[].class);
-			
-			String returnJsonP;
-			
-			if("gzip".equalsIgnoreCase(quoteInqResp.getHeaders().getFirst("Content-Encoding"))) {
-				returnJsonP = this.decompress(quoteInqResp);
-			} else {
-				returnJsonP = new String(quoteInqResp.getBody(),"UTF-8");
-			}
-			
-			String quoteInqRespJson = this.jsonpTojson(returnJsonP);
-			JsonNode quoteInqRoot = objectMapper.readTree(quoteInqRespJson);
-			ArrayNode details = (ArrayNode) (quoteInqRoot.get("result").get("ary_detail"));
-			String unitPrice = details.get(0).get("UNIT_PRICE").asText();
+			JsonNode quoteInqRoot = objectMapper.readTree(quoteRespString);
+			ArrayNode details = (ArrayNode) (quoteInqRoot.get("priceList"));
+			String unitPrice = details.get(0).get("unitPrice").asText();
 			BigDecimal price = BigDecimal.valueOf(new Double(unitPrice));
 			log.info("转换为价格:{}", price);
 			return price;
@@ -289,7 +319,7 @@ public class PricePageProcessor {
 		return productRepository.getLockedRows(threadId);
 	}
 	
-	@Async	
+	//@Async	
     public void executeAsyncTask(Integer threadId){
 		
 		this.login(this.userid, this.password);
@@ -322,8 +352,8 @@ public class PricePageProcessor {
 		
 		pricePageProcessor.objectMapper = new ObjectMapper();
 		Product product = new Product();
-		product.setId("MTRF0.3-3");
-		product.setBrdCode("");
+		product.setId("PSFGT6-300-M3");
+		product.setBrdCode("MSM1");
 
 		Integer quantity = 1;
 

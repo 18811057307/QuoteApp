@@ -46,7 +46,7 @@ public class NotificationService implements TaskListener {
 		if (assignee != null) {
 			log.info("通过邮件进行任务通知,目标人员:{}", assignee);
 			SysUser user = sysUserRepository.getByLoginName(assignee);
-			sendMail(user,"待办理事项:" + delegateTask.getName(),"请登录系统：http://121.197.3.238:8088/sadetec/， 完成待办任务.");
+			sendMail(user,"待办理事项:" + delegateTask.getName(),"请登录系统, 完成待办任务.http://121.197.3.238:8088/sadetec/");
 
 		} else {
 			Set<IdentityLink> candidates = delegateTask.getCandidates();
@@ -55,7 +55,7 @@ public class NotificationService implements TaskListener {
 				log.info("通过邮件进行任务通知,目标岗位:{}", groupId);
 				List<SysUser> users = sysUserRepository.findByRoleName(groupId);
 				for (SysUser sysUser : users) {
-					sendMail(sysUser,"待认领事项:" + delegateTask.getName(),"请登录系统：http://121.197.3.238:8088/sadetec/,认领任务.");
+					sendMail(sysUser,"待认领事项:" + delegateTask.getName(),"请登录系统,认领任务.http://121.197.3.238:8088/sadetec/");
 				}
 			}
 			

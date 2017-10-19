@@ -319,6 +319,20 @@ Ext.define('tms.controller.BPMController', {
         
         formPanel.getForm().updateRecord(formInstance);
         
+        if(formInstance.get("title") == "") {
+        	tms.notify("客户名称不能为空.");
+        	return false;
+        }        
+        //判断明细表是否导入了数据
+        var orders = Ext.ComponentQuery.query('salesOrderList')[0];
+        if(orders.store.getCount() == 0) {
+        	tms.notify("待处理的产品信息不能为空.");
+        	return false;
+        }
+        
+
+
+        
         Ext.MessageBox.confirm(
                 i18n.t('small_hint'),
                 '是否确认启动当前流程?',

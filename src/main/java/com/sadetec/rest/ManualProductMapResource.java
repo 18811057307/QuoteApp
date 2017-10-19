@@ -605,6 +605,7 @@ public class ManualProductMapResource {
 				pricePageProcessor.login(userid, password);
 			}
 			catch (Exception e) {
+				e.printStackTrace();
 				log.error("登录mi失败{},帐号{}密码{}", e.getCause(), userid, password);
 				status.setSuccess(Boolean.FALSE);
 				status.setMessage("查询Mi产品价格时登录Mi网站失败.");

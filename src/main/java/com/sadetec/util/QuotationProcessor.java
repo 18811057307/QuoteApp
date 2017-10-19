@@ -95,7 +95,8 @@ public class QuotationProcessor {
 
 				Product product = new Product();
 				product.setId(quotationHistory.getMiProductCode());
-				product.setBrdCode("");
+				//TODO默认米思米品牌的MSM1
+				product.setBrdCode("MSM1");
 				try {
 					quotationHistory.setMiProductQuote(pricePageProcessor.process(product, 1));
 				}

@@ -24,6 +24,7 @@ Ext.define('tms.view.bpm.SalesOrderProcessForm', {
             }, {
                 xtype: 'textfield',
                 name: 'title',
+                allowBlank: false,
                 fieldLabel: '客户名称',
                 anchor: '95%'
             }, {xtype:'userCombo',name:'drafter',fieldLabel: '销售', anchor:'95%'}

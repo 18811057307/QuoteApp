@@ -128,11 +128,11 @@ public class BPMResource {
 
 		FormInstance formInstance;
 
-		List<FormInstance> draftInstance = formInstanceRepository.findByDrafterIdAndProcessInstanceId(sysUser.getLoginName(), "");
+		List<FormInstance> draftInstance = formInstanceRepository.findByDrafterIdAndProcessInstanceId(sysUser.getLoginName(), "DRAFT");
 		if (draftInstance.isEmpty()) {
 			formInstance = new FormInstance();
 			formInstance.setProcessDefinitionId(processDefinitionId);
-			formInstance.setProcessInstanceId("");
+			formInstance.setProcessInstanceId("DRAFT");
 			formInstance.setDrafterId(sysUser.getLoginName());
 			formInstance.setDraftOrg(sysUser.getCompanyId().toString());
 			formInstance.setCreateDate(new Date());
@@ -354,11 +354,17 @@ public class BPMResource {
 		List<TaskInstance> mytasks = new ArrayList<>();
 		for (Task task : tasks) {
 			log.info("获取到的事项:{}",task);
+			
 			FormInstance formInstance = formInstanceRepository.findOneByProcessInstanceId(task.getProcessInstanceId());
-			TaskInstance tempTask = new TaskInstance(task);
-			tempTask.setTitle(formInstance.getTitle());
-			tempTask.setFormInstanceId(formInstance.getId());
-			mytasks.add(tempTask);
+			if(null != formInstance) {
+				TaskInstance tempTask = new TaskInstance(task);
+				tempTask.setTitle(formInstance.getTitle());
+				tempTask.setFormInstanceId(formInstance.getId());
+				mytasks.add(tempTask);				
+			} else {
+				taskService.setAssignee(task.getId(),"");
+				log.error("任务:{},没有对应的FormInstance,需要排查原因.",task.getProcessInstanceId());
+			}
 		}
 
 		for (FormInstance formInstance : historyFormInstances) {
