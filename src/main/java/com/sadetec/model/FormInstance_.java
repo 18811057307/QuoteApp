@@ -22,6 +22,11 @@ public abstract class FormInstance_ {
     public static volatile SingularAttribute<FormInstance, String> drafterId;
     public static volatile SingularAttribute<FormInstance, String> drafter;
     public static volatile SingularAttribute<FormInstance, String> draftOrg;
+    
+    public static volatile SingularAttribute<FormInstance, String> salesId;
+    public static volatile SingularAttribute<FormInstance, String> sales;
+    public static volatile SingularAttribute<FormInstance, String> salesOrg;
+    
     public static volatile SingularAttribute<FormInstance, String> comment;
     public static volatile SingularAttribute<FormInstance, String> description;
     public static volatile SingularAttribute<FormInstance, LocalDateTime> createDate;

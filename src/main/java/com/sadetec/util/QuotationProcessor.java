@@ -51,7 +51,9 @@ public class QuotationProcessor {
 
 		for (QuotationHistory quotationHistory : myHistory) {
 			String productCode = quotationHistory.getProductCode();
-			List<ManualProductMap> mapResults = manualProductMapRepository.findByMiProductCodeOrId(productCode, productCode);
+			
+			log.info("待查询的产品代码为:{}", productCode);
+			List<ManualProductMap> mapResults = manualProductMapRepository.findByMiOrAtProductCode(productCode);
 
 			if (mapResults.size() > 0) {
 				ManualProductMap fullMatch = mapResults.get(0);

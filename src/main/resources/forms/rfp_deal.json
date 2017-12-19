@@ -29,22 +29,22 @@
                             "anchor": "95%"
                         },
                         {
-                            "xtype": "datefield",
-                            "name": "createDate",
-                            "fieldLabel": "询价日期",
-                            "anchor": "95%"
-                        },
-                        {
                             "xtype": "textfield",
                             "name": "title",
                             "fieldLabel": "客户名称",
+                            "anchor": "95%"
+                        },
+                        {
+                            "xtype": "userCombo",
+                            "name": "drafter",
+                            "fieldLabel": "销售",
                             "readOnly":"true",
                             "anchor": "95%"
                         },
                         {
-                            "xtype": "textfield",
-                            "name": "sales",
-                            "fieldLabel": "营业人员",
+                            "xtype": "userCombo",
+                            "name": "drafterId",
+                            "fieldLabel": "内勤",
                             "readOnly":"true",
                             "anchor": "95%"
                         }
@@ -56,16 +56,15 @@
                     "layout": "anchor",
                     "items": [
                         {
-                            "xtype": "textfield",
-                            "name": "drafter",
-                            "fieldLabel": "内勤",
-                            "readOnly":"true",
+                            "xtype": "datefield",
+                            "name": "createDate",
+                            "fieldLabel": "单据日期",
                             "anchor": "95%"
                         },
                         {
-                            "xtype": "textfield",
-                            "name": "mobile",
-                            "fieldLabel": "联系方式",
+                            "xtype": "companyCombo",
+                            "name": "draftOrg",
+                            "fieldLabel": "所属公司",
                             "readOnly":"true",
                             "anchor": "95%"
                         },

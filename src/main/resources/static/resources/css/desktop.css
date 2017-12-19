@@ -313,6 +313,13 @@ div.ux-taskbar div.x-toolbar {
     background-image: url(../../images/shortcut/bpm_16.png) !important;
 }
 
+.process-admin-shortcut {
+    background-image: url(../../images/shortcut/process_admin_48.png) !important;
+}
+.process-admin-icon ,.icon-process-admin{
+    background-image: url(../../images/shortcut/process_admin_16.png) !important;
+}
+
 .resPartner-shortcut {
     background-image: url(../../images/shortcut/partner_48.png) !important;
 }

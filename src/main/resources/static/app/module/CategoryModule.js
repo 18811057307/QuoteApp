@@ -21,8 +21,9 @@ Ext.define('tms.module.CategoryModule', {
                 animCollapse:false,
                 constrainHeader:true,
                 layout:'border',
-                items:[{xtype:'panel',title:'产品系列',layout:'fit',items: [{xtype:'seriesList'}], border:false,  region: 'center'}
-                	,{xtype:'panel',title:'全部分类',layout:'fit',items: [{xtype:'categoryList'}],  split:true, width: 800,collapsible: true,region: 'west'}
+                items:[
+                	//{xtype:'panel',title:'产品系列',layout:'fit',items: [{xtype:'seriesList'}], border:false,  region: 'center'}
+                	{xtype:'panel',layout:'fit',items: [{xtype:'categoryList'}], region: 'center'}
                 	
                 	/*
                 	{xtype:'panel', layout: {

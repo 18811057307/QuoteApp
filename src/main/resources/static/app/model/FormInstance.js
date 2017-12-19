@@ -8,6 +8,10 @@ Ext.define('tms.model.FormInstance', {
     		,{name:'drafterId', type:'string'}
     		,{name:'drafter', type:'string'}
     		,{name:'draftOrg', type:'string'}
+    		,{name:'salesOrg', type:'string'}
+    		,{name:'salesId', type:'string'}
+    		,{name:'sales', type:'string'}
+    		,{name:'mobile', type:'string'}
     		,{name:'comment', type:'string'}
     		,{name:'description', type:'string'}
     		,{name:'createDate',type:'date', dateFormat: 'time'}

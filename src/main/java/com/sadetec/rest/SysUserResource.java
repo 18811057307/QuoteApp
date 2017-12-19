@@ -41,7 +41,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sadetec.model.BaseTreeNode;
+import com.sadetec.model.UserTreeNode;
 import com.sadetec.model.SysCompany;
 import com.sadetec.model.SysUser;
 import com.sadetec.model.SysUserRole;
@@ -173,17 +173,17 @@ public class SysUserResource {
 	 * 人员下拉选择组件,按公司-人员的方式展示.
 	 */
 	@RequestMapping(value = "/userTree", method = GET, produces = APPLICATION_JSON_VALUE)
-	public ResponseEntity<List<BaseTreeNode>> getUsersTree(
+	public ResponseEntity<List<UserTreeNode>> getUsersTree(
 			@RequestParam(value = "companyId", required = false) Integer companyId,
 			@RequestParam(value = "roleCode", required = false) String roleCode) throws URISyntaxException {
 
 		Sort sortBySequence = new Sort(Direction.ASC,"sequence");
-		List<BaseTreeNode> userTree = new ArrayList<>();
+		List<UserTreeNode> userTree = new ArrayList<>();
 		
 		if(null == companyId || 0 == companyId) {
 			List<SysCompany> companies = sysCompanyRepository.findAll(sortBySequence);		
 			for (SysCompany sysCompany : companies) {
-				BaseTreeNode company = new BaseTreeNode(sysCompany.getId().toString(), sysCompany.getName(), false, "company-icon", "", "");
+				UserTreeNode company = new UserTreeNode(sysCompany.getId().toString(), sysCompany.getName(), false, "company-icon", "", "");
 				userTree.add(company);
 			}			
 		} else {
@@ -195,7 +195,8 @@ public class SysUserResource {
 				companyUsers = sysUserRepository.findByCompanyIdOrderBySequence(companyId);
 			}
 			for (SysUser sysUser : companyUsers) {
-				BaseTreeNode user = new BaseTreeNode(sysUser.getLoginName(), sysUser.getName(), true, "icon-users", "", "");
+				UserTreeNode user = new UserTreeNode(sysUser.getLoginName(), sysUser.getName(), true, "icon-users", "", "");
+				user.setMobile(sysUser.getMobile());
 				userTree.add(user);
 			}
 		}

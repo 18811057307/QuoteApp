@@ -21,6 +21,7 @@ import org.camunda.bpm.engine.RuntimeService;
 import org.camunda.bpm.engine.TaskService;
 import org.camunda.bpm.engine.form.StartFormData;
 import org.camunda.bpm.engine.history.HistoricActivityInstance;
+import org.camunda.bpm.engine.history.HistoricProcessInstance;
 import org.camunda.bpm.engine.history.HistoricTaskInstance;
 import org.camunda.bpm.engine.repository.ProcessDefinition;
 import org.camunda.bpm.engine.runtime.ProcessInstance;
@@ -46,6 +47,7 @@ import com.sadetec.model.BaseTreeNode;
 import com.sadetec.model.FormInstance;
 import com.sadetec.model.HistoricActivityInstanceDto;
 import com.sadetec.model.ProcessDefinitionDto;
+import com.sadetec.model.ProcessInstanceDto;
 import com.sadetec.model.SysUser;
 import com.sadetec.model.TaskInstance;
 import com.sadetec.repository.FormInstanceRepository;
@@ -113,6 +115,56 @@ public class BPMResource {
 		return new ResponseEntity<PageResponse<ProcessDefinitionDto>>(pageResponse, HttpStatus.OK);
 
 	}
+	
+	/**
+	 * 管理员查看所有的流程实例
+	 * @param processKey
+	 * @param title
+	 * @param start
+	 * @param limit
+	 * @return
+	 */
+	@RequestMapping(value = "/processInstances", method = GET, produces = APPLICATION_JSON_VALUE)
+	public ResponseEntity<PageResponse<ProcessInstanceDto>> listProcessInstances(
+			@RequestParam(value = "processKey", required = false) String processKey, 
+			@RequestParam(value = "title", required = false) String title,
+			@RequestParam(value = "start", required = false) Integer start, 
+			@RequestParam(value = "limit", required = false, defaultValue = "25") Integer limit) {
+		
+		List<ProcessInstanceDto> results = new ArrayList<>();
+		
+		if(StringUtils.isEmpty(title)) {
+			List<HistoricProcessInstance> instances = historyService.createHistoricProcessInstanceQuery().processDefinitionKey(processKey).orderByProcessInstanceStartTime().desc().listPage(start, limit);
+			//遍历流程实例,获取相关的FormInstance
+			for (HistoricProcessInstance historicProcessInstance : instances) {
+				FormInstance formInstance = formInstanceRepository.findOneByProcessInstanceId(historicProcessInstance.getId());
+				if(null != formInstance) {
+					ProcessInstanceDto instanceDto = ProcessInstanceDto.fromEntity(historicProcessInstance, formInstance);
+					results.add(instanceDto);
+				}
+			}
+		} else {
+			List<FormInstance> instances = formInstanceRepository.findByTitleContains(title);
+			
+			//遍历表单实例，获取对应的流程信息
+			for (FormInstance formInstance : instances) {
+				
+				String procInstId = formInstance.getProcessInstanceId();
+				HistoricProcessInstance temp = historyService.createHistoricProcessInstanceQuery().processInstanceId(procInstId).singleResult();
+				ProcessInstanceDto instanceDto = ProcessInstanceDto.fromEntity(temp, formInstance);
+				results.add(instanceDto);
+				
+			}
+			
+		}
+		
+		PageResponse<ProcessInstanceDto> pageResponse = new PageResponse<ProcessInstanceDto>(results);
+		pageResponse.setSuccess(Boolean.TRUE);
+		pageResponse.setTotal(results.size());
+
+		return new ResponseEntity<PageResponse<ProcessInstanceDto>>(pageResponse, HttpStatus.OK);
+
+	}
 
 	/**
 	 * 
@@ -134,6 +186,7 @@ public class BPMResource {
 			formInstance.setProcessDefinitionId(processDefinitionId);
 			formInstance.setProcessInstanceId("DRAFT");
 			formInstance.setDrafterId(sysUser.getLoginName());
+			formInstance.setDrafter(sysUser.getName());
 			formInstance.setDraftOrg(sysUser.getCompanyId().toString());
 			formInstance.setCreateDate(new Date());
 			formInstanceRepository.save(formInstance);
@@ -197,6 +250,11 @@ public class BPMResource {
 					//将FormInstance的ID设置为流程的BusinessKey
 					ProcessInstance instance = runtimeService.startProcessInstanceById(tempObj.getProcessDefinitionId(),tempObj.getId().toString());
 					tempObj.setProcessInstanceId(instance.getProcessInstanceId());
+					
+					SysUser sales = sysUserRepository.getByLoginName(tempObj.getSalesId());
+					if(null != sales) {
+						tempObj.setSales(sales.getName());
+					}
 					formInstanceRepository.save(tempObj);
 				}
 			}
@@ -205,6 +263,10 @@ public class BPMResource {
 				//将FormInstance的ID设置为流程的BusinessKey
 				ProcessInstance instance = runtimeService.startProcessInstanceById(tempObj.getProcessDefinitionId(),tempObj.getId().toString());
 				tempObj.setProcessInstanceId(instance.getProcessInstanceId());
+				SysUser sales = sysUserRepository.getByLoginName(tempObj.getSalesId());
+				if(null != sales) {
+					tempObj.setSales(sales.getName());
+				}
 				formInstanceRepository.save(tempObj);
 			}
 
@@ -300,6 +362,30 @@ public class BPMResource {
 		navtree.add(myGroup);
 		navtree.add(myDone);
 		navtree.add(myStart);
+		
+		PageResponse<BaseTreeNode> pageResponse = new PageResponse<BaseTreeNode>(navtree);
+		pageResponse.setSuccess(Boolean.TRUE);
+		pageResponse.setTotal(navtree.size());
+		
+		return ResponseEntity.ok().body(pageResponse);
+	}
+	
+	
+	@RequestMapping(value = "/getProcessAdminNavTree", method = GET, produces = APPLICATION_JSON_VALUE)
+	public ResponseEntity<PageResponse<BaseTreeNode>> processAdminNavTree() {
+
+		List<BaseTreeNode> navtree = new ArrayList<>();
+		//获取所有流程
+		List<ProcessDefinition> definitions = repositoryService.createProcessDefinitionQuery().latestVersion().list();
+		for (ProcessDefinition processDefinition : definitions) {
+		
+			String processKey = processDefinition.getKey();
+			long processInstanceCount =  historyService.createHistoricProcessInstanceQuery().processDefinitionKey(processKey).count();
+			
+			BaseTreeNode procesNode = new BaseTreeNode(processDefinition.getKey(),processDefinition.getName() + "(" + processInstanceCount + ")", true, "", "", "");
+			
+			navtree.add(procesNode);
+		}
 		
 		PageResponse<BaseTreeNode> pageResponse = new PageResponse<BaseTreeNode>(navtree);
 		pageResponse.setSuccess(Boolean.TRUE);
@@ -455,9 +541,9 @@ public class BPMResource {
 		}
 
 		FormInstance formInstance = formInstanceRepository.findOneByProcessInstanceId(processInstanceId);
-		log.info("根据流程ID{},查询到的发起人{}", processInstanceId, formInstance.getDrafter());
-		SysUser drafer = sysUserRepository.getByLoginName(formInstance.getDrafter());
-		if(null != drafer) {
+		if(null != formInstance) {
+			log.info("根据流程ID{},查询到的发起人{}", processInstanceId, formInstance.getDrafterId());
+			SysUser drafer = sysUserRepository.getByLoginName(formInstance.getDrafterId());
 			results.get(results.size() - 1).setAssignee(drafer.getName());
 		}
 		PageResponse<HistoricActivityInstanceDto> pageResponse = new PageResponse<HistoricActivityInstanceDto>(results);

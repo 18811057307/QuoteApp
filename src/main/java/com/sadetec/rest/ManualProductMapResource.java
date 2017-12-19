@@ -425,14 +425,13 @@ public class ManualProductMapResource {
 			}
 		}
 		Page<ManualProductMap> result = null;
-		;
 		List<ManualProductMap> postAuthResults = new ArrayList<>();
 		if (null != productCode) {
 			if (productCode.contains(",")) {
 
 				String[] tempCodes = StringUtils.commaDelimitedListToStringArray(productCode);
 				for (String tempCode : tempCodes) {
-					result = manualProductMapRepository.findByMiProductCodeContainsOrIdContains(tempCode, tempCode, new PageRequest(0, limit));
+					result = manualProductMapRepository.findByMiProductCodeContainsOrIdContains(tempCode, tempCode, new PageRequest(page-1, limit));
 					postAuthResults.addAll(result.getContent());
 				}
 
@@ -441,13 +440,13 @@ public class ManualProductMapResource {
 
 				String[] tempCodes = StringUtils.delimitedListToStringArray(productCode, ";");
 				for (String tempCode : tempCodes) {
-					result = manualProductMapRepository.findByMiProductCodeContainsOrIdContains(tempCode, tempCode, new PageRequest(0, limit));
+					result = manualProductMapRepository.findByMiProductCodeContainsOrIdContains(tempCode, tempCode, new PageRequest(page-1, limit));
 					postAuthResults.addAll(result.getContent());
 				}
 
 			}
 			else {
-				result = manualProductMapRepository.findByMiProductCodeContainsOrIdContains(productCode, productCode, new PageRequest(0, limit));
+				result = manualProductMapRepository.findByMiProductCodeContainsOrIdContains(productCode, productCode, new PageRequest(page-1, limit));
 				postAuthResults.addAll(result.getContent());
 			}
 

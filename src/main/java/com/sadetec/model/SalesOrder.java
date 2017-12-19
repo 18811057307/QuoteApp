@@ -51,6 +51,10 @@ public class SalesOrder implements Serializable {
 	@DateTimeFormat(style = "S-")
     private Date deliveryDate;
     
+	@Temporal(TemporalType.TIMESTAMP)
+	@DateTimeFormat(style = "S-")
+    private Date validDate;
+	
 	private Integer amount;
     private String unit;
     private BigDecimal costPrice;
@@ -63,6 +67,7 @@ public class SalesOrder implements Serializable {
     private String drawingUrl;
     private String atProductCode;
     private String brand;
+    private String supplierName;
     private Boolean needProc;
     private String comment;
 
@@ -256,9 +261,19 @@ public class SalesOrder implements Serializable {
         setDeliveryDate(deliveryDate);
         return this;
     }
+    
+    @Column(name = "valid_date", length = 19)
+    public Date getValidDate() {
+		return validDate;
+	}
+
+	public void setValidDate(Date validDate) {
+		this.validDate = validDate;
+	}
     // -- [amount] ------------------------
 
-    @Digits(integer = 10, fraction = 0)
+
+	@Digits(integer = 10, fraction = 0)
     @Column(name = "amount", precision = 10)
     public Integer getAmount() {
         return amount;
@@ -406,6 +421,17 @@ public class SalesOrder implements Serializable {
         setBrand(brand);
         return this;
     }
+    
+    @Size(max = 256)
+    @Column(name = "supplier_name", length = 256)
+    public String getSupplierName() {
+		return supplierName;
+	}
+
+	public void setSupplierName(String supplierName) {
+		this.supplierName = supplierName;
+	}
+    
     // -- [costPrice] ------------------------
 
     /**
@@ -417,7 +443,8 @@ public class SalesOrder implements Serializable {
         return costPrice;
     }
 
-    public void setCostPrice(BigDecimal costPrice) {
+
+	public void setCostPrice(BigDecimal costPrice) {
         this.costPrice = costPrice;
     }
 

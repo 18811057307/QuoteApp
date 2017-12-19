@@ -31,7 +31,8 @@ public interface ManualProductMapRepository extends JpaRepository<ManualProductM
     
     List<ManualProductMap> findByMiProductCode(String miProductCode);
     
-    List<ManualProductMap> findByMiProductCodeOrId(String miProductCode, String id);
+    @Query(value="SELECT * FROM manual_product_map WHERE AT_PRODUCT_CODE = ?1 OR MI_PRODUCT_CODE = ?1", nativeQuery=true)
+    List<ManualProductMap> findByMiOrAtProductCode(String productCode);
     
     Page<ManualProductMap> findByMiProductCodeContainsOrIdContains(String miProductCode, String atProductCode, Pageable pageable);
     

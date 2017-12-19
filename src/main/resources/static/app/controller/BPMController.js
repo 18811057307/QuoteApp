@@ -2,9 +2,15 @@ Ext.define('tms.controller.BPMController', {
     extend:'Ext.app.Controller',
     stores:['tms.store.CategoryStore'],
     models:['tms.model.Category'],
-    views:['tms.view.salesOrder.AuditList','tms.view.bpm.NavPanel','tms.view.bpm.ProcessDefPanel','tms.view.bpm.List','tms.view.bpm.HistoricActivityList','tms.view.mailMessage.List', 'tms.view.sysUser.UserCombo', 'tms.view.company.CompanyCombo'],
+    views:['tms.view.salesOrder.AuditList','tms.view.bpm.NavPanel','tms.view.bpm.ProcessAdminNav','tms.view.bpm.ProcessDefPanel','tms.view.bpm.List','tms.view.bpm.ProcessAdminList','tms.view.bpm.HistoricActivityList','tms.view.mailMessage.List', 'tms.view.sysUser.UserCombo', 'tms.view.company.CompanyCombo', 'tms.view.resPartner.ResPartnerCombo'],
     init:function (application) {
         this.control({
+            'processAdminNav':{
+                itemclick:{
+                    fn:this.onProcessAdminItemClick,
+                    scope:this
+                }
+            },
             'bpmNavPanel':{
                 itemclick:{
                     fn:this.onItemClick,
@@ -196,8 +202,9 @@ Ext.define('tms.controller.BPMController', {
             var historicActivities = Ext.ComponentQuery.query('historicActivityList')[0];
             
         	historicActivities.store.load({params:{
-        		processInstanceId: record.get("processInstanceId"),
-        		ignoreStep:grid.byme
+        		processInstanceId: record.get("processInstanceId")
+        		//销售不看流程详细处理流程
+        		//ignoreStep:grid.byme
         	}});            	
             
             //发起人不能查看办理意见
@@ -257,6 +264,20 @@ Ext.define('tms.controller.BPMController', {
     onItemDblClick:function (me, record, item, index, e, eOpts) {
     	//双击分类，弹出分类的修改窗口以及分类的规格
     	if(record.data.leaf) {
+    		
+    	}
+    },
+    
+    onProcessAdminItemClick:function (me, record, item, index, e, eOpts) {
+    	//选中分类，则显示该分类下的待办事项
+    	if(record.data.leaf) {
+    		alert("test");
+    		
+    		var procAdminGrid = Ext.ComponentQuery.query('processAdminList')[0];
+    		procAdminGrid.store.clearFilter();
+    		procAdminGrid.store.load({params:{
+    			processKey: record.data.id
+    	    }});
     		
     	}
     },

@@ -141,16 +141,17 @@ Ext.define('tms.view.salesOrder.List', {
         
         this.columns = [
         	{width: 30,  header:i18n.t('salesOrder_category_name'), sortable:true, dataIndex:'categoryName'}
+        	,{width: 50,  header:i18n.t('salesOrder_product_name'), sortable:true, dataIndex:'productName'}
         	,{width: 20,  header:'品牌', dataIndex:'brand'}
     		,{width: 50,  header:i18n.t('salesOrder_product_code'), sortable:true, dataIndex:'productCode'}
-    		,{width: 20,  header:'单位', sortable:true, dataIndex:'unit'}
-    		,{width: 20,  header:i18n.t('salesOrder_amount'), sortable:true, dataIndex:'amount'}
-    		,{width: 30,  header:i18n.t('salesOrder_comment'), sortable:true, dataIndex:'comment'}
     		,{width: 30,  header:i18n.t('salesOrder_drawing_url'), sortable:true, dataIndex:'drawingUrl', renderer: function(value, metaData, record) {
-	   			 if(""!=value) {
-	   				 return "<a href='" + tms.getContextPath() + "api/salesOrder/drawingDownload?salesOrderId=" + record.get("id") + "'>下载图纸</a>";
-	   			 } 		     
-	        }}
+    			if(""!=value) {
+    				return "<a href='" + tms.getContextPath() + "api/salesOrder/drawingDownload?salesOrderId=" + record.get("id") + "'>下载图纸</a>";
+    			} 		     
+    		}}
+    		,{width: 20,  header:i18n.t('salesOrder_amount'), sortable:true, dataIndex:'amount'}
+    		,{width: 20,  header:'单位', sortable:true, dataIndex:'unit'}
+    		,{width: 30,  header:i18n.t('salesOrder_comment'), sortable:true, dataIndex:'comment'}
         ];
         
         this.callParent(arguments);

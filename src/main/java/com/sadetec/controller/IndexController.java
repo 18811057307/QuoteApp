@@ -59,6 +59,11 @@ public class IndexController {
 			shortcuts.add(new Shortcut("库存管理", "stockQuant-shortcut", "stockQuant-win"));			
 		}
 		
+		if(UserContext.hasRole("PROCESS_ADMIN")) {
+			modules.add("tms.module.ProcessAdminModule");
+			shortcuts.add(new Shortcut("流程管理", "process-admin-shortcut", "process-admin-win"));			
+		}
+		
         model.addAttribute("deskTopModules", modules);
         model.addAttribute("deskTopShortcuts", shortcuts);
         model.addAttribute("isAdmin",UserContext.hasRole("ADMIN"));

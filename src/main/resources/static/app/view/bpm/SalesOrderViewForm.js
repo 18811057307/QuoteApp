@@ -14,18 +14,20 @@ Ext.define('tms.view.bpm.SalesOrderViewForm', {
                 items: [                        
                 {xtype:'hidden', readOnly:true, name:'id',fieldLabel: i18n.t('formInstance_id'), anchor:'95%'}
                 ,{xtype:'hidden',name:'processInstanceId',fieldLabel: i18n.t('formInstance_process_instance_id'), anchor:'95%'}
-                ,{xtype:'textfield', readOnly:true, name:'title',fieldLabel: '客户名称', anchor:'95%'}
-                , {xtype:'userCombo',name:'drafter',fieldLabel: '销售', readOnly:'true',anchor:'95%'}
-                , {xtype:'userCombo',name:'drafterId',fieldLabel: '内勤', readOnly:'true', anchor:'95%'}
+                ,{xtype:'datefield', readOnly:true, name:'createDate',fieldLabel: i18n.t('formInstance_create_date'), anchor:'95%'}
+                , {xtype:'textfield',name:'sales',fieldLabel: i18n.t('formInstance_sales'), readOnly:'true',anchor:'95%'}
+                ,{xtype:'textfield', readOnly:true, name:'title',fieldLabel: i18n.t('formInstance_title'), anchor:'95%'}
+
                 ]
             },{
                 xtype: 'container',
                 flex: 1,
                 layout: 'anchor',
                 items: [
-                	{xtype:'datefield', readOnly:true, name:'createDate',fieldLabel: '单据日期', anchor:'95%'}
-                	,{xtype:'companyCombo',name:'draftOrg',fieldLabel: '所属公司', readOnly:'true',anchor:'95%'}
-                	,{xtype:'textfield', readOnly:true, name:'comment',fieldLabel: '备注信息', anchor:'95%'}
+                	,{xtype:'hidden',name:'draftOrg',fieldLabel: '所属公司', readOnly:'true',anchor:'95%'}
+                    , {xtype:'textfield',name:'drafter',fieldLabel: i18n.t('formInstance_drafter'), readOnly:'true', anchor:'95%'}
+                    , {xtype:'textfield',name:'mobile',fieldLabel: i18n.t('formInstance_mobile'), readOnly:'true', anchor:'95%'}
+                	,{xtype:'textfield', readOnly:true, name:'comment',fieldLabel: i18n.t('formInstance_comment'), anchor:'95%'}
                     ,{xtype:'hidden',name:'drafterId',fieldLabel: i18n.t('formInstance_drafter_id'), anchor:'95%'}
                     ,{xtype:'hidden',name:'processDefinitionId',fieldLabel: i18n.t('formInstance_process_definition_id'), anchor:'95%'} 
                 ]

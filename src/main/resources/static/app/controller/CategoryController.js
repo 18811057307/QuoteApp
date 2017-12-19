@@ -158,11 +158,11 @@ Ext.define('tms.controller.CategoryController', {
     	    }});
     	    */
     		
-    		var seriesGrid = Ext.ComponentQuery.query('seriesList')[0];
+    		//var seriesGrid = Ext.ComponentQuery.query('seriesList')[0];
     		//seriesGrid.store.clearFilter();
-    		seriesGrid.store.load({params:{
-    			categoryCode: record.data.id
-    	    }});
+    		//seriesGrid.store.load({params:{
+    		//	categoryCode: record.data.id
+    	   // }});
     		
     	}
     },

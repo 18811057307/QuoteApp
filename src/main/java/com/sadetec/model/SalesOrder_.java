@@ -39,6 +39,7 @@ public abstract class SalesOrder_ {
     public static volatile SingularAttribute<SalesOrder, String> drawingUrl;
     public static volatile SingularAttribute<SalesOrder, String> atProductCode;
     public static volatile SingularAttribute<SalesOrder, String> brand;
+    public static volatile SingularAttribute<SalesOrder, String> supplierName;
     public static volatile SingularAttribute<SalesOrder, Boolean> needProc;
     public static volatile SingularAttribute<SalesOrder, String> comment;
     

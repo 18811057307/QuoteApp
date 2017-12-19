@@ -12,6 +12,7 @@ Ext.define('tms.model.SalesOrder', {
     		,{name:'productName', type:'string'}
     		,{name:'processType', type:'string'}
     		,{name:'deliveryDate', type:'date', dateFormat: 'time'}
+    		,{name:'validDate', type:'date', dateFormat: 'time'}
     		,{name:'amount', type:'string'}
     		,{name:'unit', type:'string'}
     		,{name:'unitPrice', type:'double'}
@@ -24,6 +25,7 @@ Ext.define('tms.model.SalesOrder', {
     		,{name:'drawingUrl', type:'string'}
     		,{name:'atProductCode', type:'string'}
     		,{name:'brand', type:'string'}
+    		,{name:'supplierName', type:'string'}
     		,{name:'needProc', type:'boolean'}
     		,{name:'comment', type:'string'}    		
         ],

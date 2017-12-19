@@ -24,6 +24,9 @@ public interface FormInstanceRepository extends JpaRepository<FormInstance, Inte
 
 	List<FormInstance> findByDrafterIdAndProcessInstanceId(String deafterId, String processInstanceId);
 	
+	@Query(value="SELECT * FROM FORM_INSTANCE WHERE PROCESS_INSTANCE_ID != '' AND TITLE LIKE '%?1%'", nativeQuery=true)	
+	List<FormInstance> findByTitleContains(String title);
+	
 	@Query(value="SELECT * FROM FORM_INSTANCE WHERE PROCESS_INSTANCE_ID != '' AND (DRAFTER_ID = ?1 OR DRAFTER = ?1) ORDER BY CREATE_DATE DESC", nativeQuery=true)    
 	List<FormInstance> findByDrafter(String deafter);
 	

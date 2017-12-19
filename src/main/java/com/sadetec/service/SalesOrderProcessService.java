@@ -90,6 +90,9 @@ public class SalesOrderProcessService implements JavaDelegate {
 				ManualProductMap productMap = null;
 				if(StringUtils.containsIgnoreCase(salesOrder.getBrand(),"A&T") || StringUtils.containsIgnoreCase(salesOrder.getBrand(),"爱安特")) {
 					productMap = manualProductMapRepository.findById(salesOrder.getProductCode());
+					if(productMap != null) {
+						salesOrder.setAtProductCode(productMap.getId());
+					}
 				} 
 				
 				if(StringUtils.containsIgnoreCase(salesOrder.getBrand(),"misumi") || StringUtils.containsIgnoreCase(salesOrder.getBrand(),"米思米")) {
@@ -133,7 +136,9 @@ public class SalesOrderProcessService implements JavaDelegate {
 					if(!"自动报价".equals(salesOrder.getProcessType())) {
 						if(belongCata.getQuoterId() != null) {
 							salesOrder.setQuoterId(belongCata.getQuoterId());
+							salesOrder.setQuoterName(belongCata.getQuoterName());
 							salesOrder.setAuditorId(belongCata.getAuditorId());
+							salesOrder.setAuditorName(belongCata.getAuditorName());
 						} else {
 							needManualAllocation = true;
 						}
@@ -146,6 +151,7 @@ public class SalesOrderProcessService implements JavaDelegate {
 			}
 
 			execution.setVariable("businessKey", businessKey);
+			execution.setVariable("drafter", formInstance.getDrafterId());
 			execution.setVariable("needManualAllocation", needManualAllocation);
 			
 

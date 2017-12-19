@@ -41,6 +41,13 @@ public class FormInstance implements Serializable {
     private String drafterId;
     private String drafter;
     private String draftOrg;
+    
+    private String salesId;
+    private String sales;
+    private String salesOrg;
+    private String mobile;
+    private String dealStatus;
+    
     private String comment;
     private String description;
     
@@ -160,9 +167,57 @@ public class FormInstance implements Serializable {
         setDraftOrg(draftOrg);
         return this;
     }
+    
     // -- [comment] ------------------------
+    @Size(max = 256)
+    @Column(name = "sales_id", length = 256)    
+    public String getSalesId() {
+		return salesId;
+	}
 
-    @Size(max = 512)
+	public void setSalesId(String salesId) {
+		this.salesId = salesId;
+	}
+
+    @Size(max = 256)
+    @Column(name = "sales", length = 256) 
+	public String getSales() {
+		return sales;
+	}
+
+	public void setSales(String sales) {
+		this.sales = sales;
+	}
+
+    @Size(max = 256)
+    @Column(name = "sales_org", length = 256) 
+	public String getSalesOrg() {
+		return salesOrg;
+	}
+
+	public void setSalesOrg(String salesOrg) {
+		this.salesOrg = salesOrg;
+	}
+
+    @Size(max = 256)
+    @Column(name = "mobile", length = 256) 
+	public String getMobile() {
+		return mobile;
+	}
+
+	public void setMobile(String mobile) {
+		this.mobile = mobile;
+	}
+
+	public String getDealStatus() {
+		return dealStatus;
+	}
+
+	public void setDealStatus(String dealStatus) {
+		this.dealStatus = dealStatus;
+	}
+
+	@Size(max = 512)
     @Column(name = "`comment`", length = 512)
     public String getComment() {
         return comment;
