@@ -24,7 +24,7 @@ Ext.define('tms.view.bpm.SalesOrderProcessForm', {
             }, {
                 xtype: 'datefield',
                 name: 'createDate',
-                fieldLabel: '询价日期',
+                fieldLabel: i18n.t('formInstance_create_date'),
                 anchor: '95%',
                 maxValue: new Date()
             }, {

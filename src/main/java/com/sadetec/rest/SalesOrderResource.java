@@ -244,14 +244,14 @@ public class SalesOrderResource {
 				for (Iterator<SalesOrder> ketIter = temps.iterator(); ketIter.hasNext();) {
 					SalesOrder tempObj = ketIter.next();
 
-					recordChangeSummary(tempObj);
+					//recordChangeSummary(tempObj); TODO 更好的方法设置权限
 
 					salesOrderRepository.save(tempObj);
 				}
 			}
 			else {
 				SalesOrder tempObj = objectMapper.convertValue(tempNode, SalesOrder.class);
-				recordChangeSummary(tempObj);
+				//recordChangeSummary(tempObj);
 				salesOrderRepository.save(tempObj);
 			}
 
@@ -371,6 +371,11 @@ public class SalesOrderResource {
 		if("price_audit".equals(taskDefinitionKey)) {
 			results.addAll(salesOrderRepository.findByFormInstanceIdAndAuditorId(formInstanceId, UserContext.getUsername()));
 			results.addAll(salesOrderRepository.findByCategoryName(formInstanceId, UserContext.getUsername()));
+		}
+		
+		//最后跟踪下单状态，获取所有产品信息
+		if("order_status".equals(taskDefinitionKey)) {
+			results = salesOrderRepository.findByFormInstanceIdOrderById(formInstanceId);
 		}
 		
 

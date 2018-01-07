@@ -187,6 +187,10 @@ div.ux-taskbar div.x-toolbar {
     text-decoration: underline;
 }
 
+.x-column-header-inner {
+	text-overflow: clip !important;
+}
+
 
 /*----------------------------------------------------
     Various icon classes

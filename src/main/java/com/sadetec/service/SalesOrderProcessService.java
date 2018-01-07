@@ -2,7 +2,9 @@ package com.sadetec.service;
 
 import java.io.OutputStream;
 import java.math.BigDecimal;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import javax.mail.MessagingException;
@@ -11,6 +13,7 @@ import javax.mail.internet.MimeMessage;
 import org.apache.commons.lang.StringUtils;
 import org.apache.poi.ss.usermodel.FillPatternType;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 import org.apache.poi.xssf.usermodel.XSSFColor;
 import org.apache.poi.xssf.usermodel.XSSFFont;
@@ -27,17 +30,21 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+import org.thymeleaf.util.DateUtils;
 
 import com.sadetec.model.Category;
 import com.sadetec.model.FormInstance;
 import com.sadetec.model.ManualProductMap;
 import com.sadetec.model.SalesOrder;
+import com.sadetec.model.StockQuant;
 import com.sadetec.model.SysUser;
 import com.sadetec.repository.CategoryRepository;
 import com.sadetec.repository.FormInstanceRepository;
 import com.sadetec.repository.ManualProductMapRepository;
 import com.sadetec.repository.SalesOrderRepository;
+import com.sadetec.repository.StockQuantRepository;
 import com.sadetec.repository.SysUserRepository;
+import com.sadetec.util.DateUtil;
 import com.sadetec.util.QuotationProcessor;
 
 @Service("salesOrderProcessService")
@@ -62,6 +69,9 @@ public class SalesOrderProcessService implements JavaDelegate {
 	
 	@Autowired
 	private CategoryRepository categoryRepository;
+	
+	@Autowired
+	private StockQuantRepository stockQuantRepository;
 
 	@Autowired
 	private StorageService storageService;
@@ -86,7 +96,7 @@ public class SalesOrderProcessService implements JavaDelegate {
 
 			for (SalesOrder salesOrder : salesOrders) {
 				
-				//按照品牌进行查询
+				//按照品牌进行查询 FIXME 多个供应商的处理
 				ManualProductMap productMap = null;
 				if(StringUtils.containsIgnoreCase(salesOrder.getBrand(),"A&T") || StringUtils.containsIgnoreCase(salesOrder.getBrand(),"爱安特")) {
 					productMap = manualProductMapRepository.findById(salesOrder.getProductCode());
@@ -123,11 +133,11 @@ public class SalesOrderProcessService implements JavaDelegate {
 				}
 
 				if (null != productMap && null == productMap.getUniQuote()) {
-					salesOrder.setProcessType("采购询价");
+					salesOrder.setProcessType("产品技术处理");
 				}
 
 				if (null != productMap && null != productMap.getUniQuote() && (productMap.getUniQuote().compareTo(BigDecimal.ZERO) < 1)) {
-					salesOrder.setProcessType("采购询价");
+					salesOrder.setProcessType("产品技术处理");
 				}
 				
 				Category belongCata = categoryRepository.getByCategoryName(salesOrder.getCategoryName());
@@ -144,6 +154,12 @@ public class SalesOrderProcessService implements JavaDelegate {
 						}
 						salesOrder.setNeedProc(true);
 					}
+				}
+				
+				//查询更新库存信息
+				StockQuant stockQuant = stockQuantRepository.findOneByProductId(salesOrder.getAtProductCode());
+				if(null != stockQuant) {
+					salesOrder.setStockAmount(stockQuant.getUseQty().intValue());
 				}
 				
 				salesOrderRepository.saveAndFlush(salesOrder);
@@ -179,6 +195,8 @@ public class SalesOrderProcessService implements JavaDelegate {
 				
 				execution.setVariable("priceAuditor", doneOrder.get(0).getAuditorId());
 			}
+			
+			
 		}
 		
 		if ("check_audit_result".equals(execution.getCurrentActivityId())) {
@@ -189,6 +207,16 @@ public class SalesOrderProcessService implements JavaDelegate {
 			
 			List<SalesOrder> needProcOrders = salesOrderRepository.findByFormInstanceIdAndAuditorIdAndNeedProc(Integer.parseInt(businessKey), priceAuditorAssignee, true);
 
+			//设置报价完成日期和报价单号
+			formInstance.setLastModified(new Date());
+			
+			//String.format("%06",12);
+			if(StringUtils.isEmpty(formInstance.getSeqNumber())) {
+				Long curMonthSeq = formInstanceRepository.getCurMonthSeqNumber();
+				formInstance.setSeqNumber("TJAAT"+new SimpleDateFormat("yyyyMM").format(new Date())+String.format("%06d",curMonthSeq.intValue()+1));
+			}
+			formInstanceRepository.save(formInstance);
+			
 			if(needProcOrders.size() == 0) {
 				isPass = true;
 			}
@@ -198,9 +226,31 @@ public class SalesOrderProcessService implements JavaDelegate {
 		}
 		
 		if ("send_mail".equals(execution.getCurrentActivityId())) {
+			
+			//将价格反写回报价映射表 TODO多个供应商的处理
+			List<SalesOrder> completeOrder = salesOrderRepository.findByFormInstanceIdOrderById(formInstance.getId());
+			for (SalesOrder tempOrder : completeOrder) {
+				if(StringUtils.isNotBlank(tempOrder.getAtProductCode())) {
+					ManualProductMap tempMap = manualProductMapRepository.findById(tempOrder.getAtProductCode());
+					if(tempMap != null) {
+						tempMap.setAtProductQuote(tempOrder.getCostPrice());
+						tempMap.setUniQuote(tempOrder.getUnitPrice());
+						tempMap.setFactoryQuote(tempOrder.getFactoryPrice());
+					} else {
+						tempMap = new ManualProductMap();
+						tempMap.setId(tempOrder.getAtProductCode());
+						tempMap.setAtProductQuote(tempOrder.getCostPrice());
+						tempMap.setUniQuote(tempOrder.getUnitPrice());
+						tempMap.setFactoryQuote(tempOrder.getFactoryPrice());
+					}
+					manualProductMapRepository.save(tempMap);
+				}
+			}
+			
+			
 			log.info("{}询价处理完毕,开始发送邮件.", formInstance.getTitle());
 			XSSFWorkbook salesOrderExcel = new XSSFWorkbook();
-			XSSFSheet productSheet = salesOrderExcel.createSheet("产品信息");
+			XSSFSheet productSheet = salesOrderExcel.createSheet("报价单");
 			
 			XSSFCellStyle style = salesOrderExcel.createCellStyle();
 	        XSSFFont font = salesOrderExcel.createFont();
@@ -208,38 +258,68 @@ public class SalesOrderProcessService implements JavaDelegate {
 	        font.setBold(true);
 	        style.setFont(font);
 	        
-			// create header row
+			// create header row， 报价单号	询价时间	营业人员	联系方式	客户名称	
 	        XSSFRow header = productSheet.createRow(0);
-	        header.createCell(0).setCellValue("品牌");
+	        header.createCell(0).setCellValue("报价单号");
 	        header.getCell(0).setCellStyle(style);
-	        header.createCell(1).setCellValue("产品品类");
+	        header.createCell(1).setCellValue("询价时间");
 	        header.getCell(1).setCellStyle(style);
-	        header.createCell(2).setCellValue("产品型号");
-			header.getCell(2).setCellStyle(style);
-			header.createCell(3).setCellValue("AT型号");
-			header.getCell(3).setCellStyle(style);
-			header.createCell(4).setCellValue("数量");
-			header.getCell(4).setCellStyle(style);
-			header.createCell(5).setCellValue("单位");
-			header.getCell(5).setCellStyle(style);
-			header.createCell(6).setCellValue("统一价");
-			header.getCell(6).setCellStyle(style);
-			header.createCell(7).setCellValue("可用库存");
+	        header.createCell(2).setCellValue("营业人员");
+	        header.getCell(2).setCellStyle(style);
+	        header.createCell(3).setCellValue("联系方式");
+	        header.getCell(3).setCellStyle(style);
+	        header.createCell(4).setCellValue("客户名称");
+	        header.getCell(4).setCellStyle(style);
+	        
+	        //产品名称	询价型号	报价型号	数量	单位	统一价  总价	货期	报价有效期	备注
+	        header.createCell(5).setCellValue("产品名称");
+	        header.getCell(5).setCellStyle(style);
+	        header.createCell(6).setCellValue("询价型号");
+	        header.getCell(6).setCellStyle(style);
+	        header.createCell(7).setCellValue("报价型号");
 			header.getCell(7).setCellStyle(style);
+			header.createCell(8).setCellValue("数量");
+			header.getCell(8).setCellStyle(style);
+			header.createCell(9).setCellValue("单位");
+			header.getCell(9).setCellStyle(style);
+			header.createCell(10).setCellValue("统一价");
+			header.getCell(10).setCellStyle(style);
+			header.createCell(11).setCellValue("总价");
+			header.getCell(11).setCellStyle(style);
+			header.createCell(12).setCellValue("货期");
+			header.getCell(12).setCellStyle(style);
+			header.createCell(13).setCellValue("报价有效期");
+			header.getCell(13).setCellStyle(style);
+			header.createCell(14).setCellValue("备注");
+			header.getCell(14).setCellStyle(style);
 			
 			List<Object[]> salesOrders = salesOrderRepository.findSalesOrderWithStock(formInstance.getId());
 			int rowCount = 1;
 			for (Object[] order : salesOrders) {
 				XSSFRow aRow = productSheet.createRow(rowCount++);
-				aRow.createCell(0).setCellValue(order[0] != null ? order[0].toString() : "");
-				aRow.createCell(1).setCellValue(order[1] != null ? order[1].toString() : "");
-				aRow.createCell(2).setCellValue(order[2] != null ? order[2].toString() : "");
-				aRow.createCell(3).setCellValue(order[3] != null ? order[3].toString() : "");
-				aRow.createCell(4).setCellValue(order[4] != null ? order[4].toString() : "");
-				aRow.createCell(5).setCellValue(order[5] != null ? order[5].toString() : "");
-				aRow.createCell(6).setCellValue(order[6] != null ? order[6].toString() : "");
-				aRow.createCell(7).setCellValue(order[7] != null ? order[7].toString() : "");
+				aRow.createCell(0).setCellValue(formInstance.getSeqNumber());
+				aRow.createCell(1).setCellValue(DateUtil.toString(formInstance.getCreateDate()));
+				aRow.createCell(2).setCellValue(formInstance.getSales());
+				aRow.createCell(3).setCellValue(formInstance.getMobile());
+				aRow.createCell(4).setCellValue(formInstance.getTitle());
+				
+				aRow.createCell(5).setCellValue(order[0] != null ? order[0].toString() : "");
+				aRow.createCell(6).setCellValue(order[1] != null ? order[1].toString() : "");
+				aRow.createCell(7).setCellValue(order[2] != null ? order[2].toString() : "");
+				aRow.createCell(8).setCellValue(order[3] != null ? order[3].toString() : "");
+				aRow.createCell(9).setCellValue(order[4] != null ? order[4].toString() : "");
+				aRow.createCell(10).setCellValue(order[5] != null ? order[5].toString() : "");
+				aRow.createCell(11).setCellValue(order[6] != null ? order[6].toString() : "");
+				aRow.createCell(12).setCellValue(order[7] != null ? order[7].toString() : "");
+				aRow.createCell(13).setCellValue(order[8] != null ? order[8].toString() : "");
+				aRow.createCell(14).setCellValue(order[9] != null ? order[9].toString() : "");
 			}
+			
+			productSheet.addMergedRegion(new CellRangeAddress(1, rowCount-1, 0, 0));//合并单元格  
+			productSheet.addMergedRegion(new CellRangeAddress(1, rowCount-1, 1, 1));//合并单元格 
+			productSheet.addMergedRegion(new CellRangeAddress(1, rowCount-1, 2, 2));//合并单元格 
+			productSheet.addMergedRegion(new CellRangeAddress(1, rowCount-1, 3, 3));//合并单元格 
+			productSheet.addMergedRegion(new CellRangeAddress(1, rowCount-1, 4, 4));//合并单元格 
 			
 			DateTimeFormatter format = DateTimeFormat.forPattern("yyyyMMdd");
 			

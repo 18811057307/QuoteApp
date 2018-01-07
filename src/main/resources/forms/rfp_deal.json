@@ -5,6 +5,7 @@
     "detailConfig" : {
         "title": "产品信息",
         "autoHeight": true,
+        "autoScroll": true,
         "border": true
 	},
     "items": [
@@ -30,22 +31,28 @@
                         },
                         {
                             "xtype": "textfield",
+                            "name": "seqNumber",
+                            "fieldLabel": "报价单号",
+                            "readOnly" : true,
+                            "anchor": "95%"
+                        },
+                        {
+                            "xtype": "userCombo",
+                            "name": "salesId",
+                            "fieldLabel": "营业人员",
+                            "readOnly":"true",
+                            "anchor": "95%"
+                        },
+                        {
+                            "xtype": "textfield",
                             "name": "title",
                             "fieldLabel": "客户名称",
                             "anchor": "95%"
                         },
                         {
-                            "xtype": "userCombo",
-                            "name": "drafter",
-                            "fieldLabel": "销售",
-                            "readOnly":"true",
-                            "anchor": "95%"
-                        },
-                        {
-                            "xtype": "userCombo",
-                            "name": "drafterId",
-                            "fieldLabel": "内勤",
-                            "readOnly":"true",
+                            "xtype": "textfield",
+                            "name": "comment",
+                            "fieldLabel": "备注信息",
                             "anchor": "95%"
                         }
                     ]
@@ -54,24 +61,22 @@
                     "xtype": "container",
                     "flex": 1,
                     "layout": "anchor",
-                    "items": [
+                    "items": [                        
                         {
                             "xtype": "datefield",
                             "name": "createDate",
-                            "fieldLabel": "单据日期",
+                            "fieldLabel": "询价日期",
                             "anchor": "95%"
-                        },
+                        },{
+			                "xtype": "textfield",
+			                "name": "mobile",
+			                "fieldLabel": "联系方式",
+			                "anchor": "95%"
+			            },
                         {
-                            "xtype": "companyCombo",
-                            "name": "draftOrg",
-                            "fieldLabel": "所属公司",
-                            "readOnly":"true",
-                            "anchor": "95%"
-                        },
-                        {
-                            "xtype": "textfield",
-                            "name": "comment",
-                            "fieldLabel": "备注信息",
+                            "xtype": "dealStatusCombo",
+                            "name": "dealStatus",
+                            "fieldLabel": "下单状态",
                             "anchor": "95%"
                         },
                         {

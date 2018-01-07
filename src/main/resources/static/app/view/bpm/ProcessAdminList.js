@@ -13,6 +13,7 @@ Ext.define('tms.view.bpm.ProcessAdminList', {
     showBottomToolbar:false,
     columns:[
 		{width: 100,  header:'询价日期', dataIndex:'createDate', xtype:'datecolumn', format:'y年m月d日'}
+		,{width: 100,  header:'报价单号', dataIndex:'seqNumber'}
 		,{width: 100,  header:'内勤', dataIndex:'drafter'}
 		,{width: 100,  header:'营业人员', dataIndex:'sales'}
 		,{width: 100,  header:'客户名称', dataIndex:'title'}

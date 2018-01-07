@@ -23,9 +23,9 @@ Ext.define('tms.view.bpm.TaskDetailWindow', {
 		items : [ {
 			xtype : 'manualProductMapHelper',
 			data : [ {
-				title : '导入订单产品信息',
-				content : '点击产品信息表格上【选择文件】按钮，可批量导入订单的产品信息.',
-				url : tms.getContextPath() + 'xls/样例订单.xlsx',
+				title : '导入产品询价单信息',
+				content : '点击产品信息表格上【选择文件】按钮，可批量导入询价单的产品信息.',
+				url : tms.getContextPath() + 'xls/样例产品询价单.xlsx',
 				linkText : '下载Excel模板'
 			} ]
 		} ,{

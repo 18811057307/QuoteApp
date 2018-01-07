@@ -451,7 +451,7 @@
 	"manualProductMap_at_product_code" : "At规格型号",
 	"manualProductMap_at_product_desc" : "At产品描述",
 	"manualProductMap_mi_product_quote" : "Mi报价",
-	"manualProductMap_at_product_quote" : "At报价",
+	"manualProductMap_at_product_quote" : "成本报价",
 	"manualProductMap_factory_quote" : "出厂价格",
 	"manualProductMap_uni_quote" : "统一价格",
 	"manualProductMap_date_added" : "添加日期",

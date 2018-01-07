@@ -85,28 +85,35 @@ Ext.define('tms.view.salesOrder.AuditList', {
         
         this.columns = [
         	{width: 40,  header:'品牌', dataIndex:'brand'}
-    		,{width: 40,  header:i18n.t('salesOrder_category_name'), sortable:true, dataIndex:'categoryName'}
-    		,{width: 30,  header:'办理人', dataIndex:'quoterId',editor: {xtype:'userCombo',roleCode:'PURCHASING_AGENT'}, renderer: function(value) {
-	   			 var record = userStore.findRecord("loginName", value);
-			     return record ? record.get("name") : value;
-
-            }}
+    		,{width: 40,  header:i18n.t('salesOrder_product_name'), sortable:true, dataIndex:'productName'}
     		,{width: 60,  header:i18n.t('salesOrder_product_code'), sortable:true, dataIndex:'productCode', summaryType: 'count',
                 summaryRenderer: function(value, summaryData, dataIndex) {
                     return ((value === 0 || value > 1) ? '(共计 ' + value + ' 种产品)' : '(共计 1 种产品)');
                 }}
     		,{width: 60,  header:i18n.t('salesOrder_at_product_code'), sortable:true, dataIndex:'atProductCode'}
+
     		,{width: 40,  header:i18n.t('salesOrder_process_type'), sortable:true, dataIndex:'processType'}
     		,{width: 30,  header:i18n.t('salesOrder_drawing_url'), sortable:true, dataIndex:'drawingUrl', renderer: function(value, metaData, record) {
   	   			 if(""!=value) {
   	   				 return "<a href='" + tms.getContextPath() + "api/salesOrder/drawingDownload?salesOrderId=" + record.get("id") + "'>下载</a>";
   	   			 } 		     
   	        }}    		
+    		,{width: 30,  header:'供应商', dataIndex:'supplierName',editor: {xtype: 'resPartnerCombo'}} 
     		,{width: 30,  header:'单位', sortable:true, dataIndex:'unit'}
     		,{width: 30,  header:i18n.t('salesOrder_amount'), sortable:true, dataIndex:'amount',editor: {xtype: 'textfield'}}
     		,{width: 30,  header:'成本价', sortable:true, dataIndex:'costPrice',editor: {xtype: 'numberfield'}}
     		,{width: 30,  header:'出厂价', sortable:true, dataIndex:'factoryPrice',editor: {xtype: 'numberfield'}}
     		,{width: 30,  header:i18n.t('salesOrder_unit_price'), sortable:true, dataIndex:'unitPrice',editor: {xtype: 'numberfield'}}
+    		,{width: 30,  header:'小计', renderer: function(value, metaData, record, rowIdx, colIdx, store, view) {
+                return Ext.util.Format.usMoney(record.get('amount') * record.get('unitPrice'));
+    	        },summaryType: function(records){
+    	            var i = 0, length = records.length, total = 0, record;
+    		        for (; i < length; ++i) {
+    		            record = records[i];
+    		            total += record.get('amount') * record.get('unitPrice');
+    		        }
+    		        return total;
+    	    }, summaryRenderer: Ext.util.Format.usMoney}
     		,{width: 30,  header:'可用库存', sortable:true, dataIndex:'atProductCode',renderer: function(value,metaData,record) {
     			if(value && value != "") {
     				var stock = stockStore.findRecord("productId", value);
@@ -116,6 +123,18 @@ Ext.define('tms.view.salesOrder.AuditList', {
     			var stock = stockStore.findRecord("productId", productCode);
 			    return stock ? stock.get("useQty") : 0;
             }}
+    		,{width: 40,  header:'货期', dataIndex:'deliveryDate', xtype: 'datecolumn', format:'y-m-d'}
+    		,{width: 40,  header:'报价有效期', dataIndex:'validDate',xtype: 'datecolumn', format:'y-m-d'}
+    		,{width: 30,  header:'产品技术', dataIndex:'quoterId',editor: {xtype:'userCombo',roleCode:'PURCHASING_AGENT'}, renderer: function(value) {
+	   			 var record = userStore.findRecord("loginName", value);
+			     return record ? record.get("name") : value;
+
+           }}
+    		,{width: 30,  header:'审批人', dataIndex:'auditorId',editor: {xtype:'userCombo',roleCode:'AUDITOR_AGENT'}, renderer: function(value) {
+	   			 var record = userStore.findRecord("loginName", value);
+			     return record ? record.get("name") : value;
+
+          }}
     		,{width: 30,  header:'通过?', dataIndex:'needProc',renderer : function(value){
 	    	        var cssPrefix = Ext.baseCSSPrefix,
 	                cls = [cssPrefix + 'grid-statusheader-checked'];

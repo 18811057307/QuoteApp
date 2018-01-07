@@ -30,6 +30,7 @@ Ext.define('tms.view.salesOrder.EditorList', {
         dock: 'bottom'
     }],
     forceFit:true,
+    autoScroll : true,
     columnLines:true,
     border:false,
     showTopToolbar:true,
@@ -42,14 +43,18 @@ Ext.define('tms.view.salesOrder.EditorList', {
     formInstanceId: '',
     metaChange: function() {
         this.columns = [
-        	{width: 40,  header:'品牌', dataIndex:'brand'}
-    		,{width: 40,  header:i18n.t('salesOrder_category_name'), sortable:true, dataIndex:'categoryName'}
-    		,{width: 60,  header:i18n.t('salesOrder_product_code'), sortable:true, dataIndex:'productCode', summaryType: 'count',
+        	{width: 40,  header:i18n.t('salesOrder_product_name'),  dataIndex:'productName'}
+    		,{width: 60,  header:i18n.t('salesOrder_product_code'), dataIndex:'productCode', summaryType: 'count',
                 summaryRenderer: function(value, summaryData, dataIndex) {
                     return ((value === 0 || value > 1) ? '(共计 ' + value + ' 种产品)' : '(共计 1 种产品)');
                 }}
-    		,{width: 60,  header:'对应AT型号', sortable:true, dataIndex:'atProductCode'}
-    		,{width: 40,  header:i18n.t('salesOrder_process_type'), sortable:true, dataIndex:'processType'}
+    		,{width: 60,  header:i18n.t('salesOrder_at_product_code'),  dataIndex:'atProductCode'}
+    		,{width: 40,  header:i18n.t('salesOrder_process_type'),  dataIndex:'processType'}
+    		,{width: 30,  header:i18n.t('salesOrder_drawing_url'), sortable:true, dataIndex:'drawingUrl', renderer: function(value, metaData, record) {
+  	   			 if(""!=value) {
+  	   				 return "<a href='" + tms.getContextPath() + "api/salesOrder/drawingDownload?salesOrderId=" + record.get("id") + "'>下载</a>";
+  	   			 } 		     
+  	        }}
     		,{width: 30,  header:'单位', sortable:true, dataIndex:'unit'}
     		,{width: 30,  header:i18n.t('salesOrder_amount'), sortable:true, dataIndex:'amount',editor: {xtype: 'textfield'}}
     		,{width: 30,  header:i18n.t('salesOrder_unit_price'), sortable:true, dataIndex:'unitPrice',editor: {xtype: 'textfield'}}
@@ -64,6 +69,9 @@ Ext.define('tms.view.salesOrder.EditorList', {
     		        return total;
     	    },
     	    summaryRenderer: Ext.util.Format.usMoney}
+    		,{width: 40,  header:'货期', dataIndex:'deliveryDate', xtype: 'datecolumn', format:'y-m-d'}
+    		,{width: 40,  header:'报价有效期', dataIndex:'validDate',xtype: 'datecolumn', format:'y-m-d'}
+    		,{width: 30,  header:'备注', dataIndex:'comment',editor: {xtype: 'textfield'}}
         ];
     	this.reconfigure(this.store,this.columns);
     },
@@ -132,6 +140,42 @@ Ext.define('tms.view.salesOrder.EditorList', {
         	    },
         	    summaryRenderer: Ext.util.Format.usMoney}
             ];
+        } 
+        
+        if("order_status" == me.taskDefinitionKey) {
+        	
+        	this.columns = [
+        	 {width: 40,  header:i18n.t('salesOrder_product_code'), dataIndex:'productCode', summaryType: 'count',
+                summaryRenderer: function(value, summaryData, dataIndex) {
+                    return ((value === 0 || value > 1) ? '(共计 ' + value + ' 种产品)' : '(共计 1 种产品)');
+                }}
+    		,{width: 40,  header:i18n.t('salesOrder_at_product_code'),  dataIndex:'atProductCode'}
+    		,{width: 30,  header:i18n.t('salesOrder_drawing_url'), dataIndex:'drawingUrl', renderer: function(value, metaData, record) {
+   	   			 if(""!=value) {
+   	   				 return "<a href='" + tms.getContextPath() + "api/salesOrder/drawingDownload?salesOrderId=" + record.get("id") + "'>下载</a>";
+   	   			 } 		     
+   	        }}
+    		,{width: 30,  header:i18n.t('salesOrder_process_type'), dataIndex:'processType'}
+    		,{width: 30,  header:'单位', sortable:true, dataIndex:'unit'}
+    		,{width: 30,  header:i18n.t('salesOrder_amount'),  dataIndex:'amount'}    		
+    		,{width: 40,  header:i18n.t('salesOrder_unit_price'), dataIndex:'unitPrice'}
+    		
+    		,{width: 30,  header:'小计', renderer: function(value, metaData, record, rowIdx, colIdx, store, view) {
+                return Ext.util.Format.usMoney(record.get('amount') * record.get('unitPrice'));
+    	        },summaryType: function(records){
+    	            var i = 0, length = records.length, total = 0, record;
+    		        for (; i < length; ++i) {
+    		            record = records[i];
+    		            total += record.get('amount') * record.get('unitPrice');
+    		        }
+    		        return total;
+    	    },
+    	    summaryRenderer: Ext.util.Format.usMoney}
+    		,{width: 30,  header:'库存', dataIndex:'stockAmount'}
+    		,{width: 40,  header:'货期', dataIndex:'deliveryDate', xtype: 'datecolumn', format:'y-m-d'}
+    		,{width: 40,  header:'报价有效期', dataIndex:'validDate',xtype: 'datecolumn', format:'y-m-d'}
+    		,{width: 30,  header:'备注', dataIndex:'comment',editor: {xtype: 'textfield'}}
+            ];
         } else {
         
 	        this.columns = [
@@ -141,26 +185,26 @@ Ext.define('tms.view.salesOrder.EditorList', {
 		   		//	 var record = userStore.findRecord("loginName", value);
 				//     return record ? record.get("name") : value;
 		        //}}
-	    		{width: 30,  header:i18n.t('salesOrder_product_code'), sortable:true, dataIndex:'productCode', summaryType: 'count',
+	    		{width: 100,  header:i18n.t('salesOrder_product_code'), sortable:true, dataIndex:'productCode', summaryType: 'count',
 	                summaryRenderer: function(value, summaryData, dataIndex) {
 	                    return ((value === 0 || value > 1) ? '(共计 ' + value + ' 种产品)' : '(共计 1 种产品)');
 	                }}
-	    		,{width: 30,  header:i18n.t('salesOrder_at_product_code'), sortable:true, dataIndex:'atProductCode'}
-	    		,{width: 30,  header:i18n.t('salesOrder_drawing_url'), sortable:true, dataIndex:'drawingUrl', renderer: function(value, metaData, record) {
+	    		,{width: 100,  header:i18n.t('salesOrder_at_product_code'), sortable:true, dataIndex:'atProductCode',editor: {xtype: 'textfield'}}
+	    		,{width: 100,  header:i18n.t('salesOrder_drawing_url'), sortable:true, dataIndex:'drawingUrl', renderer: function(value, metaData, record) {
 	   	   			 if(""!=value) {
 	   	   				 return "<a href='" + tms.getContextPath() + "api/salesOrder/drawingDownload?salesOrderId=" + record.get("id") + "'>下载</a>";
 	   	   			 } 		     
 	   	        }}
-	    		,{width: 30,  header:'供应商', dataIndex:'supplierName',editor: {xtype: 'resPartnerCombo'}} 
-	    		,{width: 30,  header:i18n.t('salesOrder_process_type'), sortable:true, dataIndex:'processType'}
-	    		,{width: 30,  header:'单位', sortable:true, dataIndex:'unit'}
-	    		,{width: 30,  header:i18n.t('salesOrder_amount'), sortable:true, dataIndex:'amount',editor: {xtype: 'numberfield'}}    		
+	    		,{width: 100,  header:'供应商', dataIndex:'supplierName',editor: {xtype: 'resPartnerCombo'}} 
+	    		,{width: 100,  header:i18n.t('salesOrder_process_type'), sortable:true, dataIndex:'processType'}
+	    		,{width: 100,  header:'单位', sortable:true, dataIndex:'unit'}
+	    		,{width: 100,  header:i18n.t('salesOrder_amount'), sortable:true, dataIndex:'amount',editor: {xtype: 'numberfield'}}    		
 	    		
-	    		,{width: 40,  header:i18n.t('salesOrder_cost_price'), sortable:true, dataIndex:'costPrice',editor: {xtype: 'numberfield'}}
-	    		,{width: 40,  header:i18n.t('salesOrder_factory_price'), sortable:true, dataIndex:'factoryPrice',editor: {xtype: 'numberfield'}}
-	    		,{width: 40,  header:i18n.t('salesOrder_unit_price'), sortable:true, dataIndex:'unitPrice',editor: {xtype: 'numberfield'}}
+	    		,{width: 100,  header:i18n.t('salesOrder_cost_price'), sortable:true, dataIndex:'costPrice',editor: {xtype: 'numberfield'}}
+	    		,{width: 100,  header:i18n.t('salesOrder_factory_price'), sortable:true, dataIndex:'factoryPrice',editor: {xtype: 'numberfield'}}
+	    		,{width: 100,  header:i18n.t('salesOrder_unit_price'), sortable:true, dataIndex:'unitPrice',editor: {xtype: 'numberfield'}}
 	    		
-	    		,{width: 30,  header:'小计', renderer: function(value, metaData, record, rowIdx, colIdx, store, view) {
+	    		,{width: 100,  header:'小计', renderer: function(value, metaData, record, rowIdx, colIdx, store, view) {
 	                return Ext.util.Format.usMoney(record.get('amount') * record.get('unitPrice'));
 	    	        },summaryType: function(records){
 	    	            var i = 0, length = records.length, total = 0, record;
@@ -171,10 +215,11 @@ Ext.define('tms.view.salesOrder.EditorList', {
 	    		        return total;
 	    	    },
 	    	    summaryRenderer: Ext.util.Format.usMoney}
-	    		,{width: 30,  header:'库存', dataIndex:'stockAmount'}
-	    		,{width: 40,  header:'货期', dataIndex:'deliveryDate',editor: {xtype: 'datefield'}, xtype: 'datecolumn', format:'y-m-d'}
-	    		,{width: 40,  header:'报价有效期', dataIndex:'validDate',editor: {xtype: 'datefield'},xtype: 'datecolumn', format:'y-m-d'}
-	    		,{width: 30,  header:'备注', dataIndex:'comment',editor: {xtype: 'textfield'}}
+	    		,{width: 100,  header:'库存', dataIndex:'stockAmount'}
+	    		,{width: 100,  header:'货期', dataIndex:'deliveryDate',editor: {xtype: 'datefield'}, xtype: 'datecolumn', format:'y-m-d'}
+	    		,{width: 120,  header:'报价有效期', dataIndex:'validDate',editor: {xtype: 'datefield'},xtype: 'datecolumn', format:'y-m-d'}
+	    		,{width: 100,  header:'备注', dataIndex:'comment',editor: {xtype: 'textfield'}}
+	    		,{width: 100,  header:'办理人', dataIndex:'quoterName'}
 	        ];
         }
         

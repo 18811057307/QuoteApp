@@ -36,15 +36,15 @@
                         },
                         {
                             "xtype": "textfield",
-                            "name": "title",
-                            "fieldLabel": "客户名称",
+                            "name": "sales",
+                            "fieldLabel": "营业人员",
                             "readOnly":"true",
                             "anchor": "95%"
                         },
                         {
                             "xtype": "textfield",
-                            "name": "sales",
-                            "fieldLabel": "营业人员",
+                            "name": "title",
+                            "fieldLabel": "客户名称",
                             "readOnly":"true",
                             "anchor": "95%"
                         }

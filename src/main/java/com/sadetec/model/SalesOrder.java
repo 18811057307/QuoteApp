@@ -56,6 +56,7 @@ public class SalesOrder implements Serializable {
     private Date validDate;
 	
 	private Integer amount;
+	private Integer stockAmount;
     private String unit;
     private BigDecimal costPrice;
     private BigDecimal factoryPrice;
@@ -286,6 +287,16 @@ public class SalesOrder implements Serializable {
     public SalesOrder amount(Integer amount) {
         setAmount(amount);
         return this;
+    }
+    
+	@Digits(integer = 10, fraction = 0)
+    @Column(name = "stock_amount", precision = 10)
+    public Integer getStockAmount() {
+        return stockAmount;
+    }
+
+    public void setStockAmount(Integer stockAmount) {
+        this.stockAmount = stockAmount;
     }
     
     // -- [quoterId] ------------------------

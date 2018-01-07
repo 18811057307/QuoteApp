@@ -2,12 +2,22 @@ Ext.define('tms.controller.BPMController', {
     extend:'Ext.app.Controller',
     stores:['tms.store.CategoryStore'],
     models:['tms.model.Category'],
-    views:['tms.view.salesOrder.AuditList','tms.view.bpm.NavPanel','tms.view.bpm.ProcessAdminNav','tms.view.bpm.ProcessDefPanel','tms.view.bpm.List','tms.view.bpm.ProcessAdminList','tms.view.bpm.HistoricActivityList','tms.view.mailMessage.List', 'tms.view.sysUser.UserCombo', 'tms.view.company.CompanyCombo', 'tms.view.resPartner.ResPartnerCombo'],
+    views:['tms.view.salesOrder.AuditList','tms.view.bpm.NavPanel','tms.view.bpm.ProcessAdminNav','tms.view.bpm.ProcessDefPanel','tms.view.bpm.List','tms.view.bpm.ProcessAdminList','tms.view.bpm.HistoricActivityList','tms.view.mailMessage.List', 'tms.view.sysUser.UserCombo', 'tms.view.company.CompanyCombo', 'tms.view.resPartner.ResPartnerCombo', 'tms.view.salesOrder.StatusCombo'],
     init:function (application) {
         this.control({
             'processAdminNav':{
                 itemclick:{
                     fn:this.onProcessAdminItemClick,
+                    scope:this
+                }
+            },
+            'processAdminList':{
+                itemclick:{
+                    fn:this.onAdminListItemClick,
+                    scope:this
+                },
+                itemdblclick:{
+                    fn:this.onAdminListItemDblClick,
                     scope:this
                 }
             },
@@ -80,6 +90,12 @@ Ext.define('tms.controller.BPMController', {
                     fn:this.deleteSalesOrder,
                     scope:this
                 }
+            },
+            'processAdminList button[action=view]':{
+                click:{
+                    fn:this.viewAdminTask,
+                    scope:this
+                }
             }
         });
     },
@@ -127,6 +143,7 @@ Ext.define('tms.controller.BPMController', {
             	        var detailsContainer = Ext.create('Ext.container.Container',  {
             	            "xtype": "container",
             	            "anchor": "98%",
+            	            "autoScroll":"true",
             	            "items": [detailList]
             	        });
         	        	
@@ -169,54 +186,70 @@ Ext.define('tms.controller.BPMController', {
         }
     },
     
+    _viewTask:function(grid, record) {
+    	var tasViewWin = Ext.create('tms.view.bpm.TaskViewWindow');
+    	tasViewWin.width = Ext.getBody().getViewSize().width * 0.9;
+    	tasViewWin.height = Ext.getBody().getViewSize().height * 0.9;
+    	
+        var form = Ext.ComponentQuery.query('salesOrderViewForm')[0];
+        
+    	Ext.Ajax.request({
+        	url: tms.getContextPath() + '/api/formInstance/' + record.get("formInstanceId"),
+            method: 'GET',
+            success: function(result, request) {
+            	var json = Ext.decode(result.responseText);
+                var formInstance = Ext.create("tms.model.FormInstance",json);	                
+                form.loadRecord(formInstance);
+            }
+    	});
+        
+        var orders = Ext.ComponentQuery.query('salesOrderEditorList')[0];
+        if(grid.byme) {
+        	orders.metaChange();
+        }
+        orders.formInstanceId = record.get('formInstanceId');
+        orders.store.load({params:{
+        	formInstanceId: orders.formInstanceId
+	    }});
+        
+        var historicActivities = Ext.ComponentQuery.query('historicActivityList')[0];
+        
+    	historicActivities.store.load({params:{
+    		processInstanceId: record.get("processInstanceId")
+    		//销售不看流程详细处理流程
+    		//ignoreStep:grid.byme
+    	}});            	
+        
+        //发起人不能查看办理意见
+        if(!grid.byme) {
+            var mailMessages = Ext.ComponentQuery.query('mailMessageList')[0];
+            mailMessages.msgView.store.load({params:{
+            	resId: record.get('formInstanceId')
+    	    }});
+        }
+
+        tasViewWin.setTitle("查看流程："+record.get("title"));
+        tasViewWin.show();
+    },
+    
     viewTask:function (me, e, eOpts) {
         var grid = Ext.ComponentQuery.query('taskList')[0];
         var record = grid.getSelectionModel().getSelection()[0];
     	
         if(record) {
-        	var tasViewWin = Ext.create('tms.view.bpm.TaskViewWindow');
-        	tasViewWin.width = Ext.getBody().getViewSize().width * 0.9;
-        	tasViewWin.height = Ext.getBody().getViewSize().height * 0.9;
-        	
-            var form = Ext.ComponentQuery.query('salesOrderViewForm')[0];
+        	this._viewTask(grid,record);
             
-	    	Ext.Ajax.request({
-	        	url: tms.getContextPath() + '/api/formInstance/' + record.get("formInstanceId"),
-	            method: 'GET',
-	            success: function(result, request) {
-	            	var json = Ext.decode(result.responseText);
-	                var formInstance = Ext.create("tms.model.FormInstance",json);	                
-	                form.loadRecord(formInstance);
-	            }
-	    	});
-            
-            var orders = Ext.ComponentQuery.query('salesOrderEditorList')[0];
-            if(grid.byme) {
-            	orders.metaChange();
-            }
-            orders.formInstanceId = record.get('formInstanceId');
-            orders.store.load({params:{
-            	formInstanceId: orders.formInstanceId
-    	    }});
-            
-            var historicActivities = Ext.ComponentQuery.query('historicActivityList')[0];
-            
-        	historicActivities.store.load({params:{
-        		processInstanceId: record.get("processInstanceId")
-        		//销售不看流程详细处理流程
-        		//ignoreStep:grid.byme
-        	}});            	
-            
-            //发起人不能查看办理意见
-            if(!grid.byme) {
-	            var mailMessages = Ext.ComponentQuery.query('mailMessageList')[0];
-	            mailMessages.msgView.store.load({params:{
-	            	resId: record.get('formInstanceId')
-	    	    }});
-            }
-
-            tasViewWin.setTitle("查看流程："+record.get("title"));
-            tasViewWin.show();
+        } else {
+        	tms.notify("请在列表中选择一个要查看的任务");
+        }
+    },
+    
+    viewAdminTask:function (me, e, eOpts) {
+        var grid = Ext.ComponentQuery.query('processAdminList')[0];
+        var record = grid.getSelectionModel().getSelection()[0];
+    	
+        if(record) {
+        	this._viewTask(grid,record);
             
         } else {
         	tms.notify("请在列表中选择一个要查看的任务");
@@ -268,11 +301,21 @@ Ext.define('tms.controller.BPMController', {
     	}
     },
     
+    onAdminListItemClick : function (me, record, item, index, e, eOpts) {
+    	var viewButton = Ext.ComponentQuery.query('processAdminList button[action=view]')[0];
+    	viewButton.enable();
+    },
+    
+    onAdminListItemDblClick: function (me, record, item, index, e, eOpts) {
+    	//双击分类，弹出分类的修改窗口以及分类的规格
+    	if(record) {
+    		this._viewTask(record);
+    	}
+    },
+    
     onProcessAdminItemClick:function (me, record, item, index, e, eOpts) {
     	//选中分类，则显示该分类下的待办事项
     	if(record.data.leaf) {
-    		alert("test");
-    		
     		var procAdminGrid = Ext.ComponentQuery.query('processAdminList')[0];
     		procAdminGrid.store.clearFilter();
     		procAdminGrid.store.load({params:{
