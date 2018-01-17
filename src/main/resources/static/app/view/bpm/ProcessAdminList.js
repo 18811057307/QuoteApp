@@ -11,6 +11,8 @@ Ext.define('tms.view.bpm.ProcessAdminList', {
     alias:'widget.processAdminList',
     store:'ProcessInstanceStore',
     showBottomToolbar:false,
+    selType: 'checkboxmodel',
+    selModel:{mode:'MULTI'},
     columns:[
 		{width: 100,  header:'询价日期', dataIndex:'createDate', xtype:'datecolumn', format:'y年m月d日'}
 		,{width: 100,  header:'报价单号', dataIndex:'seqNumber'}
@@ -42,6 +44,12 @@ Ext.define('tms.view.bpm.ProcessAdminList', {
     		text: '流程详细信息',
     		action: 'view',
     		iconCls: 'add',
+    		disabled: true
+    	},{
+    		xtype: 'button',
+    		text: '导出选中',
+    		action: 'export',
+    		iconCls: 'save',
     		disabled: true
     	});
     	this.topToolbar.add('->');

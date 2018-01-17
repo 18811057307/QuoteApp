@@ -239,6 +239,7 @@ public class SalesOrderProcessService implements JavaDelegate {
 					} else {
 						tempMap = new ManualProductMap();
 						tempMap.setId(tempOrder.getAtProductCode());
+						tempMap.setAtProductName(tempOrder.getProductName());
 						tempMap.setAtProductQuote(tempOrder.getCostPrice());
 						tempMap.setUniQuote(tempOrder.getUnitPrice());
 						tempMap.setFactoryQuote(tempOrder.getFactoryPrice());

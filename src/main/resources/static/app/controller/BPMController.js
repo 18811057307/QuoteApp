@@ -85,6 +85,12 @@ Ext.define('tms.controller.BPMController', {
                     scope:this
                 }
             },
+            'taskList button[action=export]':{
+                click:{
+                    fn:this.exportTask,
+                    scope:this
+                }
+            },
             'salesOrderList button[action=delete]':{
                 click:{
                     fn:this.deleteSalesOrder,
@@ -94,6 +100,12 @@ Ext.define('tms.controller.BPMController', {
             'processAdminList button[action=view]':{
                 click:{
                     fn:this.viewAdminTask,
+                    scope:this
+                }
+            },
+            'processAdminList button[action=export]':{
+                click:{
+                    fn:this.exportOrders,
                     scope:this
                 }
             }
@@ -255,6 +267,41 @@ Ext.define('tms.controller.BPMController', {
         	tms.notify("请在列表中选择一个要查看的任务");
         }
     },
+    
+    exportTask:function (me, e, eOpts) {
+        var grid = Ext.ComponentQuery.query('taskList')[0];
+        var records = grid.getSelectionModel().getSelection();
+    	
+        this._export(records);
+
+    },
+    
+    exportOrders:function (me, e, eOpts) {
+        var grid = Ext.ComponentQuery.query('processAdminList')[0];
+        var records = grid.getSelectionModel().getSelection();
+    	
+        this._export(records);
+
+    },
+    
+    _export:function(records) {
+        if(records[0]) {
+        	var ids = new Array();
+        	Ext.each(records,function(item){
+        		ids.push(item.get("formInstanceId"));
+        	});
+        	tms.downloadFile({
+        		url: tms.getContextPath() + '/api/salesOrder/exportOrders',
+	            method: 'POST',
+	            params: {
+	            	formInstanceIds:ids
+	            },
+        	});
+            
+        } else {
+        	tms.notify("请在列表选择要导出的询价单。");
+        }
+    },
 
     onItemClick:function (me, record, item, index, e, eOpts) {
     	//选中分类，则显示该分类下的待办事项
@@ -304,6 +351,9 @@ Ext.define('tms.controller.BPMController', {
     onAdminListItemClick : function (me, record, item, index, e, eOpts) {
     	var viewButton = Ext.ComponentQuery.query('processAdminList button[action=view]')[0];
     	viewButton.enable();
+    	
+    	var exportButton = Ext.ComponentQuery.query('processAdminList button[action=export]')[0];
+    	exportButton.enable();
     },
     
     onAdminListItemDblClick: function (me, record, item, index, e, eOpts) {

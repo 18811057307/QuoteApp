@@ -1,6 +1,32 @@
 Ext.define('tms', {
     singleton:true,
     contextPath:'',
+    downloadFile: function(config){
+        config = config || {};
+        var url = config.url,
+            method = config.method || 'POST',// Either GET or POST. Default is POST.
+            params = config.params || {};
+
+        // Create form panel. It contains a basic form that we need for the file download.
+        var form = Ext.create('Ext.form.Panel', {
+            standardSubmit: true,
+            url: url,
+            method: method
+        });
+
+        // Call the submit to begin the file download.
+        form.submit({
+            target: '_blank', // Avoids leaving the page. 
+            params: params
+        });
+
+        // Clean-up the form after 100 milliseconds.
+        // Once the submit is called, the browser does not care anymore with the form object.
+        Ext.defer(function(){
+            form.close();
+        }, 100);
+
+    },
     notify:function (msg, title, level) {
         //info,warning,error,success
         if (!level) {

@@ -12,6 +12,7 @@ import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -30,7 +31,14 @@ import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.xssf.usermodel.XSSFCellStyle;
+import org.apache.poi.xssf.usermodel.XSSFFont;
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,16 +60,19 @@ import org.springframework.web.multipart.MultipartFile;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sadetec.model.FormInstance;
 import com.sadetec.model.MailMessage;
 import com.sadetec.model.SalesOrder;
 import com.sadetec.model.SysUser;
 import com.sadetec.repository.CategoryRepository;
+import com.sadetec.repository.FormInstanceRepository;
 import com.sadetec.repository.MailMessageRepository;
 import com.sadetec.repository.SalesOrderRepository;
 import com.sadetec.repository.SysUserRepository;
 import com.sadetec.rest.support.PageResponse;
 import com.sadetec.service.StorageException;
 import com.sadetec.service.StorageService;
+import com.sadetec.util.DateUtil;
 import com.sadetec.util.ExcelImportUtils;
 import com.sadetec.util.UserContext;
 import com.sadetec.util.WorkbookProperties;
@@ -74,6 +85,9 @@ public class SalesOrderResource {
 
 	@Autowired
 	private SalesOrderRepository salesOrderRepository;
+
+	@Autowired
+	private FormInstanceRepository formInstanceRepository;
 
 	@Autowired
 	private StorageService storageService;
@@ -197,6 +211,117 @@ public class SalesOrderResource {
 		
 		return new ResponseEntity<Resource>(fileResource, respHeaders, HttpStatus.OK);
 	}
+	
+	@RequestMapping(value = "/exportOrders", method = POST)
+	@ResponseBody
+	public ResponseEntity<Resource> exportOrders(@RequestParam(value = "formInstanceIds", required = true) Integer[] formInstanceIds) throws IOException {
+		
+		XSSFWorkbook salesOrderExcel = new XSSFWorkbook();
+		XSSFSheet productSheet = salesOrderExcel.createSheet("报价单");
+		
+		XSSFCellStyle style = salesOrderExcel.createCellStyle();
+        XSSFFont font = salesOrderExcel.createFont();
+        font.setFontName("微软雅黑");
+        font.setBold(true);
+        style.setFont(font);
+        
+		// create header row， 报价单号	询价时间	营业人员	联系方式	客户名称	
+        XSSFRow header = productSheet.createRow(0);
+        header.createCell(0).setCellValue("报价单号");
+        header.getCell(0).setCellStyle(style);
+        header.createCell(1).setCellValue("询价时间");
+        header.getCell(1).setCellStyle(style);
+        header.createCell(2).setCellValue("营业人员");
+        header.getCell(2).setCellStyle(style);
+        header.createCell(3).setCellValue("联系方式");
+        header.getCell(3).setCellStyle(style);
+        header.createCell(4).setCellValue("客户名称");
+        header.getCell(4).setCellStyle(style);
+        
+        //产品名称	询价型号	报价型号	数量	单位	统一价  总价	货期	报价有效期	备注
+        header.createCell(5).setCellValue("产品名称");
+        header.getCell(5).setCellStyle(style);
+        header.createCell(6).setCellValue("询价型号");
+        header.getCell(6).setCellStyle(style);
+        header.createCell(7).setCellValue("报价型号");
+		header.getCell(7).setCellStyle(style);
+		header.createCell(8).setCellValue("数量");
+		header.getCell(8).setCellStyle(style);
+		header.createCell(9).setCellValue("单位");
+		header.getCell(9).setCellStyle(style);
+		header.createCell(10).setCellValue("统一价");
+		header.getCell(10).setCellStyle(style);
+		header.createCell(11).setCellValue("总价");
+		header.getCell(11).setCellStyle(style);
+		header.createCell(12).setCellValue("货期");
+		header.getCell(12).setCellStyle(style);
+		header.createCell(13).setCellValue("报价有效期");
+		header.getCell(13).setCellStyle(style);
+		header.createCell(14).setCellValue("备注");
+		header.getCell(14).setCellStyle(style);
+				
+		int firstRow = 1;
+		int rowCount = 1;
+		String title = "";
+		for (Integer formInstanceId : formInstanceIds) {
+			FormInstance formInstance = formInstanceRepository.findOne(formInstanceId);
+			if(null == formInstance) {
+				break;
+			}
+			title = formInstance.getTitle();
+			log.info("{}导出询价单产品信息.", title);
+			
+			List<Object[]> salesOrders = salesOrderRepository.findSalesOrderWithStock(formInstance.getId());
+
+			for (Object[] order : salesOrders) {
+				XSSFRow aRow = productSheet.createRow(rowCount++);
+				aRow.createCell(0).setCellValue(formInstance.getSeqNumber());
+				aRow.createCell(1).setCellValue(DateUtil.toString(formInstance.getCreateDate()));
+				aRow.createCell(2).setCellValue(formInstance.getSales());
+				aRow.createCell(3).setCellValue(formInstance.getMobile());
+				aRow.createCell(4).setCellValue(formInstance.getTitle());
+				
+				aRow.createCell(5).setCellValue(order[0] != null ? order[0].toString() : "");
+				aRow.createCell(6).setCellValue(order[1] != null ? order[1].toString() : "");
+				aRow.createCell(7).setCellValue(order[2] != null ? order[2].toString() : "");
+				aRow.createCell(8).setCellValue(order[3] != null ? order[3].toString() : "");
+				aRow.createCell(9).setCellValue(order[4] != null ? order[4].toString() : "");
+				aRow.createCell(10).setCellValue(order[5] != null ? order[5].toString() : "");
+				aRow.createCell(11).setCellValue(order[6] != null ? order[6].toString() : "");
+				aRow.createCell(12).setCellValue(order[7] != null ? order[7].toString() : "");
+				aRow.createCell(13).setCellValue(order[8] != null ? order[8].toString() : "");
+				aRow.createCell(14).setCellValue(order[9] != null ? order[9].toString() : "");
+			}
+			
+			if(salesOrders.size() > 1) {
+				productSheet.addMergedRegion(new CellRangeAddress(firstRow, rowCount-1, 0, 0));//合并单元格  
+				productSheet.addMergedRegion(new CellRangeAddress(firstRow, rowCount-1, 1, 1));//合并单元格 
+				productSheet.addMergedRegion(new CellRangeAddress(firstRow, rowCount-1, 2, 2));//合并单元格 
+				productSheet.addMergedRegion(new CellRangeAddress(firstRow, rowCount-1, 3, 3));//合并单元格 
+				productSheet.addMergedRegion(new CellRangeAddress(firstRow, rowCount-1, 4, 4));//合并单元格 
+			}
+			firstRow = rowCount;
+		}
+		
+		
+		
+		DateTimeFormatter format = DateTimeFormat.forPattern("yyyyMMddHHmmss");
+		
+		String fileName = format.print(new Date().getTime()) + ".xlsx";
+		
+		OutputStream os = storageService.openOutPutStream(fileName);
+		salesOrderExcel.write(os);
+		salesOrderExcel.close();
+		os.close();
+		
+		HttpHeaders respHeaders = new HttpHeaders();
+		respHeaders.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+		respHeaders.set("Content-Disposition", "attachment; filename="+fileName);
+		Resource fileResource = storageService.loadAsResource(fileName);
+		
+		return new ResponseEntity<Resource>(fileResource, respHeaders, HttpStatus.OK);
+	}
+	
 	/**
 	 * Create a new SalesOrder.
 	 */

@@ -11,6 +11,8 @@ Ext.define('tms.view.bpm.List', {
     alias:'widget.taskList',
     store:'TaskStore',
     showBottomToolbar:false,
+    selType: 'checkboxmodel',
+    selModel:{mode:'MULTI'},
     columns:[
 		{width: 50,  header:i18n.t('task_name'), sortable:true, dataIndex:'name'}
 		,{width: 100,  header:i18n.t('task_title'), dataIndex:'title'}
@@ -42,6 +44,12 @@ Ext.define('tms.view.bpm.List', {
                     action: 'view',
                     iconCls: 'add',
                     disabled: true
+                },
+                {
+                    xtype: 'button',
+                    text: '导出询价单',
+                    action: 'export',
+                    iconCls: 'save'
                 }]
         });
         this.dockedItems.push(this.topToolbar);
