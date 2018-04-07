@@ -48,7 +48,7 @@ public class IndexController {
 			shortcuts.add(new Shortcut("报价历史", "quotelog-shortcut", "quotationLog-win"));
 			shortcuts.add(new Shortcut("产品对照管理", "manualmap-shortcut", "manualProductMap-win"));
 			shortcuts.add(new Shortcut("产品系列管理", "category-shortcut", "category-win"));
-			shortcuts.add(new Shortcut("供应商管理", "resPartner-shortcut", "resPartner-win"));
+			shortcuts.add(new Shortcut("客户与供应商管理", "resPartner-shortcut", "resPartner-win"));
 
 			shortcuts.add(new Shortcut("用户管理", "users-shortcut", "sysUser-win"));
 			shortcuts.add(new Shortcut("角色管理", "role-shortcut", "sysRole-win"));

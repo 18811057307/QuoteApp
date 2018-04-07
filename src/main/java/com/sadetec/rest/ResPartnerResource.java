@@ -13,6 +13,7 @@ import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -91,12 +92,21 @@ public class ResPartnerResource {
 	public ResponseEntity<PageResponse<ResPartner>> findPage(@RequestParam(value = "page", required = false, defaultValue = "1") Integer page,
 			@RequestParam(value = "start", required = false) Integer start, @RequestParam(value = "limit", required = false, defaultValue = "25") Integer limit,
 			@RequestParam(value = "filter", required = false) String filter, @RequestParam(value = "sort", required = false) String sort,
-			@RequestParam(value = "resId", required = false) Integer resId) throws URISyntaxException {
-
-		Page<ResPartner> result  = resPartnerRepository.findAll(new PageRequest(page - 1, limit));
-		PageResponse<ResPartner> pageResponse = new PageResponse<ResPartner>(result.getContent());
+			@RequestParam(value = "resId", required = false) Integer resId,
+			@RequestParam(value = "partnerType", required = false) String partnerType) throws URISyntaxException {
+		
+		
+		Page<ResPartner> result = null;
+		if("Customer".equals(partnerType)) {
+			result = resPartnerRepository.findByIsCustomerIsTrue(new PageRequest(page - 1, limit));
+		}
+		if("Supplier".equals(partnerType)) {
+			result = resPartnerRepository.findByIsSupplierIsTrue(new PageRequest(page - 1, limit));
+		}
+		
+		PageResponse<ResPartner> pageResponse = new PageResponse<ResPartner>(result == null ? Collections.emptyList(): result.getContent());
 		pageResponse.setSuccess(Boolean.TRUE);
-		pageResponse.setTotal(result.getTotalElements());
+		pageResponse.setTotal(result == null ? 0 : result.getTotalElements());
 
 		return new ResponseEntity<PageResponse<ResPartner>>(pageResponse, HttpStatus.OK);
 

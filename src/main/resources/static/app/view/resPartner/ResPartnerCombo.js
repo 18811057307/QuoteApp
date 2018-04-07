@@ -6,10 +6,14 @@ Ext.define('tms.view.resPartner.ResPartnerCombo', {
     valueField: 'name',
     queryMode: 'local',
     forceSelection:false,
-    editable:false,
+    createNewOnEnter:true,
+    editable:true,
+    typeAhead: true,
     initComponent: function() {
         this.store = Ext.create('tms.store.ResPartnerStore');
-        this.store.load();
+        this.store.load({params:{
+        	partnerType: this.partnerType
+	    }});
         this.callParent(arguments);
     }
 });

@@ -20,8 +20,11 @@ Ext.define('tms.module.ResPartnerModule', {
                 iconCls:'icon-resPartner',
                 animCollapse:false,
                 constrainHeader:true,
-                layout:'fit',
-                items:[{xtype:'resPartnerList'}]
+                layout:'border',
+                items:[
+                	{xtype:'resPartnerList',region:'center'}
+                	,{xtype:'resPartnerNav', split:true, width: 300,collapsible: true,region: 'west'}
+                	]
             });
         }
         return win;

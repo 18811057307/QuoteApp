@@ -25,12 +25,13 @@ Ext.define('tms.view.resPartner.Form', {
                     border:false,
                     unstyled:true,
                     items:[
+                    		{xtype:'textfield',name:'displayName',fieldLabel: i18n.t('resPartner_display_name'), anchor:'95%'}
                     		,{xtype:'textfield',name:'website',fieldLabel: i18n.t('resPartner_website'), anchor:'95%'}
                             ,{xtype:'textfield',name:'email',fieldLabel: i18n.t('resPartner_email'), anchor:'95%'}
                             ,{xtype:'textfield',name:'mobile',fieldLabel: i18n.t('resPartner_mobile'), anchor:'95%'}
                             ,{xtype:'textfield',name:'phone',fieldLabel: i18n.t('resPartner_phone'), anchor:'95%'}
                             ,{xtype:'textfield',name:'fax',fieldLabel: i18n.t('resPartner_fax'), anchor:'95%'}
-                            ,{xtype:'datefield',name:'createDate',fieldLabel: i18n.t('resPartner_create_date'), anchor:'95%'}
+                            //,{xtype:'datefield',name:'createDate',fieldLabel: i18n.t('resPartner_create_date'), anchor:'95%'}
                         ]
         }
         ]

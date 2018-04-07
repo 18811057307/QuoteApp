@@ -12,6 +12,7 @@ import static javax.persistence.GenerationType.IDENTITY;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.logging.Logger;
 
 import javax.persistence.Column;
@@ -19,11 +20,14 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 import javax.validation.constraints.Digits;
 import javax.validation.constraints.Size;
 
 import org.hibernate.validator.constraints.Email;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
@@ -44,7 +48,10 @@ public class ResPartner implements Serializable {
     private String website;
     private String email;
     private String job;
-    private LocalDateTime createDate;
+    
+	@Temporal(TemporalType.TIMESTAMP)
+	@DateTimeFormat(style = "S-")
+    private Date createDate;
     private Integer color;
     private Boolean active;
     private Boolean isSupplier;
@@ -254,15 +261,15 @@ public class ResPartner implements Serializable {
      * 创建日期
      */
     @Column(name = "create_date", length = 19)
-    public LocalDateTime getCreateDate() {
+    public Date getCreateDate() {
         return createDate;
     }
 
-    public void setCreateDate(LocalDateTime createDate) {
+    public void setCreateDate(Date createDate) {
         this.createDate = createDate;
     }
 
-    public ResPartner createDate(LocalDateTime createDate) {
+    public ResPartner createDate(Date createDate) {
         setCreateDate(createDate);
         return this;
     }
@@ -290,7 +297,7 @@ public class ResPartner implements Serializable {
     /**
      * 活动
      */
-    @Column(name = "active", length = 0)
+    @Column(name = "active", length = 1)
     public Boolean getActive() {
         return active;
     }
@@ -308,7 +315,7 @@ public class ResPartner implements Serializable {
     /**
      * 供应商
      */
-    @Column(name = "is_supplier", length = 0)
+    @Column(name = "is_supplier", length = 1)
     public Boolean getIsSupplier() {
         return isSupplier;
     }
@@ -326,7 +333,7 @@ public class ResPartner implements Serializable {
     /**
      * 公司
      */
-    @Column(name = "is_company", length = 0)
+    @Column(name = "is_company", length = 1)
     public Boolean getIsCompany() {
         return isCompany;
     }
@@ -344,7 +351,7 @@ public class ResPartner implements Serializable {
     /**
      * 员工
      */
-    @Column(name = "is_employee", length = 0)
+    @Column(name = "is_employee", length = 1)
     public Boolean getIsEmployee() {
         return isEmployee;
     }
@@ -362,7 +369,7 @@ public class ResPartner implements Serializable {
     /**
      * 客户
      */
-    @Column(name = "is_customer", length = 0)
+    @Column(name = "is_customer", length = 1)
     public Boolean getIsCustomer() {
         return isCustomer;
     }

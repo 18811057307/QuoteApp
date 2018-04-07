@@ -330,6 +330,9 @@ div.ux-taskbar div.x-toolbar {
 .resPartner-icon ,.icon-resPartner{
     background-image: url(../../images/shortcut/partner_16.png) !important;
 }
+.resCustomer-icon ,.icon-resCustomer{
+    background-image: url(../../images/shortcut/customer_16.png) !important;
+}
 
 .stockQuant-shortcut {
     background-image: url(../../images/shortcut/warehouse_48.png) !important;

@@ -14,7 +14,7 @@ Ext.define('tms.view.bpm.SalesOrderTaskForm', {
                 items: [                        
                 {xtype:'hidden',name:'id',fieldLabel: i18n.t('formInstance_id'), anchor:'95%'}
                 ,{xtype:'hidden',name:'processInstanceId',fieldLabel: i18n.t('formInstance_process_instance_id'), anchor:'95%'}
-                ,{xtype:'textfield',name:'title',fieldLabel: '客户名称', anchor:'95%'}
+                ,{"xtype": "resPartnerCombo","partnerType":"Customer",name:'title',fieldLabel: '客户名称', anchor:'95%'}
                 ,{xtype:'userCombo',name:'drafterId',fieldLabel: '内勤', editorable:'false', anchor:'95%'}
                 ]
             },{

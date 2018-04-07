@@ -38,7 +38,8 @@ Ext.define('tms.view.bpm.SalesOrderProcessForm', {
                 	}
                 }}
             ,{
-                xtype: 'textfield',
+                "xtype": "resPartnerCombo",
+                "partnerType":"Customer",
                 name: 'title',
                 allowBlank: false,
                 fieldLabel: '客户名称',

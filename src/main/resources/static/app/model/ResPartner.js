@@ -11,7 +11,7 @@ Ext.define('tms.model.ResPartner', {
     		,{name:'website', type:'string'}
     		,{name:'email', type:'string'}
     		,{name:'job', type:'string'}
-    		,{name:'createDate', type:'date'}
+    		,{name:'createDate', type:'date', dateFormat: 'time'}
     		,{name:'color', type:'string'}
     		,{name:'active', type:'string'}
     		,{name:'isSupplier', type:'string'}

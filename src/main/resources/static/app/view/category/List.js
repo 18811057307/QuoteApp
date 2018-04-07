@@ -33,7 +33,7 @@ Ext.define('tms.view.category.List', {
             {
                 dataIndex: 'quoterName',
                 flex: 0.5,
-                header: '采购员'
+                header: '产品技术'
             },
             {
                 dataIndex: 'auditorName',

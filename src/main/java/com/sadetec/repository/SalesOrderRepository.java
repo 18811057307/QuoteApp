@@ -66,4 +66,7 @@ public interface SalesOrderRepository extends JpaRepository<SalesOrder, Integer>
 
 	@Query(value="SELECT * FROM SALES_ORDER WHERE  FORM_INSTANCE_ID = ?1 AND (AUDITOR_ID != ?2 OR AUDITOR_ID IS NULL) AND CATEGORY_NAME IN (SELECT CATEGORY_NAME FROM CATEGORY WHERE AUDITOR_ID = ?2)", nativeQuery = true)
 	List<SalesOrder> findByCategoryName(Integer formInstanceId, String username);
+	
+	@Query(value="SELECT * FROM SALES_ORDER WHERE PROCESS_TYPE=?3 AND FORM_INSTANCE_ID = ?1 AND (AUDITOR_ID != ?2 OR AUDITOR_ID IS NULL) AND CATEGORY_NAME IN (SELECT CATEGORY_NAME FROM CATEGORY WHERE AUDITOR_ID = ?2)", nativeQuery = true)
+	List<SalesOrder> findByCategoryNameAndProcessType(Integer formInstanceId, String username, String processType);
 }

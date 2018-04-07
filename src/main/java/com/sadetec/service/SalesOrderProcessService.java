@@ -20,8 +20,12 @@ import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.camunda.bpm.engine.HistoryService;
+import org.camunda.bpm.engine.TaskService;
 import org.camunda.bpm.engine.delegate.DelegateExecution;
 import org.camunda.bpm.engine.delegate.JavaDelegate;
+import org.camunda.bpm.engine.history.HistoricTaskInstance;
+import org.camunda.bpm.engine.task.Task;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
@@ -79,6 +83,12 @@ public class SalesOrderProcessService implements JavaDelegate {
 	@Autowired
 	private JavaMailSender javaMailSender;
 	
+	@Autowired
+	private TaskService taskService;
+	
+	@Autowired
+	private HistoryService historyService;
+	
 	@Override
 	public void execute(DelegateExecution execution) throws Exception {
 		log.info("当前活动ID:{}", execution.getCurrentActivityId());
@@ -129,6 +139,15 @@ public class SalesOrderProcessService implements JavaDelegate {
 				if (null != productMap && null != productMap.getUniQuote() && (productMap.getUniQuote().compareTo(BigDecimal.ZERO) == 1)) {
 					salesOrder.setProcessType("自动报价");
 					salesOrder.setUnitPrice(productMap.getUniQuote());
+					
+					if(null != productMap.getAtProductQuote() && productMap.getAtProductQuote().compareTo(BigDecimal.ZERO) == 1) {
+						salesOrder.setCostPrice(productMap.getAtProductQuote());
+					}
+					
+					if(null != productMap.getFactoryQuote() && productMap.getFactoryQuote().compareTo(BigDecimal.ZERO) == 1) {
+						salesOrder.setFactoryPrice(productMap.getFactoryQuote());
+					}
+					
 					salesOrder.setNeedProc(false);
 				}
 
@@ -154,6 +173,10 @@ public class SalesOrderProcessService implements JavaDelegate {
 						}
 						salesOrder.setNeedProc(true);
 					}
+				} else {
+					//如果没有找到分类，需要进行手工分配
+					salesOrder.setNeedProc(true);
+					needManualAllocation = true;
 				}
 				
 				//查询更新库存信息
@@ -179,7 +202,8 @@ public class SalesOrderProcessService implements JavaDelegate {
 			List<SalesOrder> doneOrder = salesOrderRepository.findByFormInstanceIdAndQuoterId(Integer.parseInt(businessKey),priceInquiryAssignee);
 			if(doneOrder.size() > 0) {
 				
-				//设置出厂价以及统一价
+				//设置出厂价以及统一价,暂时取消,TODO 确认价格的关系
+				/**
 				for (SalesOrder salesOrder : doneOrder) {
 					String catagoryName = salesOrder.getCategoryName();
 					Category category = categoryRepository.getByCategoryName(catagoryName);
@@ -191,7 +215,7 @@ public class SalesOrderProcessService implements JavaDelegate {
 						salesOrder.setUnitPrice(salesOrder.getFactoryPrice().multiply(unitRatio).setScale(4, BigDecimal.ROUND_HALF_UP));
 						salesOrderRepository.save(salesOrder);
 					}
-				}
+				}**/
 				
 				execution.setVariable("priceAuditor", doneOrder.get(0).getAuditorId());
 			}
@@ -205,7 +229,14 @@ public class SalesOrderProcessService implements JavaDelegate {
 
 			Boolean isPass = false;
 			
-			List<SalesOrder> needProcOrders = salesOrderRepository.findByFormInstanceIdAndAuditorIdAndNeedProc(Integer.parseInt(businessKey), priceAuditorAssignee, true);
+			List<HistoricTaskInstance> preTasks = historyService.createHistoricTaskInstanceQuery()
+							.executionId(execution.getId())
+							.taskDefinitionKey("price_inquiry").orderByTaskId().desc().list();
+			HistoricTaskInstance preTask = preTasks.get(0);
+			log.info("preTask's assignee:{}",preTask.getAssignee());
+			
+			//审批当前子流程产品技术报价的，以及自动报价中属于当前审核员的
+			List<SalesOrder> needProcOrders = salesOrderRepository.findByFormInstanceIdAndQuoterIdAndNeedProc(Integer.parseInt(businessKey), preTask.getAssignee(),true);
 
 			//设置报价完成日期和报价单号
 			formInstance.setLastModified(new Date());

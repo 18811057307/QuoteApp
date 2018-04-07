@@ -76,7 +76,8 @@ Ext.define('tms.view.salesOrder.AuditList', {
     			me.store.load({
     	    		params:{
     	    			formInstanceId: me.formInstanceId,
-    	    			taskDefinitionKey: me.taskDefinitionKey
+    	    			taskDefinitionKey: me.taskDefinitionKey,
+    	    			taskId:me.taskId
     	    		},
     	    	    scope: this
     	    	});
@@ -98,7 +99,7 @@ Ext.define('tms.view.salesOrder.AuditList', {
   	   				 return "<a href='" + tms.getContextPath() + "api/salesOrder/drawingDownload?salesOrderId=" + record.get("id") + "'>下载</a>";
   	   			 } 		     
   	        }}    		
-    		,{width: 30,  header:'供应商', dataIndex:'supplierName',editor: {xtype: 'resPartnerCombo'}} 
+    		,{width: 30,  header:'供应商', dataIndex:'supplierName',editor: {xtype: 'resPartnerCombo',partnerType:'Supplier'}} 
     		,{width: 30,  header:'单位', sortable:true, dataIndex:'unit'}
     		,{width: 30,  header:i18n.t('salesOrder_amount'), sortable:true, dataIndex:'amount',editor: {xtype: 'textfield'}}
     		,{width: 30,  header:'成本价', sortable:true, dataIndex:'costPrice',editor: {xtype: 'numberfield'}}

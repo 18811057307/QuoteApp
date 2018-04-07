@@ -37,6 +37,13 @@ import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.camunda.bpm.engine.HistoryService;
+import org.camunda.bpm.engine.RuntimeService;
+import org.camunda.bpm.engine.TaskService;
+import org.camunda.bpm.engine.history.HistoricTaskInstance;
+import org.camunda.bpm.engine.runtime.Execution;
+import org.camunda.bpm.engine.runtime.VariableInstance;
+import org.camunda.bpm.engine.task.Task;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
@@ -106,6 +113,15 @@ public class SalesOrderResource {
 
 	@Autowired
 	private CategoryRepository categoryRepository;
+	
+	@Autowired
+	private RuntimeService runtimeService;
+	
+	@Autowired
+	private TaskService taskService;
+	
+	@Autowired
+	private HistoryService historyService;
 
 	/**
 	 * 上传销售订单，将订单中的产品信息进行预处理
@@ -368,7 +384,19 @@ public class SalesOrderResource {
 				List<SalesOrder> temps = objectMapper.convertValue(tempNode, typeRef);
 				for (Iterator<SalesOrder> ketIter = temps.iterator(); ketIter.hasNext();) {
 					SalesOrder tempObj = ketIter.next();
-
+					
+					if(StringUtils.isNotEmpty(tempObj.getQuoterId()) && StringUtils.isEmpty(tempObj.getQuoterName())) {
+						SysUser user = sysUserRepository.getByLoginName(tempObj.getQuoterId());
+						if(null != user) {
+							tempObj.setQuoterName(user.getName());
+						}
+					}
+					if(StringUtils.isNotEmpty(tempObj.getAuditorId()) && StringUtils.isEmpty(tempObj.getAuditorName())) {
+						SysUser user = sysUserRepository.getByLoginName(tempObj.getAuditorId());
+						if(null != user) {
+							tempObj.setAuditorName(user.getName());
+						}
+					}
 					//recordChangeSummary(tempObj); TODO 更好的方法设置权限
 
 					salesOrderRepository.save(tempObj);
@@ -377,6 +405,18 @@ public class SalesOrderResource {
 			else {
 				SalesOrder tempObj = objectMapper.convertValue(tempNode, SalesOrder.class);
 				//recordChangeSummary(tempObj);
+				if(StringUtils.isNotEmpty(tempObj.getQuoterId()) && StringUtils.isEmpty(tempObj.getQuoterName())) {
+					SysUser user = sysUserRepository.getByLoginName(tempObj.getQuoterId());
+					if(null != user) {
+						tempObj.setQuoterName(user.getName());
+					}
+				}
+				if(StringUtils.isNotEmpty(tempObj.getAuditorId()) && StringUtils.isEmpty(tempObj.getAuditorName())) {
+					SysUser user = sysUserRepository.getByLoginName(tempObj.getAuditorId());
+					if(null != user) {
+						tempObj.setAuditorName(user.getName());
+					}
+				}
 				salesOrderRepository.save(tempObj);
 			}
 
@@ -474,7 +514,8 @@ public class SalesOrderResource {
 	@RequestMapping(value = "/page", method = GET, produces = APPLICATION_JSON_VALUE)
 	public ResponseEntity<PageResponse<SalesOrder>> findPage(
 			@RequestParam(value = "formInstanceId", required = true) Integer formInstanceId
-			,@RequestParam(value = "taskDefinitionKey", required = false) String taskDefinitionKey)
+			,@RequestParam(value = "taskDefinitionKey", required = false) String taskDefinitionKey
+			,@RequestParam(value = "taskId", required = false) String taskId)
 			throws URISyntaxException {
 		List<SalesOrder> results = new ArrayList<>();
 		
@@ -494,8 +535,19 @@ public class SalesOrderResource {
 		
 		//如果是审核环节,则至获取当前用户被分配的,以及所有大类的
 		if("price_audit".equals(taskDefinitionKey)) {
-			results.addAll(salesOrderRepository.findByFormInstanceIdAndAuditorId(formInstanceId, UserContext.getUsername()));
-			results.addAll(salesOrderRepository.findByCategoryName(formInstanceId, UserContext.getUsername()));
+			//String priceInquiryAssignee = execution.getVariable("participant").toString();
+			Task curTask = taskService.createTaskQuery().taskId(taskId).singleResult();
+			log.info("curTask's ExecutionId:{}",curTask.getExecutionId());
+			
+			List<HistoricTaskInstance> preTasks = historyService.createHistoricTaskInstanceQuery()
+							.executionId(curTask.getExecutionId())
+							.taskDefinitionKey("price_inquiry").orderByTaskId().desc().list();
+			HistoricTaskInstance preTask = preTasks.get(0);
+			log.info("preTask's assignee:{}",preTask.getAssignee());
+			
+			//审批当前子流程产品技术报价的，以及自动报价中属于当前审核员的
+			results.addAll(salesOrderRepository.findByFormInstanceIdAndQuoterId(formInstanceId, preTask.getAssignee()));
+			results.addAll(salesOrderRepository.findByCategoryNameAndProcessType(formInstanceId, UserContext.getUsername(),"自动报价"));
 		}
 		
 		//最后跟踪下单状态，获取所有产品信息

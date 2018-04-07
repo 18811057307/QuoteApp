@@ -13,6 +13,7 @@ import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.sadetec.model.ResPartner;
@@ -30,4 +31,7 @@ public interface ResPartnerRepository extends JpaRepository<ResPartner, Integer>
         Page<ResPartner> page = findAll(Example.of(probe, matcher), new PageRequest(0, maxResults));
         return page.getContent();
     }
+
+	Page<ResPartner> findByIsCustomerIsTrue(Pageable pageRequest);
+	Page<ResPartner> findByIsSupplierIsTrue(Pageable pageRequest);
 }

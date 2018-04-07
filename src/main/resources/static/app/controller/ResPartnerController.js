@@ -2,9 +2,15 @@ Ext.define('tms.controller.ResPartnerController', {
     extend:'Ext.app.Controller',
     stores:['tms.store.ResPartnerStore'],
     models:['tms.model.ResPartner'],
-    views:['tms.view.resPartner.List'],
+    views:['tms.view.resPartner.List','tms.view.resPartner.Nav'],
     init:function (application) {
         this.control({
+            'resPartnerNav':{
+                itemclick:{
+                    fn:this.onResPartnerItemClick,
+                    scope:this
+                }
+            },
             'resPartnerList':{
                 selectionchange:{
                     fn:this.onGridSelectionChange,
@@ -54,7 +60,26 @@ Ext.define('tms.controller.ResPartnerController', {
         });
         this._getStore().load();
     },
-
+    onResPartnerItemClick:function (me, record, item, index, e, eOpts) {
+    	//选中分类，则显示该分类下的客户或合作伙伴
+    	if(record.raw.partnerType) {
+    		var partnerGrid = Ext.ComponentQuery.query('resPartnerList')[0];
+    		partnerGrid.partnerType=record.raw.partnerType;
+    		partnerGrid.store.clearFilter();
+    		partnerGrid.store.remoteFilter = true;
+            if (!partnerGrid.store.proxy.hasOwnProperty('filterParam')) {
+            	partnerGrid.store.proxy.filterParam = 'partnerType';
+            }
+            partnerGrid.store.proxy.encodeFilters = function(filters) {
+                return filters[0].value;
+            }
+    		partnerGrid.store.filter({
+                property: 'partnerType',
+                value: record.raw.partnerType
+            });
+    		
+    	}
+    },
     onGridSelectionChange:function (me, e, eOpts) {
         var editButton = Ext.ComponentQuery.query('resPartnerList button[action=update]')[0];
         var deleteButton = Ext.ComponentQuery.query('resPartnerList button[action=delete]')[0];
@@ -67,6 +92,20 @@ Ext.define('tms.controller.ResPartnerController', {
 
     onAdd:function (me, e, eOpts) {
         var record = Ext.create('tms.model.ResPartner');
+        
+        var partnerGrid = Ext.ComponentQuery.query('resPartnerList')[0];
+		if(!partnerGrid.partnerType){
+			Ext.Msg.alert(i18n.t('Failure!'), '请先在左侧选择要添加的是客户还是供应商.');
+			return;
+		}
+		
+		if("Customer" == partnerGrid.partnerType) {
+			record.set("isCustomer","true");
+		}
+		if("Supplier" == partnerGrid.partnerType) {
+			record.set("isSupplier","true");
+		}
+		
         this._openUpdateWin(record);
     },
     onEdit:function (me, e, eOpts) {

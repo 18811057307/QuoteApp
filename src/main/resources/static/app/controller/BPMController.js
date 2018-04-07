@@ -150,7 +150,7 @@ Ext.define('tms.controller.BPMController', {
         	        var result = Ext.decode(response.responseText);
         	        var metaData = Ext.decode(result.metadata);
         	        if(metaData.hasDetail) {
-        	        	Ext.apply(metaData.detailConfig,{formInstanceId:record.get('formInstanceId'),taskDefinitionKey:record.get('taskDefinitionKey')})
+        	        	Ext.apply(metaData.detailConfig,{taskId: record.get("id"), formInstanceId:record.get('formInstanceId'),taskDefinitionKey:record.get('taskDefinitionKey')})
         	        	var detailList = Ext.create(metaData.detailType,metaData.detailConfig);
             	        var detailsContainer = Ext.create('Ext.container.Container',  {
             	            "xtype": "container",
