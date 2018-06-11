@@ -304,26 +304,28 @@ public class SalesOrderProcessService implements JavaDelegate {
 	        header.getCell(4).setCellStyle(style);
 	        
 	        //产品名称	询价型号	报价型号	数量	单位	统一价  总价	货期	报价有效期	备注
-	        header.createCell(5).setCellValue("产品名称");
-	        header.getCell(5).setCellStyle(style);
-	        header.createCell(6).setCellValue("询价型号");
+	        header.createCell(5).setCellValue("供应商");
+	        header.getCell(5).setCellStyle(style);	        
+	        header.createCell(6).setCellValue("产品名称");
 	        header.getCell(6).setCellStyle(style);
-	        header.createCell(7).setCellValue("报价型号");
-			header.getCell(7).setCellStyle(style);
-			header.createCell(8).setCellValue("数量");
+	        header.createCell(7).setCellValue("询价型号");
+	        header.getCell(7).setCellStyle(style);
+	        header.createCell(8).setCellValue("报价型号");
 			header.getCell(8).setCellStyle(style);
-			header.createCell(9).setCellValue("单位");
+			header.createCell(9).setCellValue("数量");
 			header.getCell(9).setCellStyle(style);
-			header.createCell(10).setCellValue("统一价");
+			header.createCell(10).setCellValue("单位");
 			header.getCell(10).setCellStyle(style);
-			header.createCell(11).setCellValue("总价");
+			header.createCell(11).setCellValue("统一价");
 			header.getCell(11).setCellStyle(style);
-			header.createCell(12).setCellValue("货期");
+			header.createCell(12).setCellValue("总价");
 			header.getCell(12).setCellStyle(style);
-			header.createCell(13).setCellValue("报价有效期");
+			header.createCell(13).setCellValue("货期");
 			header.getCell(13).setCellStyle(style);
-			header.createCell(14).setCellValue("备注");
+			header.createCell(14).setCellValue("报价有效期");
 			header.getCell(14).setCellStyle(style);
+			header.createCell(15).setCellValue("备注");
+			header.getCell(15).setCellStyle(style);
 			
 			List<Object[]> salesOrders = salesOrderRepository.findSalesOrderWithStock(formInstance.getId());
 			int rowCount = 1;
@@ -345,6 +347,7 @@ public class SalesOrderProcessService implements JavaDelegate {
 				aRow.createCell(12).setCellValue(order[7] != null ? order[7].toString() : "");
 				aRow.createCell(13).setCellValue(order[8] != null ? order[8].toString() : "");
 				aRow.createCell(14).setCellValue(order[9] != null ? order[9].toString() : "");
+				aRow.createCell(15).setCellValue(order[10] != null ? order[10].toString() : "");
 			}
 			
 			productSheet.addMergedRegion(new CellRangeAddress(1, rowCount-1, 0, 0));//合并单元格  
@@ -366,8 +369,8 @@ public class SalesOrderProcessService implements JavaDelegate {
 			MimeMessageHelper helper = new MimeMessageHelper(mailMsg,true);
 			try {
 				List<String> receiptens = new ArrayList<>();
-				SysUser drafter = sysUserRepository.getByLoginName(formInstance.getDrafter());
-				SysUser sales = sysUserRepository.getByLoginName(formInstance.getDrafterId());
+				SysUser drafter = sysUserRepository.getByLoginName(formInstance.getDrafterId());
+				SysUser sales = sysUserRepository.getByLoginName(formInstance.getSalesId());
 				if(drafter != null) {
 					if(StringUtils.isNotEmpty(drafter.getEmail())) {
 						receiptens.add(drafter.getEmail());
@@ -378,6 +381,10 @@ public class SalesOrderProcessService implements JavaDelegate {
 						receiptens.add(sales.getEmail());
 					}
 				}
+				
+				receiptens.add("yaotiehan@sadetec.com");
+				receiptens.add("353481434@qq.com");
+				
 				helper.setFrom("service@sadetec.com");
 				helper.setTo(receiptens.toArray(new String[0]));
 				helper.setSubject(formInstance.getTitle() + "询价完成");

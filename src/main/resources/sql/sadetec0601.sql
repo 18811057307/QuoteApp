@@ -1,0 +1,1 @@
+ALTER TABLE  `sales_order` ADD  `delivery_time` int(11) COMMENT '货期(天)';

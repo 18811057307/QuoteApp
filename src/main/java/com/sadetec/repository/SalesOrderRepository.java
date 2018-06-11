@@ -33,7 +33,7 @@ public interface SalesOrderRepository extends JpaRepository<SalesOrder, Integer>
 	
 	List<SalesOrder> findByFormInstanceIdOrderById(Integer formInstanceId);
 	
-	@Query(value="SELECT SALES_ORDER.PRODUCT_NAME,SALES_ORDER.PRODUCT_CODE,SALES_ORDER.AT_PRODUCT_CODE,SALES_ORDER.AMOUNT,SALES_ORDER.UNIT,SALES_ORDER.UNIT_PRICE,SALES_ORDER.AMOUNT*SALES_ORDER.UNIT_PRICE,SALES_ORDER.DELIVERY_DATE,SALES_ORDER.VALID_DATE,SALES_ORDER.COMMENT FROM SALES_ORDER WHERE SALES_ORDER.FORM_INSTANCE_ID = ?1", nativeQuery = true)
+	@Query(value="SELECT SALES_ORDER.SUPPLIER_NAME, SALES_ORDER.PRODUCT_NAME,SALES_ORDER.PRODUCT_CODE,SALES_ORDER.AT_PRODUCT_CODE,SALES_ORDER.AMOUNT,SALES_ORDER.UNIT,SALES_ORDER.UNIT_PRICE,SALES_ORDER.AMOUNT*SALES_ORDER.UNIT_PRICE,SALES_ORDER.DELIVERY_TIME,SALES_ORDER.VALID_DATE,SALES_ORDER.COMMENT FROM SALES_ORDER WHERE SALES_ORDER.FORM_INSTANCE_ID = ?1", nativeQuery = true)
 	//@Query(value="SELECT new com.sadetec.model.SalesOrderWithStock(SalesOrder.brand,SalesOrder.categoryName,SalesOrder.productCode,SalesOrder.atProductCode,SalesOrder.amount,SalesOrder.unit,SalesOrder.unitPrice,StockQuant.useQty) FROM SalesOrder LEFT JOIN StockQuant ON ( SalesOrder.productCode = StockQuant.productId OR SalesOrder.atProductCode = StockQuant.productId ) WHERE SalesOrder.formInstanceId = ?1")
 	//@Query(value="SELECT new com.sadetec.model.SalesOrderWithStock(so.brand,so.categoryName,so.productCode,so.atProductCode,so.amount,so.unit,so.unitPrice,sq.useQty) FROM SalesOrder so LEFT JOIN StockQuant sq ON ( so.productCode = sq.productId OR so.atProductCode = sq.productId ) WHERE so.formInstanceId = ?1")
 	List<Object[]> findSalesOrderWithStock(Integer formInstanceId);

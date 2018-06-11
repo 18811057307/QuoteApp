@@ -109,7 +109,6 @@ public class ManualProductMapResource {
 			storageService.store(file);
 			PageResponse pageResponse = new PageResponse(null);
 			pageResponse.setSuccess(true);
-
 			String oriFileName = file.getOriginalFilename();
 
 			Workbook workbook = null;

@@ -69,7 +69,8 @@ Ext.define('tms.view.salesOrder.EditorList', {
     		        return total;
     	    },
     	    summaryRenderer: Ext.util.Format.usMoney}
-    		,{width: 40,  header:'货期', dataIndex:'deliveryDate', xtype: 'datecolumn', format:'y-m-d'}
+    		//,{width: 40,  header:'货期', dataIndex:'deliveryDate', xtype: 'datecolumn', format:'y-m-d'}
+    		,{width: 40,  header:'货期', dataIndex:'deliveryTime',editor: {xtype: 'numberfield'}}
     		,{width: 40,  header:'报价有效期', dataIndex:'validDate',xtype: 'datecolumn', format:'y-m-d'}
     		,{width: 30,  header:'备注', dataIndex:'comment',editor: {xtype: 'textfield'}}
         ];
@@ -173,7 +174,8 @@ Ext.define('tms.view.salesOrder.EditorList', {
     	    },
     	    summaryRenderer: Ext.util.Format.usMoney}
     		,{width: 30,  header:'库存', dataIndex:'stockAmount'}
-    		,{width: 40,  header:'货期', dataIndex:'deliveryDate', xtype: 'datecolumn', format:'y-m-d'}
+    		//,{width: 40,  header:'货期', dataIndex:'deliveryDate', xtype: 'datecolumn', format:'y-m-d'}
+    		,{width: 40,  header:'货期', dataIndex:'deliveryTime',editor: {xtype: 'numberfield'}}
     		,{width: 40,  header:'报价有效期', dataIndex:'validDate',xtype: 'datecolumn', format:'y-m-d'}
     		,{width: 30,  header:'备注', dataIndex:'comment',editor: {xtype: 'textfield'}}
             ];
@@ -217,7 +219,8 @@ Ext.define('tms.view.salesOrder.EditorList', {
 	    	    },
 	    	    summaryRenderer: Ext.util.Format.usMoney}
 	    		,{width: 100,  header:'库存', dataIndex:'stockAmount'}
-	    		,{width: 100,  header:'货期', dataIndex:'deliveryDate',editor: {xtype: 'datefield'}, xtype: 'datecolumn', format:'y-m-d'}
+	    		//,{width: 100,  header:'货期', dataIndex:'deliveryDate',editor: {xtype: 'datefield'}, xtype: 'datecolumn', format:'y-m-d'}
+	    		,{width: 100,  header:'货期', dataIndex:'deliveryTime',editor: {xtype: 'numberfield'}}
 	    		,{width: 120,  header:'报价有效期', dataIndex:'validDate',editor: {xtype: 'datefield'},xtype: 'datecolumn', format:'y-m-d'}
 	    		,{width: 100,  header:'备注', dataIndex:'comment',editor: {xtype: 'textfield'}}
 	    		,{width: 100,  header:'办理人', dataIndex:'quoterName'}

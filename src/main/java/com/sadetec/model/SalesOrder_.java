@@ -27,6 +27,7 @@ public abstract class SalesOrder_ {
     public static volatile SingularAttribute<SalesOrder, String> productName;
     public static volatile SingularAttribute<SalesOrder, String> processType;
     public static volatile SingularAttribute<SalesOrder, Date> deliveryDate;
+    public static volatile SingularAttribute<SalesOrder, Integer> deliveryTime;
     public static volatile SingularAttribute<SalesOrder, Integer> amount;
     public static volatile SingularAttribute<SalesOrder, String> unit;
     public static volatile SingularAttribute<SalesOrder, BigDecimal> factoryPrice;

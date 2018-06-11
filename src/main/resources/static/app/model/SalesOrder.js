@@ -12,6 +12,7 @@ Ext.define('tms.model.SalesOrder', {
     		,{name:'productName', type:'string'}
     		,{name:'processType', type:'string'}
     		,{name:'deliveryDate', type:'date', dateFormat: 'time'}
+    		,{name:'deliveryTime', type:'int'}
     		,{name:'validDate', type:'date', dateFormat: 'time'}
     		,{name:'amount', type:'int'}
     		,{name:'stockAmount', type:'int'}

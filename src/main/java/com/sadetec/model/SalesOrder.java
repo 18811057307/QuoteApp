@@ -50,6 +50,9 @@ public class SalesOrder implements Serializable {
 	@Temporal(TemporalType.TIMESTAMP)
 	@DateTimeFormat(style = "S-")
     private Date deliveryDate;
+	
+	//货期-天数
+	private Integer deliveryTime;
     
 	@Temporal(TemporalType.TIMESTAMP)
 	@DateTimeFormat(style = "S-")
@@ -297,6 +300,16 @@ public class SalesOrder implements Serializable {
 
     public void setStockAmount(Integer stockAmount) {
         this.stockAmount = stockAmount;
+    }
+    
+	@Digits(integer = 10, fraction = 0)
+    @Column(name = "delivery_time", precision = 10)
+    public Integer getDeliveryTime() {
+        return deliveryTime;
+    }
+
+    public void setDeliveryTime(Integer deliveryTime) {
+        this.deliveryTime = deliveryTime;
     }
     
     // -- [quoterId] ------------------------

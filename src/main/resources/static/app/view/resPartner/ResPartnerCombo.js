@@ -7,6 +7,7 @@ Ext.define('tms.view.resPartner.ResPartnerCombo', {
     queryMode: 'local',
     forceSelection:false,
     createNewOnEnter:true,
+    createNewOnBlur:true,
     editable:true,
     typeAhead: true,
     initComponent: function() {
