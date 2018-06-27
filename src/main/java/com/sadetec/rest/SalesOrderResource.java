@@ -243,38 +243,15 @@ public class SalesOrderResource {
         
 		// create header row， 报价单号	询价时间	营业人员	联系方式	客户名称	
         XSSFRow header = productSheet.createRow(0);
-        header.createCell(0).setCellValue("报价单号");
-        header.getCell(0).setCellStyle(style);
-        header.createCell(1).setCellValue("询价时间");
-        header.getCell(1).setCellStyle(style);
-        header.createCell(2).setCellValue("营业人员");
-        header.getCell(2).setCellStyle(style);
-        header.createCell(3).setCellValue("联系方式");
-        header.getCell(3).setCellStyle(style);
-        header.createCell(4).setCellValue("客户名称");
-        header.getCell(4).setCellStyle(style);
         
-        //产品名称	询价型号	报价型号	数量	单位	统一价  总价	货期	报价有效期	备注
-        header.createCell(5).setCellValue("产品名称");
-        header.getCell(5).setCellStyle(style);
-        header.createCell(6).setCellValue("询价型号");
-        header.getCell(6).setCellStyle(style);
-        header.createCell(7).setCellValue("报价型号");
-		header.getCell(7).setCellStyle(style);
-		header.createCell(8).setCellValue("数量");
-		header.getCell(8).setCellStyle(style);
-		header.createCell(9).setCellValue("单位");
-		header.getCell(9).setCellStyle(style);
-		header.createCell(10).setCellValue("统一价");
-		header.getCell(10).setCellStyle(style);
-		header.createCell(11).setCellValue("总价");
-		header.getCell(11).setCellStyle(style);
-		header.createCell(12).setCellValue("货期");
-		header.getCell(12).setCellStyle(style);
-		header.createCell(13).setCellValue("报价有效期");
-		header.getCell(13).setCellStyle(style);
-		header.createCell(14).setCellValue("备注");
-		header.getCell(14).setCellStyle(style);
+        String[] titles = new String[]{"报价单号","询价时间","营业人员","联系方式","客户名称","供应商","产品名称","询价型号","报价型号","数量","单位","统一价","总价","货期","报价有效期","备注"};
+        
+        int i = 0;
+        for (String title : titles) {
+        	header.createCell(i).setCellValue(title);
+            header.getCell(i).setCellStyle(style);  
+            i++;
+		}
 				
 		int firstRow = 1;
 		int rowCount = 1;
@@ -307,6 +284,7 @@ public class SalesOrderResource {
 				aRow.createCell(12).setCellValue(order[7] != null ? order[7].toString() : "");
 				aRow.createCell(13).setCellValue(order[8] != null ? order[8].toString() : "");
 				aRow.createCell(14).setCellValue(order[9] != null ? order[9].toString() : "");
+				aRow.createCell(15).setCellValue(order[10] != null ? order[10].toString() : "");
 			}
 			
 			if(salesOrders.size() > 1) {

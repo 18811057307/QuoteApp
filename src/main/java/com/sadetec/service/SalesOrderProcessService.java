@@ -350,11 +350,14 @@ public class SalesOrderProcessService implements JavaDelegate {
 				aRow.createCell(15).setCellValue(order[10] != null ? order[10].toString() : "");
 			}
 			
-			productSheet.addMergedRegion(new CellRangeAddress(1, rowCount-1, 0, 0));//合并单元格  
-			productSheet.addMergedRegion(new CellRangeAddress(1, rowCount-1, 1, 1));//合并单元格 
-			productSheet.addMergedRegion(new CellRangeAddress(1, rowCount-1, 2, 2));//合并单元格 
-			productSheet.addMergedRegion(new CellRangeAddress(1, rowCount-1, 3, 3));//合并单元格 
-			productSheet.addMergedRegion(new CellRangeAddress(1, rowCount-1, 4, 4));//合并单元格 
+			//Merged region A2 must contain 2 or more cells
+			if(rowCount > 2) {
+				productSheet.addMergedRegion(new CellRangeAddress(1, rowCount-1, 0, 0));//合并单元格  
+				productSheet.addMergedRegion(new CellRangeAddress(1, rowCount-1, 1, 1));//合并单元格 
+				productSheet.addMergedRegion(new CellRangeAddress(1, rowCount-1, 2, 2));//合并单元格 
+				productSheet.addMergedRegion(new CellRangeAddress(1, rowCount-1, 3, 3));//合并单元格 
+				productSheet.addMergedRegion(new CellRangeAddress(1, rowCount-1, 4, 4));//合并单元格 
+			}
 			
 			DateTimeFormatter format = DateTimeFormat.forPattern("yyyyMMdd");
 			
