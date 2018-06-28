@@ -30,7 +30,7 @@ public interface FormInstanceRepository extends JpaRepository<FormInstance, Inte
 	@Query(value="SELECT * FROM FORM_INSTANCE WHERE PROCESS_INSTANCE_ID != '' AND (DRAFTER_ID = ?1 OR DRAFTER = ?1) ORDER BY CREATE_DATE DESC", nativeQuery=true)    
 	List<FormInstance> findByDrafter(String deafter);
 	
-	@Query(value="SELECT * FROM FORM_INSTANCE WHERE PROCESS_INSTANCE_ID != '' AND (DRAFTER_ID IN (SELECT ID FROM SYS_USER WHERE COMPANY_ID = ?1) OR DRAFTER IN (SELECT ID FROM SYS_USER WHERE COMPANY_ID = ?1)) ORDER BY CREATE_DATE DESC", nativeQuery=true)
+	@Query(value="SELECT * FROM FORM_INSTANCE WHERE PROCESS_INSTANCE_ID != '' AND (DRAFTER_ID IN (SELECT LOGIN_NAME FROM SYS_USER WHERE COMPANY_ID = ?1) OR DRAFTER IN (SELECT LOGIN_NAME FROM SYS_USER WHERE COMPANY_ID = ?1)) ORDER BY CREATE_DATE DESC", nativeQuery=true)
 	List<FormInstance> findByCompanyId(Integer companyId);
 	
 	List<FormInstance> findByProcessDefinitionId(String processDefinitionId);
@@ -38,7 +38,7 @@ public interface FormInstanceRepository extends JpaRepository<FormInstance, Inte
 	@Query(value="SELECT COUNT(*) FROM FORM_INSTANCE WHERE PROCESS_INSTANCE_ID != '' AND (DRAFTER_ID = ?1 OR DRAFTER = ?1)", nativeQuery=true)
 	Long countByDrafterId(String deafterId);
 	
-	@Query(value="SELECT COUNT(*) FROM FORM_INSTANCE WHERE PROCESS_INSTANCE_ID != '' AND (DRAFTER_ID IN (SELECT ID FROM SYS_USER WHERE COMPANY_ID = ?1) OR DRAFTER IN (SELECT ID FROM SYS_USER WHERE COMPANY_ID = ?1))", nativeQuery=true)
+	@Query(value="SELECT COUNT(*) FROM FORM_INSTANCE WHERE PROCESS_INSTANCE_ID != '' AND (DRAFTER_ID IN (SELECT LOGIN_NAME FROM SYS_USER WHERE COMPANY_ID = ?1) OR DRAFTER IN (SELECT LOGIN_NAME FROM SYS_USER WHERE COMPANY_ID = ?1))", nativeQuery=true)
 	Long countByCompanyId(Integer companyId);
 	
 	@Query(value="SELECT COUNT(*) FROM FORM_INSTANCE WHERE MONTH(last_modified) = MONTH(CURRENT_DATE( )) AND YEAR(last_modified) = YEAR( CURRENT_DATE( )) AND SEQ_NUMBER != ''", nativeQuery=true)
