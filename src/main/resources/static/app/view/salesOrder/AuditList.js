@@ -126,12 +126,12 @@ Ext.define('tms.view.salesOrder.AuditList', {
             }}
     		,{width: 40,  header:'货期', dataIndex:'deliveryDate', xtype: 'datecolumn', format:'y-m-d'}
     		,{width: 40,  header:'报价有效期', dataIndex:'validDate',xtype: 'datecolumn', format:'y-m-d'}
-    		,{width: 30,  header:'产品技术', dataIndex:'quoterId',editor: {xtype:'userCombo',roleCode:'PURCHASING_AGENT'}, renderer: function(value) {
+    		,{width: 30,  header:'产品技术', dataIndex:'quoterId',editor: {xtype:'userCombo',roleCode:'PURCHASING_AGENT',allowBlank: false}, renderer: function(value) {
 	   			 var record = userStore.findRecord("loginName", value);
 			     return record ? record.get("name") : value;
 
            }}
-    		,{width: 30,  header:'审批人', dataIndex:'auditorId',editor: {xtype:'userCombo',roleCode:'AUDITOR_AGENT'}, renderer: function(value) {
+    		,{width: 30,  header:'审批人', dataIndex:'auditorId',editor: {xtype:'userCombo',roleCode:'AUDITOR_AGENT',allowBlank: false}, renderer: function(value) {
 	   			 var record = userStore.findRecord("loginName", value);
 			     return record ? record.get("name") : value;
 
@@ -165,9 +165,18 @@ Ext.define('tms.view.salesOrder.AuditList', {
                 {
                     text: '导出询价单'
                     ,handler: function(){
-                    	var formater = Ext.create("Ext.ux.exporter.excelFormatter.ExcelFormatter");
-                    	var vExportContent =formater.getExcelXml(this);
-                    	document.location = 'data:application/vnd.ms-excel;base64,' + Ext.ux.exporter.Base64.encode(vExportContent);
+                    	var ids = new Array();
+                    	ids.push( me.formInstanceId);
+                    	tms.downloadFile({
+                    		url: tms.getContextPath() + '/api/salesOrder/exportOrders',
+            	            method: 'POST',
+            	            params: {
+            	            	formInstanceIds:ids
+            	            },
+                    	});
+                    	//var formater = Ext.create("Ext.ux.exporter.excelFormatter.ExcelFormatter");
+                    	//var vExportContent =formater.getExcelXml(this);
+                    	//document.location = 'data:application/vnd.ms-excel;base64,' + Ext.ux.exporter.Base64.encode(vExportContent);
                     }
                     ,scope :this
                 }

@@ -361,7 +361,9 @@ public class SalesOrderProcessService implements JavaDelegate {
 			
 			DateTimeFormatter format = DateTimeFormat.forPattern("yyyyMMdd");
 			
-			String fileName = formInstance.getTitle() + "-" + formInstance.getDrafter() + "-" + format.print(formInstance.getCreateDate().getTime()) + ".xlsx";
+			DateTimeFormatter curFormat = DateTimeFormat.forPattern("yyyyMMddHHmmss");
+			
+			String fileName = formInstance.getTitle() + "-" + curFormat.print(new Date().getTime()) + "-" + formInstance.getDrafter() + "-" + format.print(formInstance.getCreateDate().getTime()) + ".xlsx";
 			
 			OutputStream os = storageService.openOutPutStream(fileName);
 			salesOrderExcel.write(os);

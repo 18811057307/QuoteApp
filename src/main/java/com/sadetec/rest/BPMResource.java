@@ -160,7 +160,14 @@ public class BPMResource {
 		
 		PageResponse<ProcessInstanceDto> pageResponse = new PageResponse<ProcessInstanceDto>(results);
 		pageResponse.setSuccess(Boolean.TRUE);
-		pageResponse.setTotal(results.size());
+		
+		long processInstanceCount =  historyService.createHistoricProcessInstanceQuery().processDefinitionKey(processKey).count();
+	
+		if(StringUtils.isEmpty(title)) {
+			pageResponse.setTotal(processInstanceCount);
+		} else {
+			pageResponse.setTotal(results.size());
+		}
 
 		return new ResponseEntity<PageResponse<ProcessInstanceDto>>(pageResponse, HttpStatus.OK);
 

@@ -69,6 +69,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sadetec.model.FormInstance;
 import com.sadetec.model.MailMessage;
+import com.sadetec.model.QuotationHistory;
 import com.sadetec.model.SalesOrder;
 import com.sadetec.model.SysUser;
 import com.sadetec.repository.CategoryRepository;
@@ -533,7 +534,19 @@ public class SalesOrderResource {
 			results = salesOrderRepository.findByFormInstanceIdOrderById(formInstanceId);
 		}
 		
-
+		//过滤价格权限
+		List<String> curUserRoles = UserContext.getRoles();
+		for (SalesOrder salesOrder : results) {
+			if (!curUserRoles.contains("ADMIN")) {
+				if (!curUserRoles.contains("FACTORY_QUOTE")) {
+					salesOrder.setFactoryPrice(null);
+				}
+				if (!curUserRoles.contains("COST_QUOTE")) {
+					salesOrder.setCostPrice(null);
+				}
+			}
+		}
+		
 		PageResponse<SalesOrder> pageResponse = new PageResponse<SalesOrder>(results);
 		pageResponse.setSuccess(Boolean.TRUE);
 		pageResponse.setTotal(results.size());

@@ -106,7 +106,7 @@ Ext.define('tms.view.salesOrder.EditorList', {
         	this.columns = [
             	{width: 40,  header:'品牌', dataIndex:'brand'}
         		,{width: 40,  header:i18n.t('salesOrder_category_name'), sortable:true, dataIndex:'categoryName'}
-        		
+        		,{width: 40,  header:i18n.t('salesOrder_product_name'), sortable:true, dataIndex:'productName'}
         		,{width: 60,  header:i18n.t('salesOrder_product_code'), sortable:true, dataIndex:'productCode', summaryType: 'count',
                     summaryRenderer: function(value, summaryData, dataIndex) {
                         return ((value === 0 || value > 1) ? '(共计 ' + value + ' 种产品)' : '(共计 1 种产品)');
@@ -147,7 +147,8 @@ Ext.define('tms.view.salesOrder.EditorList', {
         } else if("order_status" == me.taskDefinitionKey) {
         	
         	this.columns = [
-        	 {width: 40,  header:i18n.t('salesOrder_product_code'), dataIndex:'productCode', summaryType: 'count',
+        	{width: 40,  header:i18n.t('salesOrder_product_name'), sortable:true, dataIndex:'productName'}
+        	,{width: 40,  header:i18n.t('salesOrder_product_code'), dataIndex:'productCode', summaryType: 'count',
                 summaryRenderer: function(value, summaryData, dataIndex) {
                     return ((value === 0 || value > 1) ? '(共计 ' + value + ' 种产品)' : '(共计 1 种产品)');
                 }}
@@ -176,7 +177,7 @@ Ext.define('tms.view.salesOrder.EditorList', {
     		,{width: 30,  header:'库存', dataIndex:'stockAmount'}
     		//,{width: 40,  header:'货期', dataIndex:'deliveryDate', xtype: 'datecolumn', format:'y-m-d'}
     		,{width: 40,  header:'货期', dataIndex:'deliveryTime',editor: {xtype: 'numberfield'}}
-    		,{width: 40,  header:'报价有效期', dataIndex:'validDate',xtype: 'datecolumn', format:'y-m-d'}
+    		,{width: 40,  header:'报价有效期', dataIndex:'validDate',xtype: 'datecolumn', format:'y-m-d',value:'2018-07-10'}
     		,{width: 30,  header:'备注', dataIndex:'comment',editor: {xtype: 'textfield'}}
             ];
         } else {
@@ -188,7 +189,8 @@ Ext.define('tms.view.salesOrder.EditorList', {
 		   		//	 var record = userStore.findRecord("loginName", value);
 				//     return record ? record.get("name") : value;
 		        //}}
-	    		{width: 100,  header:i18n.t('salesOrder_product_code'), sortable:true, dataIndex:'productCode', summaryType: 'count',
+	        	{width: 40,  header:i18n.t('salesOrder_product_name'), sortable:true, dataIndex:'productName'}
+	        	,{width: 100,  header:i18n.t('salesOrder_product_code'), sortable:true, dataIndex:'productCode', summaryType: 'count',
 	                summaryRenderer: function(value, summaryData, dataIndex) {
 	                    return ((value === 0 || value > 1) ? '(共计 ' + value + ' 种产品)' : '(共计 1 种产品)');
 	                }}
@@ -222,7 +224,7 @@ Ext.define('tms.view.salesOrder.EditorList', {
 	    		//,{width: 100,  header:'货期', dataIndex:'deliveryDate',editor: {xtype: 'datefield'}, xtype: 'datecolumn', format:'y-m-d'}
 	    		,{width: 100,  header:'货期', dataIndex:'deliveryTime',editor: {xtype: 'numberfield'}}
 	    		,{width: 120,  header:'报价有效期', dataIndex:'validDate',editor: {xtype: 'datefield'},xtype: 'datecolumn', format:'y-m-d'}
-	    		,{width: 100,  header:'备注', dataIndex:'comment',editor: {xtype: 'textfield'}}
+	    		,{width: 100,  header:'备注', dataIndex:'comment',editor: {xtype: 'textfield',value:'tests'}}
 	    		,{width: 100,  header:'办理人', dataIndex:'quoterName'}
 	        ];
         }
@@ -291,9 +293,18 @@ Ext.define('tms.view.salesOrder.EditorList', {
                 {
                     text: '导出询价单'
                     ,handler: function(){
-                    	var formater = Ext.create("Ext.ux.exporter.excelFormatter.ExcelFormatter");
-                    	var vExportContent =formater.getExcelXml(this);
-                    	document.location = 'data:application/vnd.ms-excel;base64,' + Ext.ux.exporter.Base64.encode(vExportContent);
+                    	//var formater = Ext.create("Ext.ux.exporter.excelFormatter.ExcelFormatter");
+                    	//var vExportContent =formater.getExcelXml(this);
+                    	//document.location = 'data:application/vnd.ms-excel;base64,' + Ext.ux.exporter.Base64.encode(vExportContent);
+                    	var ids = new Array();
+                    	ids.push( me.formInstanceId);
+                    	tms.downloadFile({
+                    		url: tms.getContextPath() + '/api/salesOrder/exportOrders',
+            	            method: 'POST',
+            	            params: {
+            	            	formInstanceIds:ids
+            	            },
+                    	});
                     }
                     ,scope :this
                 }

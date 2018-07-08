@@ -36,7 +36,17 @@ Ext.define('tms.view.bpm.ProcessAdminList', {
     		enableOverflow: true,
     		items: []
     	});
+    	
     	this.dockedItems.push(this.topToolbar);
+    	
+    	 this.bottomToolbar = Ext.create("Ext.toolbar.Paging", {
+             store: this.store,
+             enableOverflow: true,
+             dock: 'bottom',
+             displayInfo: true
+         });
+         this.dockedItems.push(this.bottomToolbar);
+    	
     	this.callParent(arguments);
     	
     	this.topToolbar.add({
