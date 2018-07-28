@@ -180,9 +180,16 @@ public class SalesOrderProcessService implements JavaDelegate {
 				}
 				
 				//查询更新库存信息
-				StockQuant stockQuant = stockQuantRepository.findOneByProductId(salesOrder.getAtProductCode());
-				if(null != stockQuant) {
-					salesOrder.setStockAmount(stockQuant.getUseQty().intValue());
+				if(StringUtils.containsIgnoreCase(salesOrder.getBrand(),"A&T") || StringUtils.containsIgnoreCase(salesOrder.getBrand(),"爱安特")) {					
+					BigDecimal totalUseQty = stockQuantRepository.findTotalUseQtyByProductId(salesOrder.getProductCode());
+					if(null != totalUseQty) {
+						salesOrder.setStockAmount(totalUseQty.intValue());
+					}
+				} else {
+					BigDecimal totalUseQty = stockQuantRepository.findTotalUseQtyByProductId(salesOrder.getAtProductCode());
+					if(null != totalUseQty) {
+						salesOrder.setStockAmount(totalUseQty.intValue());
+					}
 				}
 				
 				salesOrderRepository.saveAndFlush(salesOrder);

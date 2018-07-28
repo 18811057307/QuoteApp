@@ -7,6 +7,7 @@
  */
 package com.sadetec.repository;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import org.springframework.data.domain.Example;
@@ -23,7 +24,8 @@ public interface StockQuantRepository extends JpaRepository<StockQuant, Integer>
 
 	StockQuant findOneByLocationAndLot(String location, String lot);
 	
-	StockQuant findOneByProductId(String productId);
+	@Query(value="SELECT SUM(USE_QTY) FROM STOCK_QUANT WHERE PRODUCT_ID = ?1", nativeQuery = true)	
+	BigDecimal findTotalUseQtyByProductId(String productId);
 
 	@Query(value="SELECT STOCK_QUANT.* FROM SALES_ORDER LEFT JOIN STOCK_QUANT ON ( SALES_ORDER.PRODUCT_CODE = STOCK_QUANT.PRODUCT_ID OR SALES_ORDER.AT_PRODUCT_CODE = STOCK_QUANT.PRODUCT_ID) WHERE SALES_ORDER.FORM_INSTANCE_ID = ?1", nativeQuery = true)
 	List<StockQuant> findByProductIdInSalesOrder(Integer formInstanceId);
